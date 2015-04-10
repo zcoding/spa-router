@@ -1,0 +1,23 @@
+{
+  "name": "spa-router",
+  "version": "0.0.1",
+  "description": "single page application router module",
+  "main": "zrouter.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zcoding/spa-router.git"
+  },
+  "keywords": [
+    "spa",
+    "router"
+  ],
+  "author": "zcoding",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zcoding/spa-router/issues"
+  },
+  "homepage": "https://github.com/zcoding/spa-router"
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>router.js</title>
+</head>
+<body>
+  <ul>
+    <li><a href="#/home">Home</a></li>
+    <li><a href="#/user">user list</a></li>
+    <li><a href="#/user/123">User 123</a></li>
+    <li><a href="#/user/add">User Add</a></li>
+    <li><a href="#/user/edit/123">User Edit</a></li>
+    <li><a href="#/list/red-123-456">list</a></li>
+    <li><a href="#/test?mode=debug">Test Mode</a></li>
+  </ul>
+  <script src="../src/zrouter.js"></script>
+  <script>
+
+  var routes = {
+    '/': function() {
+      console.log('index');
+    },
+    '/home': function() {
+      console.log('home~');
+    },
+    '/user': {
+      on: function() {
+        console.log('user list');
+      },
+      '/add': function() {
+        console.log('user add');
+      },
+      '/edit/:id': function(id) {
+        console.log('user ' + id + ' edit');
+      }
+    }
+  };
+  // 使用new创建路由器对象
+  var router = new Router(routes);
+  // 定义参数1
+  router.param('id', /[0-9]+/);
+  // 定义参数2
+  router.param({
+    'name': /[a-zA-Z]+/,
+    'age': /[0-9]+/
+  });
+  // 定义参数3
+  router.param(['color', 'width', 'height'], /(#[0-9a-zA-Z]{6})-([0-9]+)-([0-9]+)/);
+  // 配置
+  router.configure({
+    // 是否启用history API
+    history: false,
+    // 路径未找到时执行
+    notFound: function() {
+      console.log('nothing matched.');
+    },
+    // 任意存在的路由都执行
+    always: function() {
+      console.log('Always do something.');
+    }
+  });
+  // 动态添加路由
+  router.on('/user/:id', [function(id) {
+    console.log('user home');
+  }, function(id) {
+    console.log('current user: ' + id);
+  }]);
+  // 使用'-'分割参数
+  router.route('/list/:color-:width-:height', function(color, width, height) {
+    console.log('list type: ' + color + ' ' + width + ' ' + height);
+  });
+  // 捕获query参数
+  router.route('/test', function(params) {
+    console.log('Current mode: ' + params.mode);
+  });
+  // 创建多个路由器对象（互不影响），支持使用工厂方法（不用new）
+  var router2 = Router({
+    '/before': {
+      on: function() {
+        console.log('going...');
+      },
+      before: function() {
+        console.log('before...');
+      },
+      after: function() {
+        console.log('after...');
+      }
+    }
+  });
+  // 路由初始化方法
+  // 如果一个路径对应多个路由器，则按照路由器初始化先后顺序执行
+  router.init();
+  router2.init();
+
+  </script>
+</body>
+</html>
