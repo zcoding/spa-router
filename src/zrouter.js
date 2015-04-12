@@ -237,6 +237,15 @@
     };
     return this;
   };
+  
+  /**
+   * redirect to another route
+   * @param {String} path
+   * @return this
+   */
+  Router.prototype.redirect = function(path) {
+    // redirect to another route...
+  };
 
   function mount(routes) {
     for (var p in routes) {
