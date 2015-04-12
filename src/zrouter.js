@@ -31,65 +31,77 @@
     return dloc.hash === '' || dloc.hash === '#';
   };
 
-  var listener = {
-    hash: document.location.hash,
+  /**
+   * Utils: mixin
+   * @param {Object} destination
+   * @param {Object} source
+   * @return {Object}
+   */
+  var mixin = function(destination, source) {
+    return {};
+  };
 
-    check: function () {
-      var h = document.location.hash;
-      if (h != this.hash) {
-        this.hash = h;
-        this.onHashChanged();
-      }
-    },
+  /**
+   * Listener
+   */
+  var Listener = {
 
-    fire: function () {
-      this.onHashChanged();
-    },
+    // {[Function]} Listener
+    listeners: null,
 
-    init: function (fn) {
-      var self = this;
+    /**
+     * add to listeners
+     * @param {Function} fn
+     * @return Listener
+     */
+    add: function (fn) {
 
-      if (!Router.listeners) {
-        Router.listeners = [];
-      }
-
-      // hashChange发生时，遍历所有挂在Router.listeners上的监听器，并逐个执行
-      // 实现动态添加hashChange监听的方法
-      // 一个Router实例对应一个listener
-      function onchange(onChangeEvent) {
-        for (var i = 0, l = Router.listeners.length; i < l; i++) {
-          Router.listeners[i](onChangeEvent);
-        }
+      if (!this.listeners) {
+        this.listeners = [];
       }
 
-      window.onhashchange = onchange;
+      this.listeners.push(fn);
 
-      Router.listeners.push(fn);
-
-      // return this.mode;
+      return this;
     },
 
+    /**
+     * destroy listener
+     * @param {Function} fn
+     * @return Listener
+     */
     destroy: function (fn) {
-      if (!Router || !Router.listeners) {
+      var listeners = this.listeners;
+      if (!Router || !listeners) {
         return;
       }
-
-      var listeners = Router.listeners;
-
-      for (var i = listeners.length - 1; i >= 0; i--) {
+      // 移除
+      for (var i = listeners - 1; i >= 0; --i) {
         if (listeners[i] === fn) {
           listeners.splice(i, 1);
         }
       }
+      return this;
     },
 
     setHash: function (s) {
       dloc.hash = (s[0] === '/') ? s : '/' + s;
       return this;
-    },
+    }
 
-    onHashChanged: function () {}
   };
+
+  // hashChange发生时，遍历所有挂在Router.listeners上的监听器，并逐个执行
+  // 实现动态添加hashChange监听的方法
+  // 一个Router实例对应一个listener
+  function onchange(onChangeEvent) {
+    var listeners = Listener.listeners;
+    for (var i = 0, l = listeners.length; i < l; i++) {
+      listeners[i](onChangeEvent);
+    }
+  }
+
+  window.onhashchange = onchange;
 
   /**
    * Constructor: Router
@@ -113,10 +125,10 @@
     this.handler = function(onChangeEvent) {
       var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash;
       var url = newURL.replace(/.*#/, '');
-      self.dispatch('on', url.charAt(0) === '/' ? url : '/' + url);
+      dispatch('on', url.charAt(0) === '/' ? url : '/' + url);
     };
 
-    listener.init(this.handler);
+    Listener.add(this.handler);
   };
 
   /**
@@ -125,6 +137,12 @@
    * @return this
    */
   Router.prototype.on = Router.prototype.route = function(path, handle) {};
+
+  /**
+   * Default Configuration
+   * {Object}
+   */
+  var defaults = {};
 
   /**
    * @param {Object} options
@@ -145,8 +163,6 @@
     return this;
   };
 
-  // hashChange
-  var hashChange = function() {};
-  // window.onhashchange = hashChange;
+  function dispatch() {}
 
 }));
