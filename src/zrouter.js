@@ -12,27 +12,35 @@
   }
 }(function(exports) {
 
+  /// 可以用作分隔符的字符
+  /// / - ~ = ! ; @ & #
+
+  /// 可以用作匹配符的字符
+  /// + * ? ( ) $
+
   var dloc = document.location;
 
   /**
    * Shorthand: hasOwn
    * stand for hasOwnProperty
-   * @param {Object} obj
    * @param {String} p
    * @return {Boolean}
    */
-  var hasOwn = function(obj, p) {
-    return obj.hasOwnProperty(p);
+  var hasOwn = function(p) {
+    return this.hasOwnProperty(p);
   };
 
   /**
    * Utils: Each
-   * @param {Array} arr
-   * @param {Function} iterator
+   * @param {Function} iterator(element, index, array)
    */
-  var each = function(arr, iterator) {
-    for (var i = 0, len = arr.length; i < len; ++i) {
-      if (iterator(arr[i], i, arr) === false) {
+  var each = function(iterator) {
+    // Array.prototype.forEach support
+    if (typeof this.forEach !== "undefined") {
+      return this.forEach(iterator);
+    }
+    for (var i = 0, len = this.length; i < len; ++i) {
+      if (iterator(this[i], i, this) === false) {
         return;
       }
     }
@@ -176,7 +184,8 @@
   window.onhashchange = onchange;
 
   /**
-   * Constructor: Router (routes)
+   * Router (routes)
+   * @constructor
    * @param {Object} routes **Optional**
    */
   var Router = exports.Router = function(routes) {
@@ -245,28 +254,99 @@
    */
   Router.prototype.redirect = function(path) {
     // redirect to another route...
+    dloc.hash = path;
+    return this;
   };
 
+  /**
+   * 挂载新的路由
+   */
   function mount(routes) {
     for (var p in routes) {
-      if (hasOwn(routes, p)) {
+      if (hasOwn.call(routes, p)) {
         if (isFunction(routes[p])) {
-          var rule = new RegExp('^' + p + '$');
-          this.routes[rule.source] = routes[p];
+          // 替换特定规则参数（通过.param()方法定义的参数）
+          // 替换其它参数
+          var rp = p.replace(/\:[a-zA-Z0-9_]+/g, '([^\-\=\&\@\/\!]+)');
+          var rule = new RegExp('^' + rp + '$').source;
+          // 插入路由表
+          this.routes[rule] = routes[p];
         }
       }
     }
   }
 
+  /**
+   * turn query string into object
+   * e.g. color=ffee88&width=12                           =>  {color: "ffee88", width: 12}
+   *      color=ffee88&arr[0]=12&arr[1]=13                =>  {color: "ffee88", arr: [12, 13]}
+   *      color=ffee88&obj['name']=wuzijie&obj['age']=23  =>  {color: "ffee88", obj: {name: "wuzijie", age: 23}}
+   * @param {String} queryString
+   * @erturn {Object}
+   * @todo 未支持多维数组或嵌套对象
+   */
+  var parseQueryString = function(queryString) {
+    var queryArr = queryString.split('&');
+    var param = {};
+    var objectLike = /^([0-9a-zA-Z_]+)\[([0-9a-zA-Z_]+)\]$/;
+    for (var i = 0, len = queryArr.length; i < len; ++i) {
+      var _param = queryArr[i].split('=');
+      if (_param.length < 2) {
+        continue;
+      }
+      var key = _param[0], value = _param.slice(1).join('');
+      // 判断是不是数组或对象
+      var matches = key.match(objectLike);
+      if (matches === null) {
+        // 不是数组或对象，直接覆盖
+        param[key] = value;
+        continue;
+      }
+      key = matches[1];
+      var index = matches[2], currentValue = param[key];
+      if (typeof currentValue === "undefined") { // 未定义
+        if (/^[0-9]+$/.test(index)) { // 如果index为整数，就假定是数组
+          currentValue = [];
+        } else { // 否则就假定是对象
+          currentValue = {};
+        }
+      } else if (isArray(currentValue) && !/^[0-9]+$/.test(index)) { // 之前假定是数组，但发现不是（因为当前索引不是整数）
+        // 转为对象
+        var newCurrentValue = {};
+        for (var j = 0, len2 = currentValue.length; j < len2; ++j) {
+          if (typeof currentValue[j] === "undefined") continue; // 可能是稀疏数组
+          newCurrentValue[j] = currentValue[j];
+        }
+        currentValue = newCurrentValue;
+      }
+      currentValue[index] = value;
+      param[key] = currentValue;
+    }
+    return param;
+  };
+
   function dispatch(path) {
     var routes = this.routes;
     var match = false;
+    // 保存原始请求uri
+    var uri = path;
+    // 取出query部分
+    var queryIndex = path.indexOf('?');
+    var query = queryIndex === -1 ? '' : path.slice(queryIndex+1);
+    path = queryIndex === -1 ? path : path.slice(0, queryIndex);
     for (var p in routes) {
-      if (hasOwn(routes, p)) {
+      if (hasOwn.call(routes, p)) {
         var pathRegExp = new RegExp(p);
-        if(pathRegExp.test(path)) {
+        var matches = path.match(pathRegExp);
+        if (matches !== null) {
           match = true;
-          routes[p].call(this);
+          var params = matches.slice(1);
+          routes[p].call(this, {
+            uri: uri,
+            path: path,
+            params: params,
+            query: parseQueryString(query)
+          });
           break;
         }
       }

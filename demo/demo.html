@@ -3,19 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <title>router.js</title>
+  <link rel="stylesheet" href="css/demo.css">
 </head>
 <body>
-  <ul>
-    <li><a href="#/home">Home</a></li>
-    <li><a href="#/user">user list</a></li>
-    <li><a href="#/user/123">User 123</a></li>
-    <li><a href="#/user/add">User Add</a></li>
-    <li><a href="#/user/edit/123">User Edit</a></li>
-    <li><a href="#/list/red-123-456">list</a></li>
-    <li><a href="#/test?mode=debug">Test Mode</a></li>
-  </ul>
+  <div id="main-container">
+    <table>
+      <thead>
+        <tr>
+          <th>uri</th>
+          <th>path</th>
+          <th>param</th>
+          <th>query</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-uri></td>
+          <td data-path></td>
+          <td data-param></td>
+          <td data-query></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul>
+      <li><a href="#/home">Home</a></li>
+      <li><a href="#/my/god/hah">My God</a></li>
+      <li><a href="#/your/shoes-white">Your</a></li>
+      <li><a href="#/his/coc=white">His</a></li>
+      <li><a href="#/user">user list</a></li>
+      <li><a href="#/user/123">User 123</a></li>
+      <li><a href="#/user/add">User Add</a></li>
+      <li><a href="#/user/edit/123">User Edit</a></li>
+      <li><a href="#/list/red-123-456">list</a></li>
+      <li><a href="#/test?mode=debug">Test Mode</a></li>
+    </ul>
+    <h2>使用不同分隔符</h2>
+    <ul>
+      <li><a href="#/test/a/b/c">/a/b/c</a></li>
+      <li><a href="#/test/a&b&c">/a&b&c</a></li>
+      <li><a href="#/test/a!b!c">/a!b!c</a></li>
+      <li><a href="#/test/a=b=c">/a=b=c</a></li>
+      <li><a href="#/test/a@b@c">/a@b@c</a></li>
+      <li><a href="#/test/hello@world">/hello@world</a></li>
+    </ul>
+  </div>
   <script src="../src/zrouter.js"></script>
   <script>
+
+  var mainContainer = document.querySelectorAll('#main-container')[0];
+  var uri = mainContainer.querySelectorAll('[data-uri]')[0];
+  var path = mainContainer.querySelectorAll('[data-path]')[0];
+  var param = mainContainer.querySelectorAll('[data-param]')[0];
+  var query = mainContainer.querySelectorAll('[data-query]')[0];
+
+  function process () {
+    console.log(this.routes);
+    console.log(arguments);
+  }
 
   var routes = {
     '/': function() {
@@ -23,6 +68,49 @@
     },
     '/home': function() {
       console.log('home~');
+    },
+    '/my/:god/:what': function(god, what) {
+      console.log(god, what);
+    },
+    '/your/:shit-:what': function(shit, what) {
+      console.log(shit, what);
+    },
+    '/his/:shit=:what': function(shit, what) {
+      console.log(shit, what);
+    },
+    // 不同分隔符分割参数
+    '/test/:p1/:p2/:p3': function(p1, p2, p3) {
+      process.call(this, p1, p2, p3);
+      this.redirect('/test/a&b&c'); // 重定向到 /test/a&b&c
+    },
+    '/test/:p1&:p2&:p3': function(p1, p2, p3) {
+      console.log(p1, p2, p3);
+    },
+    '/test/:p1!:p2!:p3': function(p1, p2, p3) {
+      console.log(p1, p2, p3);
+      // uri.innerText = 
+    },
+    '/test/:p1=:p2=:p3': function(p1, p2, p3) {
+      console.log(p1, p2, p3);
+    },
+    '/test/:p1@:p2@:p3': function(p1, p2, p3) {
+      console.log(p1, p2, p3);
+    },
+
+    '/test/hello@world': function() {
+      console.log('hello world');
+    },
+
+    '/test/:what/:is/:that': function(req) {
+      console.log(req.uri);
+      console.log(req.params); // res.params['what'], res.params['is'], res.params['that']
+      console.log(req.path);
+      console.log(req.query); // res.query['whatever']
+      console.log(req.referrer);
+    },
+
+    '/pattern/([^\/]+)\/([0-9]+)': function(p1, p2) {
+      console.log(p1, p2)
     },
     '/user': {
       on: function() {
@@ -49,14 +137,14 @@
   router.param(['color', 'width', 'height'], /(#[0-9a-zA-Z]{6})-([0-9]+)-([0-9]+)/);
   // 配置
   router.configure({
-    // 是否启用history API
+    // 是否启用HTML5 History API
     history: false,
-    // 路径未找到时执行
+    // 找不到路由时执行
     notFound: function() {
       console.log('nothing matched.');
     },
-    // 任意存在的路由都执行
-    always: function() {
+    // 只要找到路由就执行
+    on: function() {
       console.log('Always do something.');
     }
   });
