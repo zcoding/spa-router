@@ -53,5 +53,21 @@ var routes = {
 
 ##API
 ###instance method
+####.init([root])
+初始化方法。这个方法有一个可选的参数root，表示根路径的开始。默认情况下，根路径从'/'开始，在实际URL上就是'#/'。
 ####.on() or .route()
-####.configure()
+####.configure([options])
+可配置项：
++ notfound Function 找不到路由时触发
++ on Function 找到任意路由时触发
+####.param(token, pattern)
+自定义参数规则
+e.g.
+```javascript
+var router = Router();
+router.param('id', /([0-9]+)/);
+router.on('/user/:id', function(req) {
+  console.log(req.params.id);
+});
+router.init();
+```

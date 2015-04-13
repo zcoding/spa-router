@@ -254,7 +254,7 @@
    */
   Router.prototype.redirect = function(path) {
     // redirect to another route...
-    dloc.hash = path;
+    Listener.setHash(path);
     return this;
   };
 
