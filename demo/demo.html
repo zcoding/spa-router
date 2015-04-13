@@ -10,18 +10,18 @@
     <table>
       <thead>
         <tr>
-          <th>uri</th>
-          <th>path</th>
-          <th>param</th>
-          <th>query</th>
+          <th style="width: 25%;">uri</th>
+          <th style="width: 25%;">path</th>
+          <th style="width: 25%;">param</th>
+          <th style="width: 25%;">query</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-uri></td>
-          <td data-path></td>
-          <td data-param></td>
-          <td data-query></td>
+          <td data-uri>-</td>
+          <td data-path>-</td>
+          <td data-param>-</td>
+          <td data-query>-</td>
         </tr>
       </tbody>
     </table>
@@ -57,61 +57,43 @@
   var param = mainContainer.querySelectorAll('[data-param]')[0];
   var query = mainContainer.querySelectorAll('[data-query]')[0];
 
-  function process () {
-    console.log(this.routes);
-    console.log(arguments);
+  function process (req) {
+    uri.innerText = req.uri;
+    path.innerText = req.path;
+    var params = '';
+    for (var i = 0; i < req.params.length; ++i) {
+      params += req.params[i] + ' ';
+    }
+    param.innerText = params;
+    var querys = '';
+    for (var p in req.query) {
+      querys += p + ': ' + req.query[p];
+    }
+    query.innerText = querys;
   }
 
   var routes = {
-    '/': function() {
-      console.log('index');
-    },
-    '/home': function() {
-      console.log('home~');
-    },
-    '/my/:god/:what': function(god, what) {
-      console.log(god, what);
-    },
-    '/your/:shit-:what': function(shit, what) {
-      console.log(shit, what);
-    },
-    '/his/:shit=:what': function(shit, what) {
-      console.log(shit, what);
-    },
+    '/': process,
+    '/home': process,
+    '/my/:god/:what': process,
+    '/your/:shit-:what': process,
+    '/his/:shit=:what': process,
     // 不同分隔符分割参数
-    '/test/:p1/:p2/:p3': function(p1, p2, p3) {
-      process.call(this, p1, p2, p3);
+    '/test/:p1/:p2/:p3': function(req) {
+      process.call(this, req);
       this.redirect('/test/a&b&c'); // 重定向到 /test/a&b&c
     },
-    '/test/:p1&:p2&:p3': function(p1, p2, p3) {
-      console.log(p1, p2, p3);
-    },
-    '/test/:p1!:p2!:p3': function(p1, p2, p3) {
-      console.log(p1, p2, p3);
-      // uri.innerText = 
-    },
-    '/test/:p1=:p2=:p3': function(p1, p2, p3) {
-      console.log(p1, p2, p3);
-    },
-    '/test/:p1@:p2@:p3': function(p1, p2, p3) {
-      console.log(p1, p2, p3);
-    },
+    '/test/:p1&:p2&:p3': process,
+    '/test/:p1!:p2!:p3': process,
+    '/test/:p1=:p2=:p3': process,
+    '/test/:p1@:p2@:p3': process,
 
-    '/test/hello@world': function() {
-      console.log('hello world');
-    },
+    '/test/hello@world': process,
 
-    '/test/:what/:is/:that': function(req) {
-      console.log(req.uri);
-      console.log(req.params); // res.params['what'], res.params['is'], res.params['that']
-      console.log(req.path);
-      console.log(req.query); // res.query['whatever']
-      console.log(req.referrer);
-    },
+    '/test/:what/:is/:that': process,
 
-    '/pattern/([^\/]+)\/([0-9]+)': function(p1, p2) {
-      console.log(p1, p2)
-    },
+    '/pattern/([^\/]+)\/([0-9]+)': process,
+    
     '/user': {
       on: function() {
         console.log('user list');

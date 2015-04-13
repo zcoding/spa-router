@@ -1,0 +1,24 @@
+html, body, div {
+  margin: 0;
+  padding: 0;
+}
+
+#main-container {
+  width: 800px;
+  margin: 10px auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  border-bottom: 2px solid #AAAAAA;
+  padding: 10px;
+}
+
+td {
+  border-bottom: 1px solid #EEEEEE;
+  padding: 10px;
+}
