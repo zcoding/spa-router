@@ -2,8 +2,9 @@
  * Node
  * @constructor
  */
-var Node = function(value) {
+var Node = function(value, callbacks) {
   this.value = value;
+  this.callbacks = callbacks;
   this._children = [];
   this._parent = null;
 };

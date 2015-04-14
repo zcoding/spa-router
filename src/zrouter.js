@@ -29,46 +29,6 @@
   };
 
   /**
-   * Utils: clone
-   * @param {Object} obj
-   * @return {Object}
-   */
-  var clone = function(obj) {
-    var newObj = {};
-    return newObj;
-  };
-
-  /**
-   * Utils: mixin
-   * @param {Object} destination
-   * @param {Object} source
-   * @return {Object}
-   */
-  var mixin = function(destination, source) {
-    var newObj = {};
-    // if (isPlainObject(destination)) {
-    //   for (var o in destination) {
-    //     if (destination.hasOwnProperty(o)) {
-
-    //     }
-    //   }
-    // } else {
-    //   destination = {};
-    // }
-    // for (var p in source) {
-    //   if (source.hasOwnProperty(p)) {
-    //     var _dest = destination[p], _src = source[p];
-    //     if (isPlainObject(_src) && isPlainObject[_dest]) {
-    //       newObj[p] = mixin(_dest, _src);
-    //     }
-    //     if ()
-    //     newObj[p] = source[p];
-    //   }
-    // }
-    return {};
-  };
-
-  /**
    * Listener
    */
   var Listener = {
@@ -143,7 +103,7 @@
     this.routes = {};
     // 挂载
     mount.call(this, routes, '/');
-    this.routes2 = mount2.call(this, routes);
+    this.routeTree = mount2.call(this, routes);
     this.options = {};
     // 初始化配置
     this.configure();
@@ -248,14 +208,16 @@
     }
   }
 
-  var mount2 = function(routes, local) {
+  var mount2 = function(routes, local, parent) {
     local = local || '/';
+    parent = parent || null;
     var node = new Node(local);
+    node.parent(parent);
     for (var r in routes) {
       if (hasOwn.call(routes, r)) {
         var fns = routes[r];
         if (isPlainObject(fns)) {
-          var _children = mount2.call(this, fns, r);
+          var _children = mount2.call(this, fns, r, node);
           node.children(_children);
         }
       }
