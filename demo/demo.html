@@ -26,17 +26,24 @@
       </tbody>
     </table>
 
+    <h2>Web Example</h2>
     <ul>
-      <li><a href="#/home">Home</a></li>
-      <li><a href="#/my/god/hah">My God</a></li>
-      <li><a href="#/your/shoes-white">Your</a></li>
-      <li><a href="#/his/coc=white">His</a></li>
-      <li><a href="#/user">user list</a></li>
-      <li><a href="#/user/123">User 123</a></li>
-      <li><a href="#/user/add">User Add</a></li>
-      <li><a href="#/user/edit/123">User Edit</a></li>
-      <li><a href="#/list/red-123-456">list</a></li>
-      <li><a href="#/test?mode=debug">Test Mode</a></li>
+      <li><a href="#/">Home</a></li>
+      <li><a href="#/product">Product List</a></li>
+      <li><a href="#/product/red-small-low">Category Product List</a></li>
+      <li><a href="#/product?color=red&size=small&price=low">Category Product List With Query</a></li>
+      <li><a href="#/product/12345">Product Detail</a></li>
+      <li><a href="#/about">About</a></li>
+    </ul>
+    <h2>Admin Example</h2>
+    <ul>
+      <li><a href="#/admin">Admin Home</a></li>
+      <li><a href="#/admin/product">Admin Product List</a></li>
+      <li><a href="#/admin/product?page=3">Admin Product List With Query</a></li>
+      <li><a href="#/admin/product/red-small-low">Admin Category Product List</a></li>
+      <li><a href="#/admin/product/red-small-low?page=2">Admin Category Product List With Query</a></li>
+      <li><a href="#/admin/product/add">Admin Product Add</a></li>
+      <li><a href="#/admin/product/12345">Admin Product Edit</a></li>
     </ul>
     <h2>使用不同分隔符</h2>
     <ul>
@@ -60,17 +67,33 @@
   function process (req) {
     uri.innerText = req.uri;
     path.innerText = req.path;
-    var params = '';
-    for (var i = 0; i < req.params.length; ++i) {
-      params += req.params[i] + ' ';
-    }
+    var params = req.params.join(',');
     param.innerText = params;
     var querys = '';
     for (var p in req.query) {
-      querys += p + ': ' + req.query[p];
+      querys += p + ': ' + req.query[p] + '<br>';
     }
-    query.innerText = querys;
+    querys = querys === '' ? '-' : querys;
+    query.innerHTML = querys;
   }
+
+  var baseExampleRoutes = {
+    // web
+    '/': process,
+    '/product': process,
+    '/product/:color-:size-:price': process,
+    '/product/:id': process,
+    '/about': process,
+    // admin
+    '/admin': process,
+    '/admin/product': process,
+    '/admin/product/:color-:size-:price': process,
+    '/admin/product/add': process,
+    '/admin/product/:id': process
+  };
+
+  var baseExampleRouter = Router(baseExampleRoutes);
+  baseExampleRouter.init();
 
   var routes = {
     '/': process,
@@ -160,7 +183,7 @@
   });
   // 路由初始化方法
   // 如果一个路径对应多个路由器，则按照路由器初始化先后顺序执行
-  router.init();
+  // router.init();
   // router2.init();
 
   </script>

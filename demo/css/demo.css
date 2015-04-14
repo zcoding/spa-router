@@ -16,9 +16,11 @@ table {
 th {
   border-bottom: 2px solid #AAAAAA;
   padding: 10px;
+  text-align: center;
 }
 
 td {
   border-bottom: 1px solid #EEEEEE;
   padding: 10px;
+  text-align: center;
 }
