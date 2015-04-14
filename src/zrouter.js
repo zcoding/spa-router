@@ -214,8 +214,31 @@
       // dispatch
       dispatch.call(self, url.charAt(0) === '/' ? url : '/' + url);
     };
-
     Listener.add(this.handler);
+
+    // 替换参数
+    // var routes = this.routes;
+    // for (var p in routes) {
+    //   if (hasOwn.call(routes, p)) {
+    //     var cbs = routes[p];
+    //     if (isFunction(cbs) || isArray(cbs)) {
+    //       // 替换特定规则参数（通过.param()方法定义的参数）
+    //       // Error: 这里的参数已经被替换了
+    //       var rp = p;
+    //       for (var param in this.params) {
+    //         rp = this.params[param](p);
+    //       }
+    //       rp = rp.replace(/\:[a-zA-Z0-9_]+/g, '([^\-\=\&\@\/\!]+)');
+    //       if (rp !== p) {
+    //         var rule = new RegExp('^' + rp + '$').source;
+    //         // 插入路由表
+    //         this.routes[rule] = cbs;
+    //         this.routes[p] = undefined;
+    //       }
+    //     }
+    //   }
+    // }
+
   };
 
   /**
@@ -231,16 +254,18 @@
    */
   Router.prototype.configure = function(options) {
     options = options || {};
-    this.notfound = options.notFound;
+    this.notfound = options.notfound;
   };
 
   /**
+   * Regulation parameters
+   * 这个方法必须在.init()方法之前调用，否则无效
    * @param {String|Array} token
    * @param {String|RegExp} matcher
    * @return this
    */
   Router.prototype.param = function(token, matcher) {
-    var compiled = new RegExp(token, "g");
+    var compiled = new RegExp(':' + token, "g");
     this.params[token] = function(str) {
       return str.replace(compiled, matcher.source || matcher);
     };
@@ -264,8 +289,8 @@
   function mount(routes) {
     for (var p in routes) {
       if (hasOwn.call(routes, p)) {
-        if (isFunction(routes[p])) {
-          // 替换特定规则参数（通过.param()方法定义的参数）
+        var cbs = routes[p];
+        if (isFunction(cbs) || isArray(cbs)) {
           // 替换其它参数
           var rp = p.replace(/\:[a-zA-Z0-9_]+/g, '([^\-\=\&\@\/\!]+)');
           var rule = new RegExp('^' + rp + '$').source;
@@ -334,25 +359,38 @@
     var queryIndex = path.indexOf('?');
     var query = queryIndex === -1 ? '' : path.slice(queryIndex+1);
     path = queryIndex === -1 ? path : path.slice(0, queryIndex);
+    var params = '', self = this;
     for (var p in routes) {
       if (hasOwn.call(routes, p)) {
         var pathRegExp = new RegExp(p);
         var matches = path.match(pathRegExp);
         if (matches !== null) {
           match = true;
-          var params = matches.slice(1);
-          routes[p].call(this, {
+          params = matches.slice(1);
+          var cbs = routes[p], req = {
             uri: uri,
             path: path,
             params: params,
             query: parseQueryString(query)
-          });
+          };
+          if (isArray(cbs)) {
+            each.call(cbs, function(cb) {
+              cb.call(self, req);
+            });
+          } else {
+            cbs.call(self, req);
+          }
           break;
         }
       }
     }
     if (!match && this.notfound) {
-      this.notfound.call(this);
+      this.notfound.call(this, {
+        uri: uri,
+        path: path,
+        params: params,
+        query: parseQueryString(query)
+      });
     }
   }
 

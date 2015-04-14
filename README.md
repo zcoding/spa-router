@@ -71,3 +71,7 @@ router.on('/user/:id', function(req) {
 });
 router.init();
 ```
+
+<strong>注意：</strong>
+
+这个方法必须在.init()方法执行之前调用，否则无效。这个方法创建的规则化参数对于.init()执行之后添加的路由（e.g. 通过.on()方法添加的路由）依然有效。

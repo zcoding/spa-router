@@ -77,9 +77,20 @@
     query.innerHTML = querys;
   }
 
+  function log (req) {
+    console.log(req);
+  }
+
+  function notfound(req) {
+    uri.innerText = '-';
+    path.innerText = '-';
+    param.innerText = '-';
+    query.innerText = '-';
+  }
+
   var baseExampleRoutes = {
     // web
-    '/': process,
+    '/': [process, log],
     '/product': process,
     '/product/:color-:size-:price': process,
     '/product/:id': process,
@@ -93,7 +104,15 @@
   };
 
   var baseExampleRouter = Router(baseExampleRoutes);
+
+  baseExampleRouter.param('id', /([0-9]+)/);
+
+  console.log(baseExampleRouter.routes);
+
   baseExampleRouter.init();
+  baseExampleRouter.configure({
+    notfound: notfound
+  });
 
   var separatorExampleRoutes = {
     '/test/:p1/:p2/:p3': process,
