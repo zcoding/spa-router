@@ -58,8 +58,9 @@ var routes = {
 ####.on() or .route()
 ####.configure([options])
 可配置项：
-+ notfound Function 找不到路由时触发
-+ on Function 找到任意路由时触发
++ notfound 找不到路由时触发
++ on 找到任意路由时触发
++ mode ['history'|'hash'|'hashbang'] 默认为'hash'，如果使用'history'，请保证浏览器支持HTML5 History API否则不起作用
 ####.param(token, pattern)
 自定义参数规则
 e.g.

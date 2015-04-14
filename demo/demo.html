@@ -55,6 +55,8 @@
       <li><a href="#/test/hello@world&and!hahaha=shit">/test/hello@world&and!hahaha=shit</a></li>
     </ul>
   </div>
+  <script src="../src/utils.js"></script>
+  <script src="../src/node.js"></script>
   <script src="../src/zrouter.js"></script>
   <script>
 
@@ -113,7 +115,7 @@
 
   baseExampleRouter.param('id', /([0-9]+)/);
 
-  console.log(baseExampleRouter.routes);
+  console.log(baseExampleRouter.routes2);
 
   baseExampleRouter.init();
   baseExampleRouter.configure({

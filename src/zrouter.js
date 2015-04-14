@@ -18,78 +18,7 @@
   /// 可以用作匹配符的字符
   /// + * ? ( ) $
 
-  /// this.routes
-  ///
-  /// {
-  ///   on: handlers
-  ///   'home': {
-  ///     on: handlers
-  ///   }
-  ///   'admin': {
-  ///     on: handlers
-  ///     'user': {
-  ///       on: handlers
-  ///       '([0-9]+)': {
-  ///         on: handlers
-  ///       }
-  ///     }
-  ///   }
-  /// }
-
   var dloc = document.location;
-
-  /**
-   * Shorthand: hasOwn
-   * stand for hasOwnProperty
-   * @param {String} p
-   * @return {Boolean}
-   */
-  var hasOwn = function(p) {
-    return this.hasOwnProperty(p);
-  };
-
-  /**
-   * Utils: Each
-   * @param {Function} iterator(element, index, array)
-   */
-  var each = function(iterator) {
-    // Array.prototype.forEach support
-    if (typeof this.forEach !== "undefined") {
-      return this.forEach(iterator);
-    }
-    for (var i = 0, len = this.length; i < len; ++i) {
-      if (iterator(this[i], i, this) === false) {
-        return;
-      }
-    }
-  }
-
-  /**
-   * Utils: isArray
-   * @param {Obejct} obj
-   * @return {Boolean}
-   */
-  var isArray = function(obj) {
-    return Object.prototype.toString.call(obj) === "[object Array]";
-  };
-
-  /**
-   * Utils: isFunction
-   * @param {Object} obj
-   * @return {Boolean}
-   */
-  var isFunction = function(obj) {
-    return Object.prototype.toString.call(obj) === "[object Function]";
-  };
-
-  /**
-   * Utils: isPlainObject
-   * @param {Object} obj
-   * @return {Boolean}
-   */
-  var isPlainObject = function(obj) {
-    return Object.prototype.toString.call(obj) === "[object Object]";
-  };
 
   /**
    * Utils: dlocHashEmpty 判断当前location.hash是否为空
@@ -214,16 +143,16 @@
     this.routes = {};
     // 挂载
     mount.call(this, routes, '/');
+    this.routes2 = mount2.call(this, routes);
     this.options = {};
     // 初始化配置
     this.configure();
   };
 
   /**
-   * @param {String} root [optional]
    * @return this
    */
-  Router.prototype.init = function(root) {
+  Router.prototype.init = function() {
     var self = this;
     // 一个Router实例对应一个listener，并按照初始化顺序添加到Router.listeners数组中
     // handler单独处理该路由实例的所有路由
@@ -318,6 +247,21 @@
       }
     }
   }
+
+  var mount2 = function(routes, local) {
+    local = local || '/';
+    var node = new Node(local);
+    for (var r in routes) {
+      if (hasOwn.call(routes, r)) {
+        var fns = routes[r];
+        if (isPlainObject(fns)) {
+          var _children = mount2.call(this, fns, r);
+          node.children(_children);
+        }
+      }
+    }
+    return node;
+  };
 
   /**
    * turn query string into object
