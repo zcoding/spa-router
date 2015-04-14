@@ -88,6 +88,16 @@
     query.innerText = '-';
   }
 
+  var adminRoutes = {
+    on: process,
+    '/product': {
+      on: process,
+      '/:color-:size-:price': process,
+      '/add': process,
+      '/:id': process
+    }
+  };
+
   var baseExampleRoutes = {
     // web
     '/': [process, log],
@@ -96,11 +106,7 @@
     '/product/:id': process,
     '/about': process,
     // admin
-    '/admin': process,
-    '/admin/product': process,
-    '/admin/product/:color-:size-:price': process,
-    '/admin/product/add': process,
-    '/admin/product/:id': process
+    '/admin': adminRoutes
   };
 
   var baseExampleRouter = Router(baseExampleRoutes);

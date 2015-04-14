@@ -18,6 +18,24 @@
   /// 可以用作匹配符的字符
   /// + * ? ( ) $
 
+  /// this.routes
+  ///
+  /// {
+  ///   on: handlers
+  ///   'home': {
+  ///     on: handlers
+  ///   }
+  ///   'admin': {
+  ///     on: handlers
+  ///     'user': {
+  ///       on: handlers
+  ///       '([0-9]+)': {
+  ///         on: handlers
+  ///       }
+  ///     }
+  ///   }
+  /// }
+
   var dloc = document.location;
 
   /**
@@ -189,12 +207,13 @@
    * @param {Object} routes **Optional**
    */
   var Router = exports.Router = function(routes) {
+    routes = routes || {};
     if (!(this instanceof Router)) return new Router(routes);
     // 规则化参数
     this.params = {};
     this.routes = {};
     // 挂载
-    mount.call(this, routes);
+    mount.call(this, routes, '/');
     this.options = {};
     // 初始化配置
     this.configure();
@@ -216,28 +235,8 @@
     };
     Listener.add(this.handler);
 
-    // 替换参数
-    // var routes = this.routes;
-    // for (var p in routes) {
-    //   if (hasOwn.call(routes, p)) {
-    //     var cbs = routes[p];
-    //     if (isFunction(cbs) || isArray(cbs)) {
-    //       // 替换特定规则参数（通过.param()方法定义的参数）
-    //       // Error: 这里的参数已经被替换了
-    //       var rp = p;
-    //       for (var param in this.params) {
-    //         rp = this.params[param](p);
-    //       }
-    //       rp = rp.replace(/\:[a-zA-Z0-9_]+/g, '([^\-\=\&\@\/\!]+)');
-    //       if (rp !== p) {
-    //         var rule = new RegExp('^' + rp + '$').source;
-    //         // 插入路由表
-    //         this.routes[rule] = cbs;
-    //         this.routes[p] = undefined;
-    //       }
-    //     }
-    //   }
-    // }
+    // 首次触发
+    this.handler();
 
   };
 
@@ -259,7 +258,7 @@
 
   /**
    * Regulation parameters
-   * 这个方法必须在.init()方法之前调用，否则无效
+   * @todo 这个方法有问题，其作用范围未确定
    * @param {String|Array} token
    * @param {String|RegExp} matcher
    * @return this
@@ -285,15 +284,34 @@
 
   /**
    * 挂载新的路由
+   * @todo 替换特定规则参数。因为不知道特定规则参数的有效范围，所以在何处替换是关键。
    */
-  function mount(routes) {
+  function mount(routes, mountPoint) {
     for (var p in routes) {
       if (hasOwn.call(routes, p)) {
         var cbs = routes[p];
+        // if (isPlainObject(cbs)) {
+        //   // 嵌套
+        //   var prefix = '', rp = p;
+        //   if (mountPoint.slice(-1) === '/' && mountPoint !== '/') {
+        //     prefix = mountPoint.slice(0, -1);
+        //   }
+        //   if (rp.slice(0, 1) !== '/') {
+        //     rp = '/' + rp;
+        //   }
+        //   mount.call(this, cbs, mountPoint + rp);
+        // }
         if (isFunction(cbs) || isArray(cbs)) {
-          // 替换其它参数
+          // 替换普通参数
           var rp = p.replace(/\:[a-zA-Z0-9_]+/g, '([^\-\=\&\@\/\!]+)');
-          var rule = new RegExp('^' + rp + '$').source;
+          var prefix = '';
+          if (mountPoint.slice(-1) === '/' && mountPoint !== '/') {
+            prefix = mountPoint.slice(0, -1);
+          }
+          if (rp.slice(0, 1) !== '/') {
+            rp = '/' + rp;
+          }
+          var rule = new RegExp('^' + prefix + rp + '$').source;
           // 插入路由表
           this.routes[rule] = routes[p];
         }
