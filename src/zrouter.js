@@ -318,4 +318,9 @@
     }
   }
 
+  /**
+   * dispatch
+   */
+  var dispatch2 = function() {};
+
 }));
