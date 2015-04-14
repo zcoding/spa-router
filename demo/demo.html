@@ -45,14 +45,14 @@
       <li><a href="#/admin/product/add">Admin Product Add</a></li>
       <li><a href="#/admin/product/12345">Admin Product Edit</a></li>
     </ul>
-    <h2>使用不同分隔符</h2>
+    <h2>Separators</h2>
     <ul>
-      <li><a href="#/test/a/b/c">/a/b/c</a></li>
-      <li><a href="#/test/a&b&c">/a&b&c</a></li>
-      <li><a href="#/test/a!b!c">/a!b!c</a></li>
-      <li><a href="#/test/a=b=c">/a=b=c</a></li>
-      <li><a href="#/test/a@b@c">/a@b@c</a></li>
-      <li><a href="#/test/hello@world">/hello@world</a></li>
+      <li><a href="#/test/a/b/c">/test/a/b/c</a></li>
+      <li><a href="#/test/a&b&c">/test/a&b&c</a></li>
+      <li><a href="#/test/a!b!c">/test/a!b!c</a></li>
+      <li><a href="#/test/a=b=c">/test/a=b=c</a></li>
+      <li><a href="#/test/a@b@c">/test/a@b@c</a></li>
+      <li><a href="#/test/hello@world&and!hahaha=shit">/test/hello@world&and!hahaha=shit</a></li>
     </ul>
   </div>
   <script src="../src/zrouter.js"></script>
@@ -95,25 +95,19 @@
   var baseExampleRouter = Router(baseExampleRoutes);
   baseExampleRouter.init();
 
-  var routes = {
-    '/': process,
-    '/home': process,
-    '/my/:god/:what': process,
-    '/your/:shit-:what': process,
-    '/his/:shit=:what': process,
-    // 不同分隔符分割参数
-    '/test/:p1/:p2/:p3': function(req) {
-      process.call(this, req);
-      this.redirect('/test/a&b&c'); // 重定向到 /test/a&b&c
-    },
+  var separatorExampleRoutes = {
+    '/test/:p1/:p2/:p3': process,
     '/test/:p1&:p2&:p3': process,
     '/test/:p1!:p2!:p3': process,
     '/test/:p1=:p2=:p3': process,
     '/test/:p1@:p2@:p3': process,
+    '/test/hello@world&and!hahaha=shit': process
+  };
 
-    '/test/hello@world': process,
+  var separatorExampleRouter = Router(separatorExampleRoutes);
+  separatorExampleRouter.init();
 
-    '/test/:what/:is/:that': process,
+  var routes = {
 
     '/pattern/([^\/]+)\/([0-9]+)': process,
     
@@ -159,14 +153,6 @@
   }, function(id) {
     console.log('current user: ' + id);
   }]);
-  // 使用'-'分割参数
-  router.route('/list/:color-:width-:height', function(color, width, height) {
-    console.log('list type: ' + color + ' ' + width + ' ' + height);
-  });
-  // 捕获query参数
-  router.route('/test', function(params) {
-    console.log('Current mode: ' + params.mode);
-  });
   // 创建多个路由器对象（互不影响），支持使用工厂方法（不用new）
   var router2 = Router({
     '/before': {
