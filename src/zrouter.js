@@ -94,6 +94,12 @@
    * Router (routes)
    * @constructor
    * @param {Object} routes **Optional**
+   * @param {String} mode **Optional**
+   *        mode可以是history|hash|hashbang|all
+   *        mode:history    使用HTML5 History API
+   *        mode:hash       使用hash（非hashbang模式）
+   *        mode:hashbang   使用hash（hashbang模式）
+   *        mode:all        兼容所有模式
    */
   var Router = exports.Router = function(routes) {
     routes = routes || {};
@@ -102,8 +108,8 @@
     this.params = {};
     this.routes = {};
     // 挂载
-    mount.call(this, routes, '/');
-    this.routeTree = mount2.call(this, routes);
+    var root = new RNode(''); // 根路径的value指定为空字符串
+    this.routeTree = createRouteTree(root, routes);
     this.options = {};
     // 初始化配置
     this.configure();
@@ -117,9 +123,8 @@
     // 一个Router实例对应一个listener，并按照初始化顺序添加到Router.listeners数组中
     // handler单独处理该路由实例的所有路由
     this.handler = function(onChangeEvent) {
-      var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash;
+      var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
       var url = newURL.replace(/.*#/, '');
-      // dispatch
       dispatch.call(self, url.charAt(0) === '/' ? url : '/' + url);
     };
     Listener.add(this.handler);
@@ -128,6 +133,15 @@
     this.handler();
 
   };
+
+  /**
+   * 将路由挂载到某个节点上
+   * e.g. router.mount('/user', {'/list': function() {}});
+   * @param {String} path
+   * @param {Object} routes
+   * @return this
+   * */
+  Router.prototype.mount = function(path, routes) {};
 
   /**
    * @param {String|RegExp} path
@@ -159,6 +173,8 @@
     };
     return this;
   };
+
+  Router.prototype.map = function() {};
   
   /**
    * redirect to another route
@@ -171,59 +187,74 @@
     return this;
   };
 
+  Router.prototype.dispatch = dispatch;
+
+  Router.prototype.before = function() {};
+
+  Router.prototype.after = function() {};
+
   /**
-   * 挂载新的路由
-   * @todo 替换特定规则参数。因为不知道特定规则参数的有效范围，所以在何处替换是关键。
-   */
-  function mount(routes, mountPoint) {
-    for (var p in routes) {
-      if (hasOwn.call(routes, p)) {
-        var cbs = routes[p];
-        // if (isPlainObject(cbs)) {
-        //   // 嵌套
-        //   var prefix = '', rp = p;
-        //   if (mountPoint.slice(-1) === '/' && mountPoint !== '/') {
-        //     prefix = mountPoint.slice(0, -1);
-        //   }
-        //   if (rp.slice(0, 1) !== '/') {
-        //     rp = '/' + rp;
-        //   }
-        //   mount.call(this, cbs, mountPoint + rp);
-        // }
-        if (isFunction(cbs) || isArray(cbs)) {
-          // 替换普通参数
-          var rp = p.replace(/\:[a-zA-Z0-9_]+/g, '([^\-\=\&\@\/\!]+)');
-          var prefix = '';
-          if (mountPoint.slice(-1) === '/' && mountPoint !== '/') {
-            prefix = mountPoint.slice(0, -1);
-          }
-          if (rp.slice(0, 1) !== '/') {
-            rp = '/' + rp;
-          }
-          var rule = new RegExp('^' + prefix + rp + '$').source;
-          // 插入路由表
-          this.routes[rule] = routes[p];
+   * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
+   * @param {RNode} tree
+   * @param {String} path
+   * */
+  function findNode(tree, path) {
+    var parts = path.split('/');
+    var target = null, found = false;
+    var parent = tree;
+    for (var i = 0, len = parts.length; i < len; ++i) {
+      for (var j = 0; j < parent._children.length; ++j ) {
+        if (parent._children[j].value === parts[i]) {
+          target = parent._children[j];
+          found = true;
+          break;
         }
       }
+      if (!found) { // 不存在，创建新节点
+        var extendNode = new RNode(parts[i]);
+        parent.children(extendNode);
+        extendNode.parent(parent);
+        target = extendNode;
+      }
+      parent = target;
+      found = false;
     }
+    return target;
   }
 
-  var mount2 = function(routes, local, parent) {
-    local = local || '/';
-    parent = parent || null;
-    var node = new Node(local);
-    node.parent(parent);
-    for (var r in routes) {
-      if (hasOwn.call(routes, r)) {
-        var fns = routes[r];
-        if (isPlainObject(fns)) {
-          var _children = mount2.call(this, fns, r, node);
-          node.children(_children);
+  /**
+   * 构造路由树/子树
+   * @param {RNode} parent 当前根节点
+   * @param {Object} routes 当前节点的路由表
+   * @return {RNode} 返回根节点
+   * */
+  function createRouteTree(parent, routes) {
+
+    if (utils.isFunction(routes) || utils.isArray(routes)) {
+      parent.callbacks = routes;
+      return parent;
+    }
+
+    for (var path in routes) {
+      if (routes.hasOwnProperty(path)) {
+
+        var fns = routes[path];
+
+        if (path === '/') {
+          createRouteTree(parent, fns);
+        } else {
+          if (path !== '' && path[0] === '/') {
+            path = path.slice(1);
+          }
+          var currentNode = findNode(parent, path);
+          createRouteTree(currentNode, fns);
         }
+
       }
     }
-    return node;
-  };
+
+    return parent;
+  }
 
   /**
    * turn query string into object
@@ -274,53 +305,86 @@
     return param;
   };
 
-  function dispatch(path) {
-    var routes = this.routes;
-    var match = false;
+  /**
+   * 搜索路由树，看是否存在匹配的路径，如果存在，返回相应的回调函数
+   * @todo 只返回第一个匹配到的路由（如果存在多个匹配？）
+   * @param {RNode} tree 树根
+   * @param {String} path 要匹配的路径
+   * @param {Array} local 当前已匹配的路径 **optional**
+   * 返回值包含两个，用数组表示[callbacks, params]
+   * @return {Function|Array|null} 如果存在就返回相应的回调，否则返回null
+   * @return {Object} 同时返回参数
+   * */
+  function searchRouteTree(tree, path, local) {
+
+    var params = {}, callbacks = null, parent = tree;
+
+    var parts = path.split('/');
+
+    if (parts[0] !== tree.value) {
+      return [callbacks, params];
+    }
+
+    var target = tree, found = true;
+
+    for (var i = 1, len = parts.length; i < len; ++i) {
+      for (var j = 0; j < parent._children.length; ++j) {
+        found = false;
+        if (parent._children[j].value === parts[i]) {
+          target = parent._children[j];
+          parent = target;
+          found = true;
+          break;
+        }
+      }
+      if (!found) break;
+    }
+
+    if (found) {
+      callbacks = target.callbacks;
+    }
+
+    // 判断当前是否已满足
+    // 已满足，返回
+    // 未满足，遍历子节点
+    // 子节点存在适配路径
+    // 所有子节点都不存在适配路径
+
+    return [callbacks, params];
+
+  }
+
+  /**
+   * dispatch
+   * 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
+   */
+  var dispatch = function(path) {
+    var routeTree = this.routeTree;
     // 保存原始请求uri
     var uri = path;
     // 取出query部分
     var queryIndex = path.indexOf('?');
     var query = queryIndex === -1 ? '' : path.slice(queryIndex+1);
     path = queryIndex === -1 ? path : path.slice(0, queryIndex);
-    var params = '', self = this;
-    for (var p in routes) {
-      if (hasOwn.call(routes, p)) {
-        var pathRegExp = new RegExp(p);
-        var matches = path.match(pathRegExp);
-        if (matches !== null) {
-          match = true;
-          params = matches.slice(1);
-          var cbs = routes[p], req = {
-            uri: uri,
-            path: path,
-            params: params,
-            query: parseQueryString(query)
-          };
-          if (isArray(cbs)) {
-            each.call(cbs, function(cb) {
-              cb.call(self, req);
-            });
-          } else {
-            cbs.call(self, req);
-          }
-          break;
-        }
-      }
-    }
-    if (!match && this.notfound) {
-      this.notfound.call(this, {
-        uri: uri,
-        path: path,
-        params: params,
-        query: parseQueryString(query)
-      });
-    }
-  }
+    var req = {uri: uri, path: path, query: parseQueryString(query)};
 
-  /**
-   * dispatch
-   */
-  var dispatch2 = function() {};
+    if (path === '/') {
+      path = '';
+    }
+    var result = searchRouteTree(routeTree, path);
+    var callbacks = result[0];
+    req.params = result[1];
+    if (callbacks !== null) {
+      if (utils.isArray(callbacks)) {
+        for (var i = 0, len = callbacks.length; i < len; ++i) { // 不考虑异步操作
+          callbacks[i].call(this, req);
+        }
+      } else {
+        callbacks.call(this, req);
+      }
+    } else if (this.notFound) {
+      this.notFound(req);
+    }
+  };
 
 }));

@@ -1,10 +1,12 @@
 /**
- * Node
+ * RNode
  * @constructor
  */
-var Node = function(value, callbacks) {
+var RNode = function(value) {
   this.value = value;
-  this.callbacks = callbacks;
+  this.callbacks = null;
+  this.before = null; // 所有callbacks之前执行
+  this.after = null; // 所有callbacks之后执行
   this._children = [];
   this._parent = null;
 };
@@ -14,13 +16,13 @@ var Node = function(value, callbacks) {
  * @param {Node|[Node]} children **optional**
  * @return {[Node]|Node} return children node list or this
  */
-Node.prototype.children = function(children) {
+RNode.prototype.children = function(children) {
   if (typeof children === 'undefined') {
     return this._children;
   }
-  if (children instanceof Node) {
+  if (children instanceof RNode) {
     this._children.push(children);
-  } else if (isArray(children)) {
+  } else if (utils.isArray(children)) {
     this._children = this.children.concat(children);
   }
   return this;
@@ -31,11 +33,11 @@ Node.prototype.children = function(children) {
  * @param {Node} parent **optional**
  * @return {Node} return parent node or this
  */
-Node.prototype.parent = function(parent) {
+RNode.prototype.parent = function(parent) {
   if (typeof parent === 'undefined') {
     return this._parent;
   }
-  if (parent instanceof Node) {
+  if (parent instanceof RNode) {
     this._parent = parent;
   }
   return this;

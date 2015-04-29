@@ -69,7 +69,7 @@
   function process (req) {
     uri.innerText = req.uri;
     path.innerText = req.path;
-    var params = req.params.join(',');
+    var params = req.params;
     param.innerText = params;
     var querys = '';
     for (var p in req.query) {
