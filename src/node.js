@@ -1,12 +1,24 @@
 /**
  * RNode
  * @constructor
+ * @param {String} value 必须
+ *
+ * value:     区分同级节点的唯一标识
+ * params:    value包含的参数，使用{参数名:参数规则}键值对表示
+ * before:    路由匹配时，url改变之前执行的回调函数或队列
+ * callbacks: 路由匹配时执行的回调函数或队列
+ * after:     路由匹配时，url改变之后，callbacks执行完再执行的回调函数或队列
+ *
+ * _children: 子节点引用列表
+ * _parent:   父节点引用
  */
 var RNode = function(value) {
+  if (typeof value === 'undefined') throw new TypeError('The RNode Constructor Need A Value.');
   this.value = value;
+  this.params = {};
   this.callbacks = null;
-  this.before = null; // 所有callbacks之前执行
-  this.after = null; // 所有callbacks之后执行
+  this.before = null;
+  this.after = null;
   this._children = [];
   this._parent = null;
 };

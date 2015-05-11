@@ -105,8 +105,8 @@
     routes = routes || {};
     if (!(this instanceof Router)) return new Router(routes);
     // 规则化参数
-    this.params = {};
-    this.routes = {};
+    // this.params = {}; // 不再使用，所有规则化或非规则化参数都保存到节点
+    // this.routes = {}; // 不再使用，已被routeTree代替
     // 挂载
     var root = new RNode(''); // 根路径的value指定为空字符串
     this.routeTree = createRouteTree(root, routes);
@@ -151,27 +151,23 @@
   Router.prototype.on = Router.prototype.route = function(path, handler) {};
 
   /**
+   * 将路由挂载到某个节点上
+   * .add()与.on()/.route()类似，但是.add()添加的路由不会覆盖原有的路由，而是将回调加入原有的队列（队尾）
+   */
+  Router.prototype.add = function() {};
+
+  /**
+   * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
+   */
+  Router.prototype.off = function(path) {};
+
+  /**
    * @param {Object} options **Optional**
    * @return this
    */
   Router.prototype.configure = function(options) {
     options = options || {};
-    this.notfound = options.notfound;
-  };
-
-  /**
-   * Regulation parameters
-   * @todo 这个方法有问题，其作用范围未确定
-   * @param {String|Array} token
-   * @param {String|RegExp} matcher
-   * @return this
-   */
-  Router.prototype.param = function(token, matcher) {
-    var compiled = new RegExp(':' + token, "g");
-    this.params[token] = function(str) {
-      return str.replace(compiled, matcher.source || matcher);
-    };
-    return this;
+    this.notFound = options.notFound;
   };
 
   Router.prototype.map = function() {};
@@ -202,18 +198,32 @@
     var parts = path.split('/');
     var target = null, found = false;
     var parent = tree;
+    var params;
     for (var i = 0, len = parts.length; i < len; ++i) {
+      params = {};
+      var realCurrentValue = parts[i];
+      var matcher = new RegExp(':([a-zA-Z_][a-zA-Z0-9_]*)', 'g');
+      realCurrentValue = realCurrentValue.replace(matcher, '([a-zA-Z0-9]+)');
+      var matches = parts[i].match(matcher);
+      if (matches !== null) {
+        for (var k = 0; k < matches.length; ++k) {
+          params[k] = matches[k].slice(1);
+        }
+      } else {
+        params = false;
+      }
       for (var j = 0; j < parent._children.length; ++j ) {
-        if (parent._children[j].value === parts[i]) {
+        if (parent._children[j].value === realCurrentValue) {
           target = parent._children[j];
           found = true;
           break;
         }
       }
       if (!found) { // 不存在，创建新节点
-        var extendNode = new RNode(parts[i]);
+        var extendNode = new RNode(realCurrentValue);
         parent.children(extendNode);
         extendNode.parent(parent);
+        extendNode.params = params;
         target = extendNode;
       }
       parent = target;
@@ -329,9 +339,18 @@
 
     for (var i = 1, len = parts.length; i < len; ++i) {
       for (var j = 0; j < parent._children.length; ++j) {
+        var currentNode = parent._children[j];
+        var matcher = new RegExp('^' + currentNode.value + '$');
         found = false;
-        if (parent._children[j].value === parts[i]) {
-          target = parent._children[j];
+        var matches = parts[i].match(matcher)
+        if (matches !== null) {
+          if (!!currentNode.params) {
+            matches = [].slice.apply(matches, [1]);
+            for (var k = 0; k < matches.length; ++k) {
+              params[currentNode.params[k]] = matches[k];
+            }
+          }
+          target = currentNode;
           parent = target;
           found = true;
           break;
@@ -343,12 +362,6 @@
     if (found) {
       callbacks = target.callbacks;
     }
-
-    // 判断当前是否已满足
-    // 已满足，返回
-    // 未满足，遍历子节点
-    // 子节点存在适配路径
-    // 所有子节点都不存在适配路径
 
     return [callbacks, params];
 

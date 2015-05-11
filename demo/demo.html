@@ -71,6 +71,7 @@
     path.innerText = req.path;
     var params = req.params;
     param.innerText = params;
+    console.log(params);
     var querys = '';
     for (var p in req.query) {
       querys += p + ': ' + req.query[p] + '<br>';
@@ -83,117 +84,117 @@
     console.log(req);
   }
 
-  function notfound(req) {
-    uri.innerText = '-';
-    path.innerText = '-';
-    param.innerText = '-';
-    query.innerText = '-';
+  function notFound(req) {
+    // uri.innerText = '-';
+    // path.innerText = '-';
+    // param.innerText = '-';
+    // query.innerText = '-';
+    console.info(req);
+    console.log('not found');
   }
 
   var adminRoutes = {
-    on: process,
+    '/': log,
     '/product': {
-      on: process,
-      '/:color-:size-:price': process,
-      '/add': process,
-      '/:id': process
+      '/': log,
+      '/:color-:size-:price': log,
+      '/add': log,
+      '/:id': log
     }
   };
 
   var baseExampleRoutes = {
     // web
-    '/': [process, log],
-    '/product': process,
-    '/product/:color-:size-:price': process,
-    '/product/:id': process,
-    '/about': process,
+    '/': [log],
+    '/product': log,
+    '/product/:color-:size-:price': log,
+    '/product/:id': log,
+    '/about': log,
     // admin
     '/admin': adminRoutes
   };
 
   var baseExampleRouter = Router(baseExampleRoutes);
 
-  baseExampleRouter.param('id', /([0-9]+)/);
-
   console.log(baseExampleRouter.routeTree);
 
-  baseExampleRouter.init();
   baseExampleRouter.configure({
-    notfound: notfound
+    notFound: notFound
   });
+  baseExampleRouter.init();
 
-  var separatorExampleRoutes = {
-    '/test/:p1/:p2/:p3': process,
-    '/test/:p1&:p2&:p3': process,
-    '/test/:p1!:p2!:p3': process,
-    '/test/:p1=:p2=:p3': process,
-    '/test/:p1@:p2@:p3': process,
-    '/test/hello@world&and!hahaha=shit': process
-  };
+  // var separatorExampleRoutes = {
+  //   '/test/:p1/:p2/:p3': process,
+  //   '/test/:p1&:p2&:p3': process,
+  //   '/test/:p1!:p2!:p3': process,
+  //   '/test/:p1=:p2=:p3': process,
+  //   '/test/:p1@:p2@:p3': process,
+  //   '/test/hello@world&and!hahaha=shit': process
+  // };
 
-  var separatorExampleRouter = Router(separatorExampleRoutes);
-  separatorExampleRouter.init();
+  // var separatorExampleRouter = Router(separatorExampleRoutes);
+  // separatorExampleRouter.init();
 
-  var routes = {
+  // var routes = {
 
-    '/pattern/([^\/]+)\/([0-9]+)': process,
+  //   '/pattern/([^\/]+)\/([0-9]+)': process,
     
-    '/user': {
-      on: function() {
-        console.log('user list');
-      },
-      '/add': function() {
-        console.log('user add');
-      },
-      '/edit/:id': function(id) {
-        console.log('user ' + id + ' edit');
-      }
-    }
-  };
+  //   '/user': {
+  //     on: function() {
+  //       console.log('user list');
+  //     },
+  //     '/add': function() {
+  //       console.log('user add');
+  //     },
+  //     '/edit/:id': function(id) {
+  //       console.log('user ' + id + ' edit');
+  //     }
+  //   }
+  // };
   // 使用new创建路由器对象
-  var router = new Router(routes);
+  // var router = new Router(routes);
   // 定义参数1
-  router.param('id', /[0-9]+/);
+  // router.param('id', /[0-9]+/);
   // 定义参数2
-  router.param({
-    'name': /[a-zA-Z]+/,
-    'age': /[0-9]+/
-  });
+  // router.param({
+  //   'name': /[a-zA-Z]+/,
+  //   'age': /[0-9]+/
+  // });
   // 定义参数3
-  router.param(['color', 'width', 'height'], /(#[0-9a-zA-Z]{6})-([0-9]+)-([0-9]+)/);
+  // router.param(['color', 'width', 'height'], /(#[0-9a-zA-Z]{6})-([0-9]+)-([0-9]+)/);
   // 配置
-  router.configure({
-    // 是否启用HTML5 History API
-    history: false,
-    // 找不到路由时执行
-    notFound: function() {
-      console.log('nothing matched.');
-    },
-    // 只要找到路由就执行
-    on: function() {
-      console.log('Always do something.');
-    }
-  });
-  // 动态添加路由
-  router.on('/user/:id', [function(id) {
-    console.log('user home');
-  }, function(id) {
-    console.log('current user: ' + id);
-  }]);
+  // router.configure({
+  //   // 是否启用HTML5 History API
+  //   history: false,
+  //   // 找不到路由时执行
+  //   notFound: function() {
+  //     console.log('nothing matched.');
+  //   },
+  //   // 只要找到路由就执行
+  //   on: function() {
+  //     console.log('Always do something.');
+  //   }
+  // });
+  // // 动态添加路由
+  // router.on('/user/:id', [function(id) {
+  //   console.log('user home');
+  // }, function(id) {
+  //   console.log('current user: ' + id);
+  // }]);
   // 创建多个路由器对象（互不影响），支持使用工厂方法（不用new）
-  var router2 = Router({
-    '/before': {
-      on: function() {
-        console.log('going...');
-      },
-      before: function() {
-        console.log('before...');
-      },
-      after: function() {
-        console.log('after...');
-      }
-    }
-  });
+  // var router2 = Router({
+  //   '/before': {
+  //     on: function() {
+  //       console.log('going...');
+  //     },
+  //     before: function() {
+  //       console.log('before...');
+  //     },
+  //     after: function() {
+  //       console.log('after...');
+  //     }
+  //   }
+  // });
   // 路由初始化方法
   // 如果一个路径对应多个路由器，则按照路由器初始化先后顺序执行
   // router.init();
