@@ -55,9 +55,7 @@
       <li><a href="#/test/hello@world&and!hahaha=shit">/test/hello@world&and!hahaha=shit</a></li>
     </ul>
   </div>
-  <script src="../src/utils.js"></script>
-  <script src="../src/node.js"></script>
-  <script src="../src/zrouter.js"></script>
+  <script src="../build/spa-router.min.js"></script>
   <script>
 
   var mainContainer = document.querySelectorAll('#main-container')[0];
@@ -116,7 +114,7 @@
 
   var baseExampleRouter = Router(baseExampleRoutes);
 
-  console.log(baseExampleRouter.routeTree);
+  // console.log(baseExampleRouter.routeTree);
 
   baseExampleRouter.configure({
     notFound: notFound
