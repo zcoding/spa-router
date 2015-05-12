@@ -24,12 +24,14 @@ var RNode = function(value) {
   this._parent = null;
 };
 
+var nprtt = RNode.prototype;
+
 /**
  * set/get children
  * @param {Node|[Node]} children **optional**
  * @return {[Node]|Node} return children node list or this
  */
-RNode.prototype.children = function(children) {
+nprtt.children = function(children) {
   if (typeof children === 'undefined') {
     return this._children;
   }
@@ -46,7 +48,7 @@ RNode.prototype.children = function(children) {
  * @param {Node} parent **optional**
  * @return {Node} return parent node or this
  */
-RNode.prototype.parent = function(parent) {
+nprtt.parent = function(parent) {
   if (typeof parent === 'undefined') {
     return this._parent;
   }

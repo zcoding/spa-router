@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-12 version: 1.0.0-0 */
+/* spa-router by zcoding, MIT license, 2015-05-12 version: 1.1.0 */
 /// 浏览器兼容性：
 /// hashchange: [Chrome 5.0] [Firefox(Gecko) 3.6] [IE 8.0] [Opera 10.6] [Safari 5.0]
 
@@ -12,46 +12,43 @@
   }
 }(function(exports) {
 
-var utils =  {
+var toString = Object.prototype.toString;
+/**
+ * Shorthand: hasOwn
+ * stand for hasOwnProperty
+ * @param {String} p
+ * @return {Boolean}
+ */
+var hasOwn = function(p) {
+  return this.hasOwnProperty(p);
+},
 
-  /**
-   * Shorthand: hasOwn
-   * stand for hasOwnProperty
-   * @param {String} p
-   * @return {Boolean}
-   */
-  hasOwn: function(p) {
-    return this.hasOwnProperty(p);
-  },
+/**
+ * Utils: isArray
+ * @param {Obejct} obj
+ * @return {Boolean}
+ */
+isArray = function(obj) {
+  return toString.call(obj) === "[object Array]";
+},
 
-  /**
-   * Utils: isArray
-   * @param {Obejct} obj
-   * @return {Boolean}
-   */
-  isArray: function(obj) {
-    return Object.prototype.toString.call(obj) === "[object Array]";
-  },
+/**
+ * Utils: isFunction
+ * @param {Object} obj
+ * @return {Boolean}
+ */
+isFunction = function(obj) {
+  return toString.call(obj) === "[object Function]";
+},
 
-  /**
-   * Utils: isFunction
-   * @param {Object} obj
-   * @return {Boolean}
-   */
-  isFunction: function(obj) {
-    return Object.prototype.toString.call(obj) === "[object Function]";
-  },
-
-  /**
-   * Utils: isPlainObject
-   * @param {Object} obj
-   * @return {Boolean}
-   */
-  isPlainObject: function(obj) {
-    return Object.prototype.toString.call(obj) === "[object Object]";
-  }
-
-}
+/**
+ * Utils: isPlainObject
+ * @param {Object} obj
+ * @return {Boolean}
+ */
+isPlainObject = function(obj) {
+  return toString.call(obj) === "[object Object]";
+};
 
 /**
  * RNode
@@ -78,12 +75,14 @@ var RNode = function(value) {
   this._parent = null;
 };
 
+var nprtt = RNode.prototype;
+
 /**
  * set/get children
  * @param {Node|[Node]} children **optional**
  * @return {[Node]|Node} return children node list or this
  */
-RNode.prototype.children = function(children) {
+nprtt.children = function(children) {
   if (typeof children === 'undefined') {
     return this._children;
   }
@@ -100,7 +99,7 @@ RNode.prototype.children = function(children) {
  * @param {Node} parent **optional**
  * @return {Node} return parent node or this
  */
-RNode.prototype.parent = function(parent) {
+nprtt.parent = function(parent) {
   if (typeof parent === 'undefined') {
     return this._parent;
   }
@@ -211,17 +210,19 @@ var Router = exports.Router = function(routes) {
   this.configure();
 };
 
+var rprtt = Router.prototype;
+
 /**
  * @return this
  */
-Router.prototype.init = function() {
+rprtt.init = function() {
   var self = this;
   // 一个Router实例对应一个listener，并按照初始化顺序添加到Router.listeners数组中
   // handler单独处理该路由实例的所有路由
   this.handler = function(onChangeEvent) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
     var url = newURL.replace(/.*#/, '');
-    dispatch.call(self, url.charAt(0) === '/' ? url : '/' + url);
+    self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
   };
   Listener.add(this.handler);
 
@@ -237,53 +238,63 @@ Router.prototype.init = function() {
  * @param {Object} routes
  * @return this
  * */
-Router.prototype.mount = function(path, routes) {};
+rprtt.mount = function(path, routes) {};
 
 /**
  * @param {String|RegExp} path
  * @param {Function|Array} handler
  * @return this
  */
-Router.prototype.on = Router.prototype.route = function(path, handler) {};
+rprtt.on = rprtt.route = function(path, handler) {
+  if (path !== '' && path[0] === '/') {
+    path = path.slice(1);
+  }
+  var node = findNode(this.routeTree, path);
+  node.callbacks = node.callbacks || [];
+  if (isArray(handler)) {
+    node.callbacks = node.callbacks.concat(handler);
+  } else if (isFunction(handler)) {
+    node.callbacks.push(handler);
+  }
+  return this;
+};
 
 /**
  * 将路由挂载到某个节点上
  * .add()与.on()/.route()类似，但是.add()添加的路由不会覆盖原有的路由，而是将回调加入原有的队列（队尾）
  */
-Router.prototype.add = function() {};
+rprtt.add = function() {};
 
 /**
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
-Router.prototype.off = function(path) {};
+rprtt.off = function(path) {};
 
 /**
  * @param {Object} options **Optional**
  * @return this
  */
-Router.prototype.configure = function(options) {
+rprtt.configure = function(options) {
   options = options || {};
   this.notFound = options.notFound;
 };
 
-Router.prototype.map = function() {};
+rprtt.map = function() {};
 
 /**
  * redirect to another route
  * @param {String} path
  * @return this
  */
-Router.prototype.redirect = function(path) {
-  // redirect to another route...
+rprtt.redirect = function(path) {
+  // redirect to another path...
   Listener.setHash(path);
   return this;
 };
 
-Router.prototype.dispatch = dispatch;
+rprtt.before = function() {};
 
-Router.prototype.before = function() {};
-
-Router.prototype.after = function() {};
+rprtt.after = function() {};
 
 /**
  * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
@@ -336,7 +347,10 @@ function findNode(tree, path) {
  * */
 function createRouteTree(parent, routes) {
 
-  if (utils.isFunction(routes) || utils.isArray(routes)) {
+  if (isFunction(routes)) {
+    parent.callbacks = [routes];
+    return parent;
+  } else if (isArray(routes)) {
     parent.callbacks = routes;
     return parent;
   }
@@ -467,7 +481,7 @@ function searchRouteTree(tree, path, local) {
  * dispatch
  * 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
  */
-var dispatch = function(path) {
+rprtt.dispatch = function(path) {
   var routeTree = this.routeTree;
   // 保存原始请求uri
   var uri = path;
@@ -484,12 +498,12 @@ var dispatch = function(path) {
   var callbacks = result[0];
   req.params = result[1];
   if (callbacks !== null) {
-    if (utils.isArray(callbacks)) {
+    if (isArray(callbacks)) {
       for (var i = 0, len = callbacks.length; i < len; ++i) { // 不考虑异步操作
         callbacks[i].call(this, req);
       }
     } else {
-      callbacks.call(this, req);
+      throw new TypeError('callbacks must be an array type');
     }
   } else if (this.notFound) {
     this.notFound(req);

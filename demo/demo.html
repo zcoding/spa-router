@@ -95,7 +95,7 @@
     '/': log,
     '/product': {
       '/': log,
-      '/:color-:size-:price': log,
+      '/:color-:size-:price': [log, function() { console.log('admin product list'); }],
       '/add': log,
       '/:id': log
     }
@@ -114,12 +114,29 @@
 
   var baseExampleRouter = Router(baseExampleRoutes);
 
-  // console.log(baseExampleRouter.routeTree);
+  baseExampleRouter.on('/admin/product/:color-:size-:price', function() {
+    console.log('get it');
+  });
+
+  baseExampleRouter.on('/admin/ok', [function() { console.log(1); }, function() { console.log(2); }]);
 
   baseExampleRouter.configure({
     notFound: notFound
   });
+
+  console.log(baseExampleRouter.routeTree);
+
   baseExampleRouter.init();
+
+  baseExampleRouter.route('/admin/trrt', function(req) {
+    console.log('不会马上执行，除非手动触发dispatch');
+  });
+
+  baseExampleRouter.route('/admin/yrry', function(req) {
+    console.log('不会马上执行');
+  });
+
+  baseExampleRouter.dispatch('/admin/trrt');
 
   // var separatorExampleRoutes = {
   //   '/test/:p1/:p2/:p3': process,
