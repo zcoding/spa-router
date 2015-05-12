@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-12 version: 1.1.0 */
+/* spa-router by zcoding, MIT license, 2015-05-12 version: 1.1.1 */
 /// 浏览器兼容性：
 /// hashchange: [Chrome 5.0] [Firefox(Gecko) 3.6] [IE 8.0] [Opera 10.6] [Safari 5.0]
 
@@ -215,7 +215,7 @@ var rprtt = Router.prototype;
 /**
  * @return this
  */
-rprtt.init = function() {
+rprtt.init = function(options) {
   var self = this;
   // 一个Router实例对应一个listener，并按照初始化顺序添加到Router.listeners数组中
   // handler单独处理该路由实例的所有路由
@@ -225,6 +225,9 @@ rprtt.init = function() {
     self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
   };
   Listener.add(this.handler);
+
+  // if (options.history) { // 使用HTML5 History API
+  // }
 
   // 首次触发
   this.handler();
@@ -238,7 +241,13 @@ rprtt.init = function() {
  * @param {Object} routes
  * @return this
  * */
-rprtt.mount = function(path, routes) {};
+rprtt.mount = function(path, routes) {
+  if (path !== '' && path[0] === '/') {
+    path = path.slice(1);
+  }
+  createRouteTree(findNode(this.routeTree, path), routes);
+  return this;
+};
 
 /**
  * @param {String|RegExp} path
@@ -258,6 +267,14 @@ rprtt.on = rprtt.route = function(path, handler) {
   }
   return this;
 };
+
+/**
+ * 和.on()方法类似，但只会触发一次
+ * @param {String|RegExp} path
+ * @param {Function|Array} handlers
+ * @return this
+ */
+rprtt.once = function(path, handlers) {};
 
 /**
  * 将路由挂载到某个节点上
@@ -434,6 +451,9 @@ var parseQueryString = function(queryString) {
  * 返回值包含两个，用数组表示[callbacks, params]
  * @return {Function|Array|null} 如果存在就返回相应的回调，否则返回null
  * @return {Object} 同时返回参数
+ *
+ * TODO 这个方法有问题：无法准确匹配（分段匹配有可能被覆盖）
+ *
  * */
 function searchRouteTree(tree, path, local) {
 
@@ -445,13 +465,13 @@ function searchRouteTree(tree, path, local) {
     return [callbacks, params];
   }
 
-  var target = tree, found = true;
+  var target = tree, found = false;
 
   for (var i = 1, len = parts.length; i < len; ++i) {
+    found = false;
     for (var j = 0; j < parent._children.length; ++j) {
       var currentNode = parent._children[j];
       var matcher = new RegExp('^' + currentNode.value + '$');
-      found = false;
       var matches = parts[i].match(matcher)
       if (matches !== null) {
         if (!!currentNode.params) {

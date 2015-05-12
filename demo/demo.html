@@ -55,7 +55,7 @@
       <li><a href="#/test/hello@world&and!hahaha=shit">/test/hello@world&and!hahaha=shit</a></li>
     </ul>
   </div>
-  <script src="../build/spa-router.min.js"></script>
+  <script src="../build/spa-router.js"></script>
   <script>
 
   var mainContainer = document.querySelectorAll('#main-container')[0];
@@ -122,6 +122,14 @@
 
   baseExampleRouter.configure({
     notFound: notFound
+  });
+
+  baseExampleRouter.mount('/admin', {
+    '/': function a1() {},
+    '/bb': function a2() {},
+    '/cc': {
+      '/:get-:tr': [function a3() {}, function a4() {}]
+    }
   });
 
   console.log(baseExampleRouter.routeTree);
