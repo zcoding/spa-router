@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-14 version: 1.1.2 */
+/* spa-router by zcoding, MIT license, 2015-05-14 version: 1.1.3 */
 /// 浏览器兼容性：
 /// hashchange: [Chrome 5.0] [Firefox(Gecko) 3.6] [IE 8.0] [Opera 10.6] [Safari 5.0]
 
@@ -128,14 +128,8 @@ var dlocHashEmpty = function() {
 /// Listener
 var Listener = {
 
-  // {[Function]} Listener
   listeners: null,
 
-  /**
-   * add to listeners
-   * @param {Function} fn
-   * @return Listener
-   */
   add: function (fn) {
 
     if (!this.listeners) {
@@ -147,17 +141,11 @@ var Listener = {
     return this;
   },
 
-  /**
-   * destroy listener
-   * @param {Function} fn
-   * @return Listener
-   */
   destroy: function (fn) {
     var listeners = this.listeners;
     if (!Router || !listeners) {
       return;
     }
-    // 移除
     for (var i = listeners - 1; i >= 0; --i) {
       if (listeners[i] === fn) {
         listeners.splice(i, 1);
@@ -173,9 +161,6 @@ var Listener = {
 
 };
 
-// hashChange发生时，遍历所有挂在Router.listeners上的监听器，并逐个执行
-// 实现动态添加hashChange监听的方法
-// 一个Router实例对应一个listener
 function onchange(onChangeEvent) {
   var listeners = Listener.listeners;
   for (var i = 0, l = listeners.length; i < l; i++) {
@@ -199,10 +184,6 @@ window.onhashchange = onchange;
 var Router = exports.Router = function(routes) {
   routes = routes || {};
   if (!(this instanceof Router)) return new Router(routes);
-  // 规则化参数
-  // this.params = {}; // 不再使用，所有规则化或非规则化参数都保存到节点
-  // this.routes = {}; // 不再使用，已被routeTree代替
-  // 挂载
   var root = new RNode(''); // 根路径的value指定为空字符串
   this.routeTree = createRouteTree(root, routes);
   this.options = {};
@@ -232,6 +213,8 @@ rprtt.init = function(options) {
   // 首次触发
   this.handler();
 
+  return this;
+
 };
 
 /**
@@ -250,20 +233,22 @@ rprtt.mount = function(path, routes) {
 };
 
 /**
+ * .on()
+ *
  * @param {String|RegExp} path
- * @param {Function|Array} handler
+ * @param {Function|Array} handlers
  * @return this
  */
-rprtt.on = rprtt.route = function(path, handler) {
+rprtt.on = rprtt.route = function(path, handlers) {
   if (path !== '' && path[0] === '/') {
     path = path.slice(1);
   }
-  var node = findNode(this.routeTree, path);
-  node.callbacks = node.callbacks || [];
-  if (isArray(handler)) {
-    node.callbacks = node.callbacks.concat(handler);
-  } else if (isFunction(handler)) {
-    node.callbacks.push(handler);
+  var n = findNode(this.routeTree, path);
+  n.callbacks = n.callbacks || [];
+  if (isArray(handlers)) {
+    n.callbacks = n.callbacks.concat(handlers);
+  } else if (isFunction(handlers)) {
+    n.callbacks.push(handlers);
   }
   return this;
 };
@@ -274,7 +259,7 @@ rprtt.on = rprtt.route = function(path, handler) {
  * @param {Function|Array} handlers
  * @return this
  */
-rprtt.once = function(path, handlers) {};
+// rprtt.once = function(path, handlers) {};
 
 /**
  * 将路由挂载到某个节点上
@@ -285,7 +270,7 @@ rprtt.add = function() {};
 /**
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
-rprtt.off = function(path) {};
+// rprtt.off = function(path) {};
 
 /**
  * @param {Object} options **Optional**
@@ -294,6 +279,7 @@ rprtt.off = function(path) {};
 rprtt.configure = function(options) {
   options = options || {};
   this.notFound = options.notFound;
+  return this;
 };
 
 rprtt.map = function() {};
@@ -358,18 +344,18 @@ function findNode(tree, path) {
 
 /**
  * 构造路由树/子树
- * @param {RNode} parent 当前根节点
+ * @param {RNode} root 当前根节点
  * @param {Object} routes 当前节点的路由表
  * @return {RNode} 返回根节点
  * */
-function createRouteTree(parent, routes) {
+function createRouteTree(root, routes) {
 
   if (isFunction(routes)) {
-    parent.callbacks = [routes];
-    return parent;
+    root.callbacks = [routes];
+    return root;
   } else if (isArray(routes)) {
-    parent.callbacks = routes;
-    return parent;
+    root.callbacks = routes;
+    return root;
   }
 
   for (var path in routes) {
@@ -378,19 +364,18 @@ function createRouteTree(parent, routes) {
       var fns = routes[path];
 
       if (path === '/') {
-        createRouteTree(parent, fns);
+        createRouteTree(root, fns);
       } else {
         if (path !== '' && path[0] === '/') {
           path = path.slice(1);
         }
-        var currentNode = findNode(parent, path);
-        createRouteTree(currentNode, fns);
+        createRouteTree(findNode(root, path), fns);
       }
 
     }
   }
 
-  return parent;
+  return root;
 }
 
 /**
@@ -448,6 +433,7 @@ var parseQueryString = function(queryString) {
  * @param {Integer} ci 当前路径分段索引
  * @param {Integer} ri 当前节点所在兄弟节点列表的位置
  * @params {Object} params 记录参数的对象
+ * @return {[RNode, Object]} 同时返回节点和参数
  */
 function dfs(root, parts, ci, ri, params) {
 
@@ -507,16 +493,12 @@ function dfs(root, parts, ci, ri, params) {
  * @param {String} path 要匹配的路径
  * 返回值包含两个，用数组表示[callbacks, params]
  * @return {Function|Array|null} 如果存在就返回相应的回调，否则返回null
- * @return {Object} 同时返回参数
- *
- * TODO 这个方法有问题：无法准确匹配（分段匹配有可能被覆盖）
+ * @return {[Array, Object]} 同时返回回调和参数
  *
  * */
 function searchRouteTree(tree, path) {
 
-  var parts = path.split('/');
-
-  var found = dfs(tree, parts, 0, 0, {});
+  var found = dfs(tree, path.split('/'), 0, 0, {});
 
   if (!found[0]) {
     return [null, {}];
@@ -529,6 +511,8 @@ function searchRouteTree(tree, path) {
 /**
  * dispatch
  * 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
+ * @param {String} path
+ * @return this
  */
 rprtt.dispatch = function(path) {
 
@@ -558,6 +542,8 @@ rprtt.dispatch = function(path) {
   } else if (this.notFound) {
     this.notFound(req);
   }
+
+  return this;
 
 };
 

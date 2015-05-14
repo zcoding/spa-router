@@ -1,10 +1,12 @@
 html, body, div {
   margin: 0;
   padding: 0;
+  font-size: 14px;
+  font-family: Consolas;
 }
 
 #main-container {
-  width: 800px;
+  width: 1200px;
   margin: 10px auto;
 }
 
@@ -14,13 +16,26 @@ table {
 }
 
 th {
+  border-left: 1px solid #EEEEEE;
   border-bottom: 2px solid #AAAAAA;
+  border-top: 2px solid #EEEEEE;
   padding: 10px;
   text-align: center;
 }
 
 td {
+  border-left: 1px solid #EEEEEE;
   border-bottom: 1px solid #EEEEEE;
   padding: 10px;
   text-align: center;
+}
+
+tr td:last-child, tr th:last-child {
+  border-right: 1px solid #EEEEEE;
+}
+
+td p {
+  margin: 0;
+  padding: 5px 0;
+  text-align: left;
 }

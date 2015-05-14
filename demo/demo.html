@@ -10,23 +10,26 @@
     <table>
       <thead>
         <tr>
-          <th style="width: 25%;">uri</th>
-          <th style="width: 25%;">path</th>
-          <th style="width: 25%;">param</th>
-          <th style="width: 25%;">query</th>
+          <th style="width: 50%;">req.uri</th>
+          <th style="width: 30%;">req.path</th>
+          <th style="width: 10%;">req.params</th>
+          <th style="width: 10%;">req.query</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
+        <tr style="height: 150px;">
           <td data-uri>-</td>
           <td data-path>-</td>
           <td data-param>-</td>
           <td data-query>-</td>
         </tr>
+        <tr style="height: 50px;">
+          <td colspan="4" data-msg></td>
+        </tr>
       </tbody>
     </table>
 
-    <h2>Web Example</h2>
+    <h2>Basic Example</h2>
     <ul>
       <li><a href="#/">Home</a></li>
       <li><a href="#/product">Product List</a></li>
@@ -34,9 +37,6 @@
       <li><a href="#/product?color=red&size=small&price=low">Category Product List With Query</a></li>
       <li><a href="#/product/12345">Product Detail</a></li>
       <li><a href="#/about">About</a></li>
-    </ul>
-    <h2>Admin Example</h2>
-    <ul>
       <li><a href="#/admin">Admin Home</a></li>
       <li><a href="#/admin/product">Admin Product List</a></li>
       <li><a href="#/admin/product?page=3">Admin Product List With Query</a></li>
@@ -44,8 +44,9 @@
       <li><a href="#/admin/product/red-small-low?page=2">Admin Category Product List With Query</a></li>
       <li><a href="#/admin/product/add">Admin Product Add</a></li>
       <li><a href="#/admin/product/12345">Admin Product Edit</a></li>
+      <li><a href="#/notfound">Not Found</a></li>
     </ul>
-    <h2>Separators</h2>
+    <!-- <h2>Separators</h2>
     <ul>
       <li><a href="#/test/a/b/c">/test/a/b/c</a></li>
       <li><a href="#/test/a&b&c">/test/a&b&c</a></li>
@@ -53,99 +54,98 @@
       <li><a href="#/test/a=b=c">/test/a=b=c</a></li>
       <li><a href="#/test/a@b@c">/test/a@b@c</a></li>
       <li><a href="#/test/hello@world&and!hahaha=shit">/test/hello@world&and!hahaha=shit</a></li>
-    </ul>
+    </ul> -->
   </div>
   <script src="../build/spa-router.js"></script>
   <script>
 
   var mainContainer = document.querySelectorAll('#main-container')[0];
-  var uri = mainContainer.querySelectorAll('[data-uri]')[0];
-  var path = mainContainer.querySelectorAll('[data-path]')[0];
-  var param = mainContainer.querySelectorAll('[data-param]')[0];
-  var query = mainContainer.querySelectorAll('[data-query]')[0];
+  var getDom = function(selector) {
+    return mainContainer.querySelectorAll(selector)[0];
+  };
+  var lightStyle = 'padding: 0 5px;background: #aaa;color: #333;font-size: 18px;font-family: Consolas;font-weight: bold;';
+  var darkStyle = 'padding: 0 5px;background: #333;color: #eee;font-size: 18px;font-family: Consolas;font-weight: bold;';
 
-  function process (req) {
-    uri.innerText = req.uri;
-    path.innerText = req.path;
-    var params = req.params;
-    param.innerText = params;
-    console.log(params);
-    var querys = '';
-    for (var p in req.query) {
-      querys += p + ': ' + req.query[p] + '<br>';
+  var show = (function () {
+    
+    var uriD = getDom('[data-uri]');
+    var pathD = getDom('[data-path]');
+    var paramD = getDom('[data-param]');
+    var queryD = getDom('[data-query]');
+
+    return function process (req, msg) {
+      msg = msg || '';
+      uriD.innerText = req.uri;
+      pathD.innerText = req.path;
+      var params = req.params, query = req.query;
+      var paramString = '', queryString = '';
+      for (var p in params) {
+        if (params.hasOwnProperty(p)) {
+          paramString += '<p>' + p + ': ' + params[p] + '</p>';
+        }
+      }
+      paramD.innerHTML = paramString || '-';
+      for (var q in query) {
+        queryString += '<p>' + q + ': ' + query[q] + '</p>';
+      }
+      queryD.innerHTML = queryString || '-';
+      getDom('[data-msg]').innerText = msg;
     }
-    querys = querys === '' ? '-' : querys;
-    query.innerHTML = querys;
-  }
+  })();
 
   function log (req) {
-    console.log(req);
+    console.log('%cGet: ' + req.path, lightStyle);
   }
 
   function notFound(req) {
-    // uri.innerText = '-';
-    // path.innerText = '-';
-    // param.innerText = '-';
-    // query.innerText = '-';
-    console.info(req);
-    console.log('not found');
+    getDom('[data-uri]').innerText = '-';
+    getDom('[data-path]').innerText = '-';
+    getDom('[data-param]').innerHTML = '-';
+    getDom('[data-query]').innerHTML = '-';
+    getDom('[data-msg]').innerText = 'page not found';
+    console.log('%cNot Found: ' + req.path, darkStyle);
   }
 
-  var adminRoutes = {
-    '/': log,
-    '/product': {
-      '/': log,
-      '/:color-:size-:price': [log, function() { console.log('admin product list'); }],
-      '/:id': function(req) { console.log('edit'); },
-      '/add': function() { console.log('add'); } // 这个路由被/:id覆盖。解决方法：1.定义参数id的格式；2.把/add放在/:id之前
-    }
+  var basicExampleRoutes = {
+    '/': [log, show],
+    '/product': [log, show],
+    '/product/:color-:size-:price': [log, show],
+    '/product/:id': [log, show],
+    '/about': [log, show],
   };
 
-  var baseExampleRoutes = {
-    // web
-    '/': [log],
-    '/product': log,
-    '/product/:color-:size-:price': log,
-    '/product/:id/one/now': log,
-    '/product/id/one': function() {console.log(12345);},
-    '/about': log,
-    // admin
-    '/admin': adminRoutes
-  };
+  var basicExampleRouter = new Router(basicExampleRoutes);
 
-  var baseExampleRouter = Router(baseExampleRoutes);
-
-  // baseExampleRouter.on('/admin/product/:color-:size-:price', function() {
-  //   console.log('get it');
-  // });
-
-  // baseExampleRouter.on('/admin/ok', [function() { console.log(1); }, function() { console.log(2); }]);
-
-  baseExampleRouter.configure({
+  /// .configure()
+  /// e.g.
+  basicExampleRouter.configure({
     notFound: notFound
   });
 
-  // baseExampleRouter.mount('/admin', {
-  //   '/': function a1() {},
-  //   '/bb': function a2() {},
-  //   '/cc': {
-  //     '/:get-:tr': [function a3() {}, function a4() {}]
-  //   }
-  // });
+  /// .mount()
+  /// e.g.
+  basicExampleRouter.mount('/admin', {
+    '/': [log, show],
+    '/product': {
+      '/': [log, show],
+      '/:color-:size-:price': [log, show],
+      '/:id': [log, show, function(req) { console.log(req.params['id']); }],
+      '/add': function notAccessable() { console.log('you never get this route'); }
+    }
+  });
 
-  // console.log(baseExampleRouter.routeTree);
+  basicExampleRouter.init();
 
-  baseExampleRouter.init();
-
-  // baseExampleRouter.route('/admin/trrt', function(req) {
-  //   console.log('不会马上执行，除非手动触发dispatch');
-  // });
-
-  // baseExampleRouter.route('/admin/yrry', function(req) {
-  //   console.log('不会马上执行');
-  // });
-
-  // baseExampleRouter.dispatch('/admin/trrt');
+  /// .route() & .dispatch()
+  /// e.g.
+  basicExampleRouter
+  .route('/whatever/foo', [log, show, function(req) {
+    console.log('%c不会马上执行', lightStyle);
+  }])
+  .route('/whatever/bar', function(req) {
+    console.log('%c手动触发dispatch立即执行', lightStyle);
+  })
+  .dispatch('/whatever/bar');
 
   // var separatorExampleRoutes = {
   //   '/test/:p1/:p2/:p3': process,
