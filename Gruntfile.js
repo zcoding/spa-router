@@ -50,7 +50,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
-  grunt.registerTask('default', ['watch:router']);
+  grunt.registerTask('default', ['concat:router', 'uglify:router', 'watch:router']);
   grunt.registerTask('build', ['concat:router', 'uglify:router']);
 
 };

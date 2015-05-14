@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-12 version: 1.1.1 */
+/* spa-router by zcoding, MIT license, 2015-05-14 version: 1.1.2 */
 /// 浏览器兼容性：
 /// hashchange: [Chrome 5.0] [Firefox(Gecko) 3.6] [IE 8.0] [Opera 10.6] [Safari 5.0]
 
@@ -443,11 +443,68 @@ var parseQueryString = function(queryString) {
 };
 
 /**
+ * @param {RNode} root 当前节点
+ * @param {Array} parts 路径分段数组
+ * @param {Integer} ci 当前路径分段索引
+ * @param {Integer} ri 当前节点所在兄弟节点列表的位置
+ * @params {Object} params 记录参数的对象
+ */
+function dfs(root, parts, ci, ri, params) {
+
+  var value = parts[ci];
+
+  var newParams = {};
+  for (var p in params) { // 将旧参数对象复制到新参数对象
+    if (params.hasOwnProperty(p)) {
+      newParams[p] = params[p];
+    }
+  }
+
+  var parent = root.parent();
+
+  if (parent === null && ri > 0) { // finally not matched
+    return [false, newParams];
+  }
+
+  if (parent !== null && ri > parent._children.length-1) { // not matched, go back
+    return [false, newParams];
+  }
+
+  if (ci > parts.length-1 || ci < 0) return [false, newParams];
+
+  var matcher = new RegExp('^' + root.value + '$');
+  var matches = value.match(matcher);
+
+  if (matches === null) return [false, newParams]; // not matched, go back
+
+  if (!!root.params) {
+    matches = [].slice.apply(matches, [1]);
+    for (var k = 0; k < matches.length; ++k) {
+      newParams[root.params[k]] = matches[k];
+    }
+  }
+
+  if (ci === parts.length-1 && root.callbacks !== null) { // finally matched
+    return [root, newParams];
+  }
+
+  // matched, go ahead
+  for (var i = 0; i < root._children.length; ++i) {
+    var found = dfs(root._children[i], parts, ci+1, i, newParams);
+    if (!found[0]) continue;
+    return found;
+  }
+
+  // not matched, go back
+  return dfs(root, parts, ci, ri+1, params);
+
+}
+
+/**
  * 搜索路由树，看是否存在匹配的路径，如果存在，返回相应的回调函数
  * @todo 只返回第一个匹配到的路由（如果存在多个匹配？）
  * @param {RNode} tree 树根
  * @param {String} path 要匹配的路径
- * @param {Array} local 当前已匹配的路径 **optional**
  * 返回值包含两个，用数组表示[callbacks, params]
  * @return {Function|Array|null} 如果存在就返回相应的回调，否则返回null
  * @return {Object} 同时返回参数
@@ -455,45 +512,17 @@ var parseQueryString = function(queryString) {
  * TODO 这个方法有问题：无法准确匹配（分段匹配有可能被覆盖）
  *
  * */
-function searchRouteTree(tree, path, local) {
-
-  var params = {}, callbacks = null, parent = tree;
+function searchRouteTree(tree, path) {
 
   var parts = path.split('/');
 
-  if (parts[0] !== tree.value) {
-    return [callbacks, params];
+  var found = dfs(tree, parts, 0, 0, {});
+
+  if (!found[0]) {
+    return [null, {}];
   }
 
-  var target = tree, found = false;
-
-  for (var i = 1, len = parts.length; i < len; ++i) {
-    found = false;
-    for (var j = 0; j < parent._children.length; ++j) {
-      var currentNode = parent._children[j];
-      var matcher = new RegExp('^' + currentNode.value + '$');
-      var matches = parts[i].match(matcher)
-      if (matches !== null) {
-        if (!!currentNode.params) {
-          matches = [].slice.apply(matches, [1]);
-          for (var k = 0; k < matches.length; ++k) {
-            params[currentNode.params[k]] = matches[k];
-          }
-        }
-        target = currentNode;
-        parent = target;
-        found = true;
-        break;
-      }
-    }
-    if (!found) break;
-  }
-
-  if (found) {
-    callbacks = target.callbacks;
-  }
-
-  return [callbacks, params];
+  return [found[0].callbacks, found[1]]
 
 }
 
@@ -502,6 +531,7 @@ function searchRouteTree(tree, path, local) {
  * 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
  */
 rprtt.dispatch = function(path) {
+
   var routeTree = this.routeTree;
   // 保存原始请求uri
   var uri = path;
@@ -528,6 +558,7 @@ rprtt.dispatch = function(path) {
   } else if (this.notFound) {
     this.notFound(req);
   }
+
 };
 
 }));

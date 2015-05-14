@@ -96,8 +96,8 @@
     '/product': {
       '/': log,
       '/:color-:size-:price': [log, function() { console.log('admin product list'); }],
-      '/add': log,
-      '/:id': log
+      '/:id': function(req) { console.log('edit'); },
+      '/add': function() { console.log('add'); } // 这个路由被/:id覆盖。解决方法：1.定义参数id的格式；2.把/add放在/:id之前
     }
   };
 
@@ -106,7 +106,8 @@
     '/': [log],
     '/product': log,
     '/product/:color-:size-:price': log,
-    '/product/:id': log,
+    '/product/:id/one/now': log,
+    '/product/id/one': function() {console.log(12345);},
     '/about': log,
     // admin
     '/admin': adminRoutes
@@ -114,37 +115,37 @@
 
   var baseExampleRouter = Router(baseExampleRoutes);
 
-  baseExampleRouter.on('/admin/product/:color-:size-:price', function() {
-    console.log('get it');
-  });
+  // baseExampleRouter.on('/admin/product/:color-:size-:price', function() {
+  //   console.log('get it');
+  // });
 
-  baseExampleRouter.on('/admin/ok', [function() { console.log(1); }, function() { console.log(2); }]);
+  // baseExampleRouter.on('/admin/ok', [function() { console.log(1); }, function() { console.log(2); }]);
 
   baseExampleRouter.configure({
     notFound: notFound
   });
 
-  baseExampleRouter.mount('/admin', {
-    '/': function a1() {},
-    '/bb': function a2() {},
-    '/cc': {
-      '/:get-:tr': [function a3() {}, function a4() {}]
-    }
-  });
+  // baseExampleRouter.mount('/admin', {
+  //   '/': function a1() {},
+  //   '/bb': function a2() {},
+  //   '/cc': {
+  //     '/:get-:tr': [function a3() {}, function a4() {}]
+  //   }
+  // });
 
-  console.log(baseExampleRouter.routeTree);
+  // console.log(baseExampleRouter.routeTree);
 
   baseExampleRouter.init();
 
-  baseExampleRouter.route('/admin/trrt', function(req) {
-    console.log('不会马上执行，除非手动触发dispatch');
-  });
+  // baseExampleRouter.route('/admin/trrt', function(req) {
+  //   console.log('不会马上执行，除非手动触发dispatch');
+  // });
 
-  baseExampleRouter.route('/admin/yrry', function(req) {
-    console.log('不会马上执行');
-  });
+  // baseExampleRouter.route('/admin/yrry', function(req) {
+  //   console.log('不会马上执行');
+  // });
 
-  baseExampleRouter.dispatch('/admin/trrt');
+  // baseExampleRouter.dispatch('/admin/trrt');
 
   // var separatorExampleRoutes = {
   //   '/test/:p1/:p2/:p3': process,
