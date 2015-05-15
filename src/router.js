@@ -63,7 +63,7 @@ rprtt.init = function(options) {
     var url = newURL.replace(/.*#/, '');
     self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
   };
-  Listener.init({history: true}).add(this.handler);
+  Listener.init(this.options.mode).add(this.handler);
 
   // 首次触发
   this.handler();
@@ -224,56 +224,6 @@ function createRouteTree(root, routes) {
 }
 
 /**
- * turn query string into object
- * e.g. color=ffee88&width=12                           =>  {color: "ffee88", width: 12}
- *      color=ffee88&arr[0]=12&arr[1]=13                =>  {color: "ffee88", arr: [12, 13]}
- *      color=ffee88&obj['name']=wuzijie&obj['age']=23  =>  {color: "ffee88", obj: {name: "wuzijie", age: 23}}
- * @param {String} queryString
- * @erturn {Object}
- *
- * TODO 未支持多维数组或嵌套对象
- */
-var parseQueryString = function(queryString) {
-  var queryArr = queryString.split('&');
-  var param = {};
-  var objectLike = /^([0-9a-zA-Z_]+)\[([0-9a-zA-Z_]+)\]$/;
-  for (var i = 0, len = queryArr.length; i < len; ++i) {
-    var _param = queryArr[i].split('=');
-    if (_param.length < 2) {
-      continue;
-    }
-    var key = _param[0], value = _param.slice(1).join('');
-    // 判断是不是数组或对象
-    var matches = key.match(objectLike);
-    if (matches === null) {
-      // 不是数组或对象，直接覆盖
-      param[key] = value;
-      continue;
-    }
-    key = matches[1];
-    var index = matches[2], currentValue = param[key];
-    if (typeof currentValue === "undefined") { // 未定义
-      if (/^[0-9]+$/.test(index)) { // 如果index为整数，就假定是数组
-        currentValue = [];
-      } else { // 否则就假定是对象
-        currentValue = {};
-      }
-    } else if (isArray(currentValue) && !/^[0-9]+$/.test(index)) { // 之前假定是数组，但发现不是（因为当前索引不是整数）
-      // 转为对象
-      var newCurrentValue = {};
-      for (var j = 0, len2 = currentValue.length; j < len2; ++j) {
-        if (typeof currentValue[j] === "undefined") continue; // 可能是稀疏数组
-        newCurrentValue[j] = currentValue[j];
-      }
-      currentValue = newCurrentValue;
-    }
-    currentValue[index] = value;
-    param[key] = currentValue;
-  }
-  return param;
-};
-
-/**
  * @param {RNode} root 当前节点
  * @param {Array} parts 路径分段数组
  * @param {Integer} ci 当前路径分段索引
@@ -369,7 +319,7 @@ rprtt.dispatch = function(path) {
   var queryIndex = path.indexOf('?');
   var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
-  var req = {uri: uri, path: path, query: parseQueryString(queryString)};
+  var req = {uri: uri, path: path, query: queryHelper.parse(queryString)};
 
   if (path === '/') {
     path = '';
@@ -391,4 +341,15 @@ rprtt.dispatch = function(path) {
 
   return this;
 
+};
+
+/**
+ * 这个方法会改变当前的`url`，从而触发路由（和dispatch类似，但是dispatch不会改动`url`）
+ * 这个方法对于hash/hashbang模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
+ * 改方法相当于调用一次history.pushState()然后再调用.dispatch()
+ *
+ * @param {String} path
+ */
+rprtt.setRoute = function(path) {
+  Listener.setHashHistory(path);
 };

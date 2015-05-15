@@ -1,6 +1,7 @@
-/* spa-router by zcoding, MIT license, 2015-05-15 version: 1.1.3 */
+/* spa-router by zcoding, MIT license, 2015-05-15 version: 0.1.5 */
 /// 浏览器兼容性：
-/// hashchange: [Chrome 5.0] [Firefox(Gecko) 3.6] [IE 8.0] [Opera 10.6] [Safari 5.0]
+/// onhashchange: [IE 8.0]
+/// history.pushState: [IE 10.0]
 
 (function(factory) {
   if (typeof define === 'function' && define.cmd) {
@@ -11,8 +12,7 @@
     factory(window)
   }
 }(function(exports) {
-
-var toString = Object.prototype.toString;
+var toString = Object.prototype.toString, decodeC = window.decodeURIComponent, encodeC = window.encodeURIComponent;
 /**
  * Shorthand: hasOwn
  * stand for hasOwnProperty
@@ -20,45 +20,106 @@ var toString = Object.prototype.toString;
  * @return {Boolean}
  */
 var hasOwn = function(p) {
-  return this.hasOwnProperty(p);
-},
+    return this.hasOwnProperty(p);
+  },
 
-/**
- * Utils: isArray
- * @param {Obejct} obj
- * @return {Boolean}
- */
-isArray = function(obj) {
-  return toString.call(obj) === "[object Array]";
-},
+  /**
+   * Utils: isArray
+   * @param {Obejct} obj
+   * @return {Boolean}
+   */
+  isArray = function(obj) {
+    return toString.call(obj) === "[object Array]";
+  },
 
-/**
- * Utils: isFunction
- * @param {Object} obj
- * @return {Boolean}
- */
-isFunction = function(obj) {
-  return toString.call(obj) === "[object Function]";
-},
+  /**
+   * Utils: isFunction
+   * @param {Object} obj
+   * @return {Boolean}
+   */
+  isFunction = function(obj) {
+    return toString.call(obj) === "[object Function]";
+  },
 
-/**
- * Utils: extend
- * @param {Object,...} src list
- * @return {Object} a new object
- */
-extend = function() {
-  var obj = {};
-  var srcList = [].slice.call(arguments, 0);
-  for (var i = 0, len = srcList.length; i < len; ++i) {
-    var src = srcList[i];
-    for (var q in src) {
-      if (hasOwn.call(src, q)) {
-        obj[q] = src[q];
+  /**
+   * Utils: extend
+   * @param {Object,...} src list
+   * @return {Object} a new object
+   */
+  extend = function() {
+    var obj = {};
+    var srcList = [].slice.call(arguments, 0);
+    for (var i = 0, len = srcList.length; i < len; ++i) {
+      var src = srcList[i];
+      for (var q in src) {
+        if (hasOwn.call(src, q)) {
+          obj[q] = src[q];
+        }
       }
     }
-  }
-  return obj;
-};
+    return obj;
+  },
+
+  queryHelper = {
+    /**
+     * parse query string
+     * @param {String} queryString
+     * @erturn {Object}
+     *
+     */
+    parse: function(queryString) {
+      if (typeof queryString !== 'string') {
+        return {};
+      }
+
+      queryString = queryString.trim().replace(/^(\?|#)/, '');
+
+      if (!queryString) {
+        return {};
+      }
+
+      queryString = queryString.replace(/^\s*|\s*$/g, '');
+
+      var queryParts = queryString.split('&');
+
+      var query = {};
+
+      for (var i = 0, len = queryParts.length; i < len; ++i) {
+        var parts = queryParts[i].replace(/\+/g, ' ').split('='); // 特殊字符`+`转换为空格
+        var key = parts[0];
+        var val = parts[1];
+
+        key = decodeC(key);
+
+        val = val === undefined ? null : decodeC(val);
+
+        if (!hasOwn.call(query, key)) {
+          query[key] = val;
+        } else if (Array.isArray(query[key])) {
+          query[key].push(val);
+        } else {
+          query[key] = [query[key], val];
+        }
+      }
+
+      return query;
+
+    },
+
+    stringify: function(obj) {
+      return obj ? Object.keys(obj).sort().map(function(key) {
+        var val = obj[key];
+
+        if (Array.isArray(val)) {
+          return val.sort().map(function(val2) {
+            return encodeC(key) + '=' + encodeC(val2);
+          }).join('&');
+        }
+
+        return encodeC(key) + '=' + encodeC(val);
+      }).join('&') : '';
+    }
+  };
 /**
  * RNode
  * @constructor
@@ -120,6 +181,8 @@ nprtt.parent = function(parent) {
 
 var dloc = document.location;
 
+var historySupport = typeof window['history'] !== 'undefined';
+
 /**
  * Utils: dlocHashEmpty 判断当前location.hash是否为空
  * @return {Boolean}
@@ -135,8 +198,13 @@ var Listener = {
 
   history: false,
 
-  init: function(options) {
-    this.history = options.history || this.history;
+  init: function(mode) {
+    this.history = mode === 'history';
+    // if (this.history && historySupport) {
+    //   window.onpopstate = onchange;
+    // } else {
+    //   window.onhashchange = onchange;
+    // }
     return this;
   },
 
@@ -151,22 +219,27 @@ var Listener = {
     return this;
   },
 
-  destroy: function (fn) {
-    var listeners = this.listeners;
-    if (!Router || !listeners) {
-      return;
-    }
-    for (var i = listeners - 1; i >= 0; --i) {
-      if (listeners[i] === fn) {
-        listeners.splice(i, 1);
-      }
-    }
-    return this;
-  },
+  // destroy: function (fn) {
+  //   var listeners = this.listeners;
+  //   if (!Router || !listeners) {
+  //     return;
+  //   }
+  //   for (var i = listeners - 1; i >= 0; --i) {
+  //     if (listeners[i] === fn) {
+  //       listeners.splice(i, 1);
+  //     }
+  //   }
+  //   return this;
+  // },
 
   setHash: function (s) {
     window.location.hash = (s[0] === '/') ? s : '/' + s;
     return this;
+  },
+
+  setHashHistory: function (path) {
+    history.pushState({}, document.title, path);
+    window.onpopstate();
   }
 
 };
@@ -178,7 +251,7 @@ function onchange(onChangeEvent) {
   }
 }
 
-window.onhashchange = onchange;
+ window.onhashchange = onchange;
 
 /// 可以用作分隔符的字符
 /// / - ~ = ! ; @ & #
@@ -244,7 +317,7 @@ rprtt.init = function(options) {
     var url = newURL.replace(/.*#/, '');
     self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
   };
-  Listener.init({history: true}).add(this.handler);
+  Listener.init(this.options.mode).add(this.handler);
 
   // 首次触发
   this.handler();
@@ -405,56 +478,6 @@ function createRouteTree(root, routes) {
 }
 
 /**
- * turn query string into object
- * e.g. color=ffee88&width=12                           =>  {color: "ffee88", width: 12}
- *      color=ffee88&arr[0]=12&arr[1]=13                =>  {color: "ffee88", arr: [12, 13]}
- *      color=ffee88&obj['name']=wuzijie&obj['age']=23  =>  {color: "ffee88", obj: {name: "wuzijie", age: 23}}
- * @param {String} queryString
- * @erturn {Object}
- *
- * TODO 未支持多维数组或嵌套对象
- */
-var parseQueryString = function(queryString) {
-  var queryArr = queryString.split('&');
-  var param = {};
-  var objectLike = /^([0-9a-zA-Z_]+)\[([0-9a-zA-Z_]+)\]$/;
-  for (var i = 0, len = queryArr.length; i < len; ++i) {
-    var _param = queryArr[i].split('=');
-    if (_param.length < 2) {
-      continue;
-    }
-    var key = _param[0], value = _param.slice(1).join('');
-    // 判断是不是数组或对象
-    var matches = key.match(objectLike);
-    if (matches === null) {
-      // 不是数组或对象，直接覆盖
-      param[key] = value;
-      continue;
-    }
-    key = matches[1];
-    var index = matches[2], currentValue = param[key];
-    if (typeof currentValue === "undefined") { // 未定义
-      if (/^[0-9]+$/.test(index)) { // 如果index为整数，就假定是数组
-        currentValue = [];
-      } else { // 否则就假定是对象
-        currentValue = {};
-      }
-    } else if (isArray(currentValue) && !/^[0-9]+$/.test(index)) { // 之前假定是数组，但发现不是（因为当前索引不是整数）
-      // 转为对象
-      var newCurrentValue = {};
-      for (var j = 0, len2 = currentValue.length; j < len2; ++j) {
-        if (typeof currentValue[j] === "undefined") continue; // 可能是稀疏数组
-        newCurrentValue[j] = currentValue[j];
-      }
-      currentValue = newCurrentValue;
-    }
-    currentValue[index] = value;
-    param[key] = currentValue;
-  }
-  return param;
-};
-
-/**
  * @param {RNode} root 当前节点
  * @param {Array} parts 路径分段数组
  * @param {Integer} ci 当前路径分段索引
@@ -550,7 +573,7 @@ rprtt.dispatch = function(path) {
   var queryIndex = path.indexOf('?');
   var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
-  var req = {uri: uri, path: path, query: parseQueryString(queryString)};
+  var req = {uri: uri, path: path, query: queryHelper.parse(queryString)};
 
   if (path === '/') {
     path = '';
@@ -572,6 +595,17 @@ rprtt.dispatch = function(path) {
 
   return this;
 
+};
+
+/**
+ * 这个方法会改变当前的`url`，从而触发路由（和dispatch类似，但是dispatch不会改动`url`）
+ * 这个方法对于hash/hashbang模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
+ * 改方法相当于调用一次history.pushState()然后再调用.dispatch()
+ *
+ * @param {String} path
+ */
+rprtt.setRoute = function(path) {
+  Listener.setHashHistory(path);
 };
 
 }));
