@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-14 version: 1.1.3 */
+/* spa-router by zcoding, MIT license, 2015-05-15 version: 1.1.3 */
 /// 浏览器兼容性：
 /// hashchange: [Chrome 5.0] [Firefox(Gecko) 3.6] [IE 8.0] [Opera 10.6] [Safari 5.0]
 
@@ -42,14 +42,23 @@ isFunction = function(obj) {
 },
 
 /**
- * Utils: isPlainObject
- * @param {Object} obj
- * @return {Boolean}
+ * Utils: extend
+ * @param {Object,...} src list
+ * @return {Object} a new object
  */
-isPlainObject = function(obj) {
-  return toString.call(obj) === "[object Object]";
+extend = function() {
+  var obj = {};
+  var srcList = [].slice.call(arguments, 0);
+  for (var i = 0, len = srcList.length; i < len; ++i) {
+    var src = srcList[i];
+    for (var q in src) {
+      if (hasOwn.call(src, q)) {
+        obj[q] = src[q];
+      }
+    }
+  }
+  return obj;
 };
-
 /**
  * RNode
  * @constructor
@@ -109,12 +118,6 @@ nprtt.parent = function(parent) {
   return this;
 };
 
-/// 可以用作分隔符的字符
-/// / - ~ = ! ; @ & #
-
-/// 可以用作匹配符的字符
-/// + * ? ( ) $
-
 var dloc = document.location;
 
 /**
@@ -129,6 +132,13 @@ var dlocHashEmpty = function() {
 var Listener = {
 
   listeners: null,
+
+  history: false,
+
+  init: function(options) {
+    this.history = options.history || this.history;
+    return this;
+  },
 
   add: function (fn) {
 
@@ -155,7 +165,7 @@ var Listener = {
   },
 
   setHash: function (s) {
-    dloc.hash = (s[0] === '/') ? s : '/' + s;
+    window.location.hash = (s[0] === '/') ? s : '/' + s;
     return this;
   }
 
@@ -170,16 +180,25 @@ function onchange(onChangeEvent) {
 
 window.onhashchange = onchange;
 
+/// 可以用作分隔符的字符
+/// / - ~ = ! ; @ & #
+
+/// 可以用作匹配符的字符
+/// + * ? ( ) $
+
+var defaults = {
+  mode: 'hashbang',
+  notFound: false,
+  always: false,
+  on: false,
+  before: false,
+  after: false
+};
+
 /**
  * Router (routes)
  * @constructor
  * @param {Object} routes **Optional**
- * @param {String} mode **Optional**
- *        mode可以是history|hash|hashbang|all
- *        mode:history    使用HTML5 History API
- *        mode:hash       使用hash（非hashbang模式）
- *        mode:hashbang   使用hash（hashbang模式）
- *        mode:all        兼容所有模式
  */
 var Router = exports.Router = function(routes) {
   routes = routes || {};
@@ -187,17 +206,37 @@ var Router = exports.Router = function(routes) {
   var root = new RNode(''); // 根路径的value指定为空字符串
   this.routeTree = createRouteTree(root, routes);
   this.options = {};
-  // 初始化配置
-  this.configure();
+  this.configure(defaults);
 };
 
 var rprtt = Router.prototype;
 
 /**
+ * @param {Object} options **Optional**
+ * @return this
+ */
+rprtt.configure = function(options) {
+  options = options || {};
+  this.options = extend(this.options, options);
+  return this;
+};
+
+/**
+ * @param {Object} options
+ *        mode可以是history|hash|hashbang|all
+ *        mode:history    使用HTML5 History API
+ *        mode:hash       使用hash（非hashbang模式）
+ *        mode:hashbang   使用hash（hashbang模式）
+ *        mode:all        兼容所有模式
  * @return this
  */
 rprtt.init = function(options) {
+  options = options || {};
   var self = this;
+
+  // 初始化配置
+  this.configure(options);
+
   // 一个Router实例对应一个listener，并按照初始化顺序添加到Router.listeners数组中
   // handler单独处理该路由实例的所有路由
   this.handler = function(onChangeEvent) {
@@ -205,16 +244,12 @@ rprtt.init = function(options) {
     var url = newURL.replace(/.*#/, '');
     self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
   };
-  Listener.add(this.handler);
-
-  // if (options.history) { // 使用HTML5 History API
-  // }
+  Listener.init({history: true}).add(this.handler);
 
   // 首次触发
   this.handler();
 
   return this;
-
 };
 
 /**
@@ -272,16 +307,6 @@ rprtt.add = function() {};
  */
 // rprtt.off = function(path) {};
 
-/**
- * @param {Object} options **Optional**
- * @return this
- */
-rprtt.configure = function(options) {
-  options = options || {};
-  this.notFound = options.notFound;
-  return this;
-};
-
 rprtt.map = function() {};
 
 /**
@@ -303,6 +328,7 @@ rprtt.after = function() {};
  * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
  * @param {RNode} tree
  * @param {String} path
+ * @return {RNode}
  * */
 function findNode(tree, path) {
   var parts = path.split('/');
@@ -313,7 +339,7 @@ function findNode(tree, path) {
     params = {};
     var realCurrentValue = parts[i];
     var matcher = new RegExp(':([a-zA-Z_][a-zA-Z0-9_]*)', 'g');
-    realCurrentValue = realCurrentValue.replace(matcher, '([a-zA-Z0-9]+)');
+    realCurrentValue = realCurrentValue.replace(matcher, '([a-zA-Z0-9_]+)');
     var matches = parts[i].match(matcher);
     if (matches !== null) {
       for (var k = 0; k < matches.length; ++k) {
@@ -385,7 +411,8 @@ function createRouteTree(root, routes) {
  *      color=ffee88&obj['name']=wuzijie&obj['age']=23  =>  {color: "ffee88", obj: {name: "wuzijie", age: 23}}
  * @param {String} queryString
  * @erturn {Object}
- * @todo 未支持多维数组或嵌套对象
+ *
+ * TODO 未支持多维数组或嵌套对象
  */
 var parseQueryString = function(queryString) {
   var queryArr = queryString.split('&');
@@ -521,9 +548,9 @@ rprtt.dispatch = function(path) {
   var uri = path;
   // 取出query部分
   var queryIndex = path.indexOf('?');
-  var query = queryIndex === -1 ? '' : path.slice(queryIndex+1);
+  var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
-  var req = {uri: uri, path: path, query: parseQueryString(query)};
+  var req = {uri: uri, path: path, query: parseQueryString(queryString)};
 
   if (path === '/') {
     path = '';
@@ -539,8 +566,8 @@ rprtt.dispatch = function(path) {
     } else {
       throw new TypeError('callbacks must be an array type');
     }
-  } else if (this.notFound) {
-    this.notFound(req);
+  } else if (this.options.notFound) {
+    this.options.notFound(req);
   }
 
   return this;

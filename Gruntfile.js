@@ -29,7 +29,7 @@ module.exports = function(grunt) {
         banner: '/* spa-router by <%= pkg.author %>, <%= pkg.license %> license, <%= grunt.template.today("yyyy-mm-dd") %> version: <%= pkg.version %> */'
       },
       "router": {
-        src: ['src/intro.js', 'src/utils.js', 'src/rnode.js', 'src/router.js', 'src/outro.js'],
+        src: ['src/intro.js', 'src/utils.js', 'src/rnode.js', 'src/listener.js', 'src/router.js', 'src/outro.js'],
         dest: 'build/spa-router.js'
       }
     },

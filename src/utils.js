@@ -29,10 +29,20 @@ isFunction = function(obj) {
 },
 
 /**
- * Utils: isPlainObject
- * @param {Object} obj
- * @return {Boolean}
+ * Utils: extend
+ * @param {Object,...} src list
+ * @return {Object} a new object
  */
-isPlainObject = function(obj) {
-  return toString.call(obj) === "[object Object]";
+extend = function() {
+  var obj = {};
+  var srcList = [].slice.call(arguments, 0);
+  for (var i = 0, len = srcList.length; i < len; ++i) {
+    var src = srcList[i];
+    for (var q in src) {
+      if (hasOwn.call(src, q)) {
+        obj[q] = src[q];
+      }
+    }
+  }
+  return obj;
 };
