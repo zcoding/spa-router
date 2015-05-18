@@ -20,11 +20,11 @@ var Listener = {
 
   init: function(mode) {
     this.history = mode === 'history';
-    // if (this.history && historySupport) {
-    //   window.onpopstate = onchange;
-    // } else {
-    //   window.onhashchange = onchange;
-    // }
+    if (this.history && historySupport) {
+      window.onpopstate = onchange;
+    } else {
+      window.onhashchange = onchange;
+    }
     return this;
   },
 
@@ -71,4 +71,4 @@ function onchange(onChangeEvent) {
   }
 }
 
- window.onhashchange = onchange;
+// window.onhashchange = onchange;

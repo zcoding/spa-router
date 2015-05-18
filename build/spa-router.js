@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-15 version: 0.1.6 */
+/* spa-router by zcoding, MIT license, 2015-05-18 version: 0.2.0 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -224,11 +224,11 @@ var Listener = {
 
   init: function(mode) {
     this.history = mode === 'history';
-    // if (this.history && historySupport) {
-    //   window.onpopstate = onchange;
-    // } else {
-    //   window.onhashchange = onchange;
-    // }
+    if (this.history && historySupport) {
+      window.onpopstate = onchange;
+    } else {
+      window.onhashchange = onchange;
+    }
     return this;
   },
 
@@ -275,7 +275,7 @@ function onchange(onChangeEvent) {
   }
 }
 
- window.onhashchange = onchange;
+// window.onhashchange = onchange;
 
 /// 可以用作分隔符的字符
 /// / - ~ = ! ; @ & #
