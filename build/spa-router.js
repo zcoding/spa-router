@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-18 version: 0.2.0 */
+/* spa-router by zcoding, MIT license, 2015-05-18 version: 0.2.2 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -340,7 +340,7 @@ rprtt.init = function(options) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
     var url;
     if (self.options.mode === 'history') {
-      url = window.location.pathname;
+      url = window.location.pathname + window.location.search + window.location.hash;
       if (url.substr(0, 1) !== '/') {
         url = '/' + url;
       }
@@ -603,7 +603,9 @@ rprtt.dispatch = function(path) {
   var uri = path;
   // 取出query部分
   var queryIndex = path.indexOf('?');
-  var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1);
+  var hashIndex = path.indexOf('#');
+  hashIndex = hashIndex === -1 ? path.length : hashIndex;
+  var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
   var req = {uri: uri, path: path, query: queryHelper.parse(queryString)};
 

@@ -325,7 +325,9 @@ rprtt.dispatch = function(path) {
   var uri = path;
   // 取出query部分
   var queryIndex = path.indexOf('?');
-  var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1);
+  var hashIndex = path.indexOf('#');
+  hashIndex = hashIndex === -1 ? path.length : hashIndex;
+  var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
   var req = {uri: uri, path: path, query: queryHelper.parse(queryString)};
 
