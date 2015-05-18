@@ -10,6 +10,10 @@ app.engine('.ejs', ejs.__express);
 app.use(express.static(__dirname + '/demo'));
 app.use(express.static(__dirname + '/build'));
 
+app.get('/', function(req, res) {
+  res.render('demo-history.html');
+});
+
 app.listen(9090, function() {
   console.log('listening at 9090...');
 });

@@ -31,20 +31,20 @@
 
     <h2>Basic Example</h2>
     <ul>
-      <li><a href="#/">Home</a></li>
-      <li><a href="#/product">Product List</a></li>
-      <li><a href="#/product/red-small-low">Category Product List</a></li>
-      <li><a href="#/product?color=red&size=small&price=low">Category Product List With Query</a></li>
-      <li><a href="#/product/12345">Product Detail</a></li>
-      <li><a href="#/about">About</a></li>
-      <li><a href="#/admin">Admin Home</a></li>
-      <li><a href="#/admin/product">Admin Product List</a></li>
-      <li><a href="#/admin/product?page=3">Admin Product List With Query</a></li>
-      <li><a href="#/admin/product/red-small-low">Admin Category Product List</a></li>
-      <li><a href="#/admin/product/red-small-low?page=2">Admin Category Product List With Query</a></li>
-      <li><a href="#/admin/product/add">Admin Product Add</a></li>
-      <li><a href="#/admin/product/12345">Admin Product Edit</a></li>
-      <li><a href="#/notfound">Not Found</a></li>
+      <li><a href="/" data-pjax>Home</a></li>
+      <li><a href="/product" data-pjax>Product List</a></li>
+      <li><a href="/product/red-small-low" data-pjax>Category Product List</a></li>
+      <li><a href="/product?color=red&size=small&price=low" data-pjax>Category Product List With Query</a></li>
+      <li><a href="/product/12345" data-pjax>Product Detail</a></li>
+      <li><a href="/about" data-pjax>About</a></li>
+      <li><a href="/admin" data-pjax>Admin Home</a></li>
+      <li><a href="/admin/product" data-pjax>Admin Product List</a></li>
+      <li><a href="/admin/product?page=3" data-pjax>Admin Product List With Query</a></li>
+      <li><a href="/admin/product/red-small-low" data-pjax>Admin Category Product List</a></li>
+      <li><a href="/admin/product/red-small-low?page=2" data-pjax>Admin Category Product List With Query</a></li>
+      <li><a href="/admin/product/add" data-pjax>Admin Product Add</a></li>
+      <li><a href="/admin/product/12345" data-pjax>Admin Product Edit</a></li>
+      <li><a href="/notfound" data-pjax>Not Found</a></li>
     </ul>
 <!--     <h2>Separators</h2>
     <ul>
@@ -139,16 +139,25 @@
     mode: 'history'
   });
 
+  [].forEach.call(document.querySelectorAll('[data-pjax]'), function(ele, index) {
+    ele.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      var link2 = this.getAttribute('href');
+      basicExampleRouter.setRoute(link2);
+      return false;
+    });
+  });
+
   /// .route() & .dispatch()
   /// e.g.
-  basicExampleRouter
-  .route('/whatever/foo', [log, show, function(req) {
-    console.log('%c不会马上执行', lightStyle);
-  }])
-  .route('/whatever/bar', function(req) {
-    console.log('%c手动触发dispatch立即执行', lightStyle);
-  })
-  .dispatch('/whatever/bar');
+  // basicExampleRouter
+  // .route('/whatever/foo', [log, show, function(req) {
+  //   console.log('%c不会马上执行', lightStyle);
+  // }])
+  // .route('/whatever/bar', function(req) {
+  //   console.log('%c手动触发dispatch立即执行', lightStyle);
+  // })
+  // .dispatch('/whatever/bar');
 
   // console.log(basicExampleRouter.options);
 

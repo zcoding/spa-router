@@ -60,7 +60,15 @@ rprtt.init = function(options) {
   // handler单独处理该路由实例的所有路由
   this.handler = function(onChangeEvent) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
-    var url = newURL.replace(/.*#/, '');
+    var url;
+    if (self.options.mode === 'history') {
+      url = window.location.pathname;
+      if (url.substr(0, 1) !== '/') {
+        url = '/' + url;
+      }
+    } else {
+      url = newURL.replace(/.*#/, '');
+    }
     self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
   };
   Listener.init(this.options.mode).add(this.handler);
