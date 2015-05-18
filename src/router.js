@@ -62,7 +62,7 @@ rprtt.init = function(options) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
     var url;
     if (self.options.mode === 'history') {
-      url = window.location.pathname;
+      url = window.location.pathname + window.location.search + window.location.hash;
       if (url.substr(0, 1) !== '/') {
         url = '/' + url;
       }
