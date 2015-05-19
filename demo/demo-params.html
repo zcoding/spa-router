@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>params</title>
+  <link rel="stylesheet" href="css/demo.css">
+</head>
+<body>
+  <div id="main-container">
+    <div class="field">
+      <input type="text" placeholder="parameter string">
+      <button id="add2">add to router</button>
+    </div>
+    <div class="field">
+      <input type="text" placeholder="url">
+      <button id="dispatch2">Dispatch</button>
+    </div>
+    <div class="field" id="show">
+      
+    </div>
+  </div>
+  <script src="../build/spa-router.js"></script>
+  <script>
+  var aRouter = new Router();
+  aRouter.init();
+  var show = document.getElementById('show');
+  document.getElementById('add2').addEventListener('click', function(evt) {
+    var input = this.parentNode.children[0];
+    var path = input.value.replace(/^\s*|\s*$/g, '');
+    aRouter.on(path, function(req) {
+      var html = '';
+      for (var p in req.params) {
+        if (req.params.hasOwnProperty(p)) {
+          html += '<p>' + p + ':' + req.params[p] + '</p>';
+        }
+      }
+      show.innerHTML = html;
+    });
+    console.log(aRouter.routeTree);
+  });
+  document.getElementById('dispatch2').addEventListener('click', function(evt) {
+    var input = this.parentNode.children[0];
+    var url = input.value.replace(/^\s*|\s*$/g, '');
+    aRouter.dispatch(url);
+  });
+  </script>
+</body>
+</html>
