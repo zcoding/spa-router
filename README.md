@@ -65,6 +65,8 @@ router.on('/test', function(req) {
 });
 ```
 .on()/.route()方法添加的路由，如果在.init()之后执行，不会立即触发（等到下一次才触发），如果要立即触发，可以执行.dispatch()方法
+####.mount(routes)
+
 ####.configure([options])
 可配置项：
 + notFound 找不到路由时触发

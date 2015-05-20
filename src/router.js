@@ -165,9 +165,12 @@ function findNode(tree, path) {
   for (var i = 0, len = parts.length; i < len; ++i) {
     params = {};
     var realCurrentValue = parts[i];
-    var matcher = new RegExp(':([a-zA-Z_][a-zA-Z0-9_]*)', 'g');
-    realCurrentValue = realCurrentValue.replace(matcher, '([a-zA-Z0-9_]+)');
-    var matches = parts[i].match(matcher);
+
+    var matcher = new RegExp(':([a-zA-Z_][a-zA-Z0-9_]*)', 'g'); // 匹配普通参数（普通参数和普通参数名由字母、数字、下划线组成，普通参数名不能以数字开头）
+
+    realCurrentValue = realCurrentValue.replace(matcher, '([a-zA-Z0-9_]+)'); // 替换普通参数
+
+    var matches = parts[i].match(matcher); // 处理普通参数
     if (matches !== null) {
       for (var k = 0; k < matches.length; ++k) {
         params[k] = matches[k].slice(1);
@@ -175,6 +178,14 @@ function findNode(tree, path) {
     } else {
       params = false;
     }
+
+    // var specialParamsMatcher = new RegExp('{\s*[a-zA-Z_][a-zA-Z0-9_]*\s*:\s*([^}]+)\s*}', 'g'); // 匹配特殊参数（特殊参数名由字母、数字、下划线组成，特殊参数规则为正则串）
+    // var specialParamsMatches = parts[i].match(specialParamsMatcher); // 处理特殊参数
+    // if (specialParamsMatches !== null) {
+    //   for (var j = 0; j < specialParamsMatches.length; ++j) {
+    //   }
+    // }
+
     for (var j = 0; j < parent._children.length; ++j ) {
       if (parent._children[j].value === realCurrentValue) {
         target = parent._children[j];
@@ -363,3 +374,5 @@ rprtt.dispatch = function(path) {
 rprtt.setRoute = function(path) {
   Listener.setHashHistory(path);
 };
+
+rprtt.mount = function(routes) {};

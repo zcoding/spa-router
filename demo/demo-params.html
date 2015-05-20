@@ -43,6 +43,22 @@
     var url = input.value.replace(/^\s*|\s*$/g, '');
     aRouter.dispatch(url);
   });
+
+  var zRouter = new Router({
+    '/': function(req) {
+      console.log('home');
+    },
+    '/admin': {
+      '/:id': function() {},
+      '/edit/{id:[0-9]+}': function() {},
+      '/list/{color: [a-z]+}-{size: [0-9]+}-{price: [0-9]+}': function(req) { // ([a-z]+-[0-9]+-[0-9]+)
+        console.log(req.params); // {color: 'red', size: '12', price: '23'}
+      },
+      '/post/{id: integer}/{time: date}': function(req) { // ([0-9]+), ()
+        console.log(req.params); // {id: '12', time: '2015-05-20'}
+      }
+    }
+  });
   </script>
 </body>
 </html>
