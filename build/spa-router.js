@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-21 version: 0.2.3 */
+/* spa-router by zcoding, MIT license, 2015-05-21 version: 0.3.0 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -299,6 +299,7 @@ var Router = exports.Router = function(routes) {
   routes = routes || {};
   if (!(this instanceof Router)) return new Router(routes);
   var root = new RNode(''); // 根路径的value指定为空字符串
+  root.params = false;
   this.routeTree = createRouteTree(root, routes);
   this.options = {};
   this.configure(defaults);
@@ -429,6 +430,7 @@ rprtt.after = function() {};
 
 /**
  * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
+ * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
  * @param {RNode} tree
  * @param {String} path
  * @return {RNode}
@@ -439,28 +441,22 @@ function findNode(tree, path) {
   var parent = tree;
   var params;
   for (var i = 0, len = parts.length; i < len; ++i) {
-    params = {};
+    params = false;
     var realCurrentValue = parts[i];
 
-    var matcher = new RegExp(':([a-zA-Z_][a-zA-Z0-9_]*)', 'g'); // 匹配普通参数（普通参数和普通参数名由字母、数字、下划线组成，普通参数名不能以数字开头）
+    var matcher = /:([a-zA-Z_][a-zA-Z0-9_]*)(\([^\)]+\))?/g;
 
-    realCurrentValue = realCurrentValue.replace(matcher, '([a-zA-Z0-9_]+)'); // 替换普通参数
+    var k = 0;
 
-    var matches = parts[i].match(matcher); // 处理普通参数
-    if (matches !== null) {
-      for (var k = 0; k < matches.length; ++k) {
-        params[k] = matches[k].slice(1);
+    realCurrentValue = realCurrentValue.replace(matcher, function($1, $2, $3) {
+      params = params || [];
+      params[k++] = $2;
+      if (typeof $3 === 'undefined') {
+        return '([a-zA-Z0-9_]+)';
+      } else {
+        return $3;
       }
-    } else {
-      params = false;
-    }
-
-    // var specialParamsMatcher = new RegExp('{\s*[a-zA-Z_][a-zA-Z0-9_]*\s*:\s*([^}]+)\s*}', 'g'); // 匹配特殊参数（特殊参数名由字母、数字、下划线组成，特殊参数规则为正则串）
-    // var specialParamsMatches = parts[i].match(specialParamsMatcher); // 处理特殊参数
-    // if (specialParamsMatches !== null) {
-    //   for (var j = 0; j < specialParamsMatches.length; ++j) {
-    //   }
-    // }
+    });
 
     for (var j = 0; j < parent._children.length; ++j ) {
       if (parent._children[j].value === realCurrentValue) {

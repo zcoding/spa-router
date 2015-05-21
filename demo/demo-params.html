@@ -46,19 +46,36 @@
 
   var zRouter = new Router({
     '/': function(req) {
-      console.log('home');
+      console.log(req.params);
     },
     '/admin': {
-      '/:id': function() {},
-      '/edit/{id:[0-9]+}': function() {},
-      '/list/{color: [a-z]+}-{size: [0-9]+}-{price: [0-9]+}': function(req) { // ([a-z]+-[0-9]+-[0-9]+)
+      '/:id([1-4]+)': function(req) {
+        console.log(req.params);
+      },
+      '/([5-6]+)': function(req) {
+        console.log(req.params);
+      },
+      '/edit': {
+        '/': function(req) {
+          console.log(req.params);
+        },
+        '/:id([0-9]+)': function(req) {
+          console.log(req.params);
+        }
+      },
+      '/list/:color([a-z]+)-:size([0-9]{4})-:price([0-9]+)': function(req) { // ([a-z]+-[0-9]+-[0-9]+)
         console.log(req.params); // {color: 'red', size: '12', price: '23'}
       },
-      '/post/{id: integer}/{time: date}': function(req) { // ([0-9]+), ()
+      '/post/:id(integer)/:time(date)': function(req) { // ([0-9]+), ()
         console.log(req.params); // {id: '12', time: '2015-05-20'}
       }
     }
   });
+  zRouter.configure({
+    notFound: function(req) { console.log('not found'); }
+  });
+  zRouter.init();
+  console.log(zRouter.routeTree);
   </script>
 </body>
 </html>
