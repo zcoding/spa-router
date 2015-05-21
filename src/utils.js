@@ -68,6 +68,8 @@ var queryHelper = {
       return {};
     }
 
+    var queryParts = queryString.split('&');
+
     var query = {};
 
     for (var i = 0, len = queryParts.length; i < len; ++i) {
