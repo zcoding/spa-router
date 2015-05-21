@@ -62,15 +62,11 @@ var queryHelper = {
       return {};
     }
 
-    queryString = queryString.trim().replace(/^(\?|#)/, '');
+    queryString = queryString.replace(/^\s*|\s*$/g, '').replace(/^(\?|#)/, '');
 
     if (!queryString) {
       return {};
     }
-
-    queryString = queryString.replace(/^\s*|\s*$/g, '');
-
-    var queryParts = queryString.split('&');
 
     var query = {};
 
