@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-20 version: 0.2.2 */
+/* spa-router by zcoding, MIT license, 2015-05-21 version: 0.2.3 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -76,13 +76,11 @@ var queryHelper = {
       return {};
     }
 
-    queryString = queryString.trim().replace(/^(\?|#)/, '');
+    queryString = queryString.replace(/^\s*|\s*$/g, '').replace(/^(\?|#)/, '');
 
     if (!queryString) {
       return {};
     }
-
-    queryString = queryString.replace(/^\s*|\s*$/g, '');
 
     var queryParts = queryString.split('&');
 

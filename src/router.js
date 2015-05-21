@@ -374,5 +374,3 @@ rprtt.dispatch = function(path) {
 rprtt.setRoute = function(path) {
   Listener.setHashHistory(path);
 };
-
-rprtt.mount = function(routes) {};
