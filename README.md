@@ -31,15 +31,19 @@ var router = Router(routes);
 router.init();
 ```
 
-###获取参数
+###定义和获取参数
 ```javascript
 var routes = {
-  '/product/:color-:size-:price': function(req) {
+  '/product/:color(red|blue|black)-:size-:price([0-9]{1,2})': function(req) {
     var params = req.params;
     console.log('product list with ' + params.color + ' color, ' + params.size + ' size and ' + params.price + ' price');
   }
 };
 ```
+关于参数的定义：
++ 普通参数通过`:`+`参数名`声明，普通参数匹配规则为`[a-zA-Z0-9_]+`，即字母数字下划线
++ 特殊参数通过`:`+`参数名`+`(匹配规则)`声明，匹配规则为正则表达式字符串（注意不要在匹配规则里面写小括号）
++ 虽然正则表达式字符串可以直接作为匹配串，但是如果没有声明为参数，则无法通过`req.params`获取
 
 ###获取query
 ```javascript
@@ -52,6 +56,11 @@ var routes = {
   }
 }
 ```
+关于query的注意事项：
++ 对于形如`a=1&a=2`的query字符串，将被解析为`a:['1','2']`
++ 只有key没有value的query会被忽略，例如`a&b=2`将被解析为`b:'2'`
++ 注意query中的`+`表示空白符，例如`a=1+1`将被解析为`a:'1 1'`，如果要传`+`字符，应该先编码，即`encodeURIComponent('a=1+1')`将被解析为`a:'1+1'`
++ 所有的query解析出来都是字符串或字符串数组（不会转换为数字）
 
 ##API
 ###instance method
