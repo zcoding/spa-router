@@ -7,6 +7,16 @@ spa-router是一个前端路由模块，用于SPA（单页应用程序）的开�
 ##How to use
 
 ###基本使用方式
+构造函数：创建一个路由对象
+```javascript
+var r1 = Router(routes);
+var r2 = new Router(routes); // 推荐使用new
+```
+`.init()`方法：初始化路由
+```javascript
+r1.init(options);
+```
+example
 ```javascript
 var routes = { // 先定义路由表
   '/': function(req) {
@@ -26,7 +36,7 @@ var routes = { // 先定义路由表
     }
   }
 };
-var router = Router(routes);
+var router = new Router(routes);
 // or use new operator: var router = new Router(routes);
 router.init();
 ```
@@ -64,7 +74,7 @@ var routes = {
 
 ##API
 ###instance method
-####.init([root])
+####.init([options])
 初始化方法。这个方法有一个可选的参数root，表示根路径的开始。默认情况下，根路径从'/'开始。如果是hashbang模式，在实际URL上就是'#/'。
 
 ####.on(path, handler/handler list) or .route(path, handler/handler list)
