@@ -28,8 +28,8 @@ var nprtt = RNode.prototype;
 
 /**
  * set/get children
- * @param {Node|[Node]} children **optional**
- * @return {[Node]|Node} return children node list or this
+ * @param {RNode|[RNode]} children **optional**
+ * @return {[RNode]|RNode} return children node list or this
  */
 nprtt.children = function(children) {
   if (typeof children === 'undefined') {
@@ -37,7 +37,7 @@ nprtt.children = function(children) {
   }
   if (children instanceof RNode) {
     this._children.push(children);
-  } else if (utils.isArray(children)) {
+  } else if (isArray(children)) {
     this._children = this.children.concat(children);
   }
   return this;
@@ -45,8 +45,8 @@ nprtt.children = function(children) {
 
 /**
  * set/get parent
- * @param {Node} parent **optional**
- * @return {Node} return parent node or this
+ * @param {RNode} parent **optional**
+ * @return {RNode} return parent node or this
  */
 nprtt.parent = function(parent) {
   if (typeof parent === 'undefined') {

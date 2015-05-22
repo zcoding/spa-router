@@ -11,7 +11,8 @@ var defaults = {
   always: false,
   on: false,
   before: false,
-  after: false
+  after: false,
+  recurse: false
 };
 
 /**
@@ -43,11 +44,9 @@ rprtt.configure = function(options) {
 
 /**
  * @param {Object} options
- *        mode可以是history|hash|hashbang|all
+ *        mode可以是history|hashbang|default
  *        mode:history    使用HTML5 History API
- *        mode:hash       使用hash（非hashbang模式）
  *        mode:hashbang   使用hash（hashbang模式）
- *        mode:all        兼容所有模式
  * @return this
  */
 rprtt.init = function(options) {
@@ -117,27 +116,6 @@ rprtt.on = rprtt.route = function(path, handlers) {
 };
 
 /**
- * 和.on()方法类似，但只会触发一次
- * @param {String|RegExp} path
- * @param {Function|Array} handlers
- * @return this
- */
-// rprtt.once = function(path, handlers) {};
-
-/**
- * 将路由挂载到某个节点上
- * .add()与.on()/.route()类似，但是.add()添加的路由不会覆盖原有的路由，而是将回调加入原有的队列（队尾）
- */
-rprtt.add = function() {};
-
-/**
- * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
- */
-// rprtt.off = function(path) {};
-
-rprtt.map = function() {};
-
-/**
  * redirect to another route
  * @param {String} path
  * @return this
@@ -147,10 +125,6 @@ rprtt.redirect = function(path) {
   Listener.setHash(path);
   return this;
 };
-
-rprtt.before = function() {};
-
-rprtt.after = function() {};
 
 /**
  * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
@@ -370,3 +344,47 @@ rprtt.dispatch = function(path) {
 rprtt.setRoute = function(path) {
   Listener.setHashHistory(path);
 };
+
+/**
+ * 和.on()方法类似，但只会触发一次
+ * @param {String|RegExp} path
+ * @param {Function|Array} handlers
+ * @return this
+ */
+rprtt.once = function(path, handlers) {};
+
+/**
+ * 将路由挂载到某个节点上
+ * .add()与.on()/.route()类似，但是.add()添加的路由不会覆盖原有的路由，而是将回调加入原有的队列（队尾）
+ */
+rprtt.add = function() {};
+
+/**
+ * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
+ */
+rprtt.off = function(path) {};
+
+/**
+ * 移除某个path对应的路由
+ */
+rprtt.remove = function(path) {};
+
+/**
+ * 获取某个path对应的路由
+ */
+rprtt.getRoute = function(path) {};
+
+/**
+ * 判断某个path是否有定义路由
+ */
+rprtt.hasRoute = function(path) {};
+
+/**
+ * 在路由触发前执行
+ */
+rprtt.before = function() {};
+
+/**
+ * 在路由触发后执行
+ */
+rprtt.after = function() {};

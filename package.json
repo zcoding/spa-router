@@ -1,6 +1,6 @@
 {
   "name": "spa-router",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "single page application router module",
   "main": "zrouter.js",
   "repository": {

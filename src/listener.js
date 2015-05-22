@@ -70,5 +70,3 @@ function onchange(onChangeEvent) {
     listeners[i](onChangeEvent);
   }
 }
-
-// window.onhashchange = onchange;
