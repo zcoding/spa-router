@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-21 version: 0.3.0 */
+/* spa-router by zcoding, MIT license, 2015-05-22 version: 0.3.1 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]

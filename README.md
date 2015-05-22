@@ -66,6 +66,7 @@ var routes = {
 ###instance method
 ####.init([root])
 初始化方法。这个方法有一个可选的参数root，表示根路径的开始。默认情况下，根路径从'/'开始。如果是hashbang模式，在实际URL上就是'#/'。
+
 ####.on(path, handler/handler list) or .route(path, handler/handler list)
 这个方法用于动态添加路由
 ```javascript
@@ -73,17 +74,23 @@ router.on('/test', function(req) {
   // ...
 });
 ```
-.on()/.route()方法添加的路由，如果在.init()之后执行，不会立即触发（等到下一次才触发），如果要立即触发，可以执行.dispatch()方法
++ `.on()`方法添加的路由将和当前的路由表合并
++ `.on()`/`.route()`方法如果在`.init()`之后执行，不会立即触发，必须等到下一次url发生改变或者调用`.dispatch()`方法才会触发
+
 ####.mount(routes)
+挂载路由
++ `.mount()`方法挂载的路由表会和原来的路由表合并
++ `.mount()`方法如果在`.init()`之后执行，不会立即触发，必须等到下一次url发生改变或者调用`.dispatch()`方法才会触发
 
 ####.configure([options])
 可配置项：
 + notFound 找不到路由时触发
-+ on 找到任意路由时触发
-+ always 总是触发（无论是否存在路由）
-+ mode ['history'|'hash'|'hashbang'] 默认为'hashbang'，如果使用'history'，请保证浏览器支持HTML5 History API否则不起作用（如果浏览器不支持，默认仍然会使用hashbang模式）
++ <s>on 找到任意路由时触发</s>
++ <s>always 总是触发（无论是否存在路由）</s>
++ <s>mode ['history'|'hash'|'hashbang'] 默认为'hashbang'，如果使用'history'，请保证浏览器支持HTML5 History API否则不起作用（如果浏览器不支持，默认仍然会使用hashbang模式）</s>
 
 ####.dispatch(path)
 触发path对应的路由（但不会改变URL）
+
 ####.setRoute(path)
 改变当前的URL，由此触发对应的路由。这个方法适用于`'history'`模式。在`'history'`模式下，如果点击`<a>`标签默认会发生页面跳转行为，无法达到SPA的效果。一般我们使用`PJAX`的方法禁止`<a>`标签跳转，但为了改变URL并且触发路由，就需要调用`.setRoute()`方法。
