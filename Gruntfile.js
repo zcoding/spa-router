@@ -42,6 +42,17 @@ module.exports = function(grunt) {
         files: ['src/*.js'],
         tasks: ['concat:router', 'uglify:router']
       }
+    },
+
+    compress: {
+      'release': {
+        options: {
+          archive: './release/spa-router-<%= pkg.version %>.zip',
+        },
+        files: [
+          {src: ['src/**', 'build/**', 'demo/**', 'package.json', 'server.js', 'README.md']}
+        ]
+      }
     }
 
   });
@@ -49,8 +60,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-compress');
 
   grunt.registerTask('default', ['concat:router', 'uglify:router', 'watch:router']);
   grunt.registerTask('build', ['concat:router', 'uglify:router']);
+  grunt.registerTask('release', ['concat:router', 'uglify:router', 'compress:release']);
 
 };
