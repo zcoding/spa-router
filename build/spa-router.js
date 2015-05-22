@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-22 version: 0.3.3 */
+/* spa-router by zcoding, MIT license, 2015-05-22 version: 0.3.4 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -62,6 +62,16 @@ var hasOwn = function(p) {
       }
     }
     return obj;
+  },
+
+  addEvent = function(name, handler) {
+    if (window.addEventListener) {
+      window.addEventListener(name, handler, false);
+    } else if (window.attachEvent) {
+      window.attachEvent('on' + name, handler);
+    } else {
+      window['on' + name] = handler;
+    }
   };
 
 var queryHelper = {
@@ -222,10 +232,10 @@ var Listener = {
 
   init: function(mode) {
     this.history = mode === 'history';
-    if (this.history && historySupport) {
-      window.onpopstate = onchange;
+    if (this.history && historySupport) { // IE 10+
+      addEvent('popstate', onchange);
     } else {
-      window.onhashchange = onchange;
+      addEvent('hashchange', onchange);
     }
     return this;
   },
@@ -254,14 +264,25 @@ var Listener = {
   //   return this;
   // },
 
-  setHash: function (s) {
-    window.location.hash = (s[0] === '/') ? s : '/' + s;
-    return this;
-  },
-
   setHashHistory: function (path) {
-    history.pushState({}, document.title, path);
-    window.onpopstate();
+    if (this.history) {
+      history.pushState({}, document.title, path);
+    } else {
+      if (path[0] === '/') {
+        window.location.hash = path;
+      } else { // TODO: consider '?a=b'
+        if (/.*\/$/.test(window.location.hash)) {
+          window.location.hash += path;
+        } else {
+          var hash = window.location.hash.replace(/([^\/]+|)$/, function($1) {
+            return $1 === '' ? '/' + path : path;
+          });
+          // if ()
+          window.location.hash = hash;
+        }
+      }
+    }
+    return this;
   }
 
 };
@@ -286,7 +307,7 @@ var defaults = {
   on: false,
   before: false,
   after: false,
-  recurse: false
+  recurse: false // 参考director
 };
 
 /**
@@ -617,6 +638,10 @@ rprtt.dispatch = function(path) {
  */
 rprtt.setRoute = function(path) {
   Listener.setHashHistory(path);
+  if (this.options.mode === 'history') {
+    var loc = window.location;
+    this.dispatch(loc.pathname + loc.search + loc.hash);
+  }
 };
 
 /**

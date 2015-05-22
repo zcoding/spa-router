@@ -20,10 +20,10 @@ var Listener = {
 
   init: function(mode) {
     this.history = mode === 'history';
-    if (this.history && historySupport) {
-      window.onpopstate = onchange;
+    if (this.history && historySupport) { // IE 10+
+      addEvent('popstate', onchange);
     } else {
-      window.onhashchange = onchange;
+      addEvent('hashchange', onchange);
     }
     return this;
   },
@@ -52,14 +52,25 @@ var Listener = {
   //   return this;
   // },
 
-  setHash: function (s) {
-    window.location.hash = (s[0] === '/') ? s : '/' + s;
-    return this;
-  },
-
   setHashHistory: function (path) {
-    history.pushState({}, document.title, path);
-    window.onpopstate();
+    if (this.history) {
+      history.pushState({}, document.title, path);
+    } else {
+      if (path[0] === '/') {
+        window.location.hash = path;
+      } else { // TODO: consider '?a=b'
+        if (/.*\/$/.test(window.location.hash)) {
+          window.location.hash += path;
+        } else {
+          var hash = window.location.hash.replace(/([^\/]+|)$/, function($1) {
+            return $1 === '' ? '/' + path : path;
+          });
+          // if ()
+          window.location.hash = hash;
+        }
+      }
+    }
+    return this;
   }
 
 };

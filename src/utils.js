@@ -48,6 +48,16 @@ var hasOwn = function(p) {
       }
     }
     return obj;
+  },
+
+  addEvent = function(name, handler) {
+    if (window.addEventListener) {
+      window.addEventListener(name, handler, false);
+    } else if (window.attachEvent) {
+      window.attachEvent('on' + name, handler);
+    } else {
+      window['on' + name] = handler;
+    }
   };
 
 var queryHelper = {

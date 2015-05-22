@@ -12,7 +12,7 @@ var defaults = {
   on: false,
   before: false,
   after: false,
-  recurse: false
+  recurse: false // 参考director
 };
 
 /**
@@ -343,6 +343,10 @@ rprtt.dispatch = function(path) {
  */
 rprtt.setRoute = function(path) {
   Listener.setHashHistory(path);
+  if (this.options.mode === 'history') {
+    var loc = window.location;
+    this.dispatch(loc.pathname + loc.search + loc.hash);
+  }
 };
 
 /**
