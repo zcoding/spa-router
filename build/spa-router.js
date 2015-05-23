@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-22 version: 0.3.4 */
+/* spa-router by zcoding, MIT license, 2015-05-23 version: 0.3.5 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -411,17 +411,6 @@ rprtt.on = rprtt.route = function(path, handlers) {
 };
 
 /**
- * redirect to another route
- * @param {String} path
- * @return this
- */
-rprtt.redirect = function(path) {
-  // redirect to another path...
-  Listener.setHash(path);
-  return this;
-};
-
-/**
  * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
  * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
  * @param {RNode} tree
@@ -642,7 +631,13 @@ rprtt.setRoute = function(path) {
     var loc = window.location;
     this.dispatch(loc.pathname + loc.search + loc.hash);
   }
+  return this;
 };
+
+/**
+ * the same as .setRoute()
+ */
+rprtt.redirect = rprtt.setRoute;
 
 /**
  * 和.on()方法类似，但只会触发一次
