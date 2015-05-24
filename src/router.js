@@ -353,30 +353,20 @@ rprtt.redirect = rprtt.setRoute;
 rprtt.once = function(path, handlers) {};
 
 /**
- * 将路由挂载到某个节点上
- * .add()与.on()/.route()类似，但是.add()添加的路由不会覆盖原有的路由，而是将回调加入原有的队列（队尾）
- */
-rprtt.add = function() {};
-
-/**
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
 rprtt.off = function(path) {};
 
 /**
- * 移除某个path对应的路由
- */
-rprtt.remove = function(path) {};
-
-/**
  * 获取某个path对应的路由
  */
-rprtt.getRoute = function(path) {};
+// rprtt.getRoute = function(path) {
+// };
 
 /**
  * 判断某个path是否有定义路由
  */
-rprtt.hasRoute = function(path) {};
+// rprtt.hasRoute = function(path) {};
 
 /**
  * 在路由触发前执行
