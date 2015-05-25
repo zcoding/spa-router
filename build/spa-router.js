@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-05-24 version: 0.3.6 */
+/* spa-router by zcoding, MIT license, 2015-05-25 version: 0.3.7 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -301,7 +301,11 @@ function onchange(onChangeEvent) {
 /// + * ? ( ) $
 
 var defaults = {
-  mode: 'hashbang',
+  // mode可以是history|hashbang|default
+  // mode:history     使用HTML5 History API
+  // mode:hashbang    使用hash（hashbang模式）
+  // mode:[default]   使用hash（非hashbang模式）
+  mode: 'default',
   notFound: false,
   always: false,
   on: false,
@@ -339,9 +343,6 @@ rprtt.configure = function(options) {
 
 /**
  * @param {Object} options
- *        mode可以是history|hashbang|default
- *        mode:history    使用HTML5 History API
- *        mode:hashbang   使用hash（hashbang模式）
  * @return this
  */
 rprtt.init = function(options) {
@@ -356,13 +357,18 @@ rprtt.init = function(options) {
   this.handler = function(onChangeEvent) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
     var url;
-    if (self.options.mode === 'history') {
-      url = window.location.pathname + window.location.search + window.location.hash;
-      if (url.substr(0, 1) !== '/') {
-        url = '/' + url;
-      }
-    } else {
-      url = newURL.replace(/.*#/, '');
+    switch(self.options.mode) {
+      case 'history':
+        url = window.location.pathname + window.location.search + window.location.hash;
+        if (url.substr(0, 1) !== '/') {
+          url = '/' + url;
+        }
+        break;
+      case 'hashbang':
+        url = newURL.replace(/.*#!/, '');
+        break;
+      default:
+        url = newURL.replace(/.*#/, '');
     }
     self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
   };
@@ -624,6 +630,7 @@ rprtt.dispatch = function(path) {
  * 改方法相当于调用一次history.pushState()然后再调用.dispatch()
  *
  * @param {String} path
+ * @return this
  */
 rprtt.setRoute = function(path) {
   Listener.setHashHistory(path);
@@ -651,17 +658,6 @@ rprtt.once = function(path, handlers) {};
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
 rprtt.off = function(path) {};
-
-/**
- * 获取某个path对应的路由
- */
-// rprtt.getRoute = function(path) {
-// };
-
-/**
- * 判断某个path是否有定义路由
- */
-// rprtt.hasRoute = function(path) {};
 
 /**
  * 在路由触发前执行
