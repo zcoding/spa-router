@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-06-02 version: 0.3.8 */
+/* spa-router by zcoding, MIT license, 2015-06-02 version: 0.3.9 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -251,19 +251,6 @@ var Listener = {
     return this;
   },
 
-  // destroy: function (fn) {
-  //   var listeners = this.listeners;
-  //   if (!Router || !listeners) {
-  //     return;
-  //   }
-  //   for (var i = listeners - 1; i >= 0; --i) {
-  //     if (listeners[i] === fn) {
-  //       listeners.splice(i, 1);
-  //     }
-  //   }
-  //   return this;
-  // },
-
   setHashHistory: function (path) {
     if (this.history) {
       history.pushState({}, document.title, path);
@@ -297,12 +284,6 @@ function onchange(onChangeEvent) {
     listeners[i](onChangeEvent);
   }
 }
-
-/// 可以用作分隔符的字符
-/// / - ~ = ! ; @ & #
-
-/// 可以用作匹配符的字符
-/// + * ? ( ) $
 
 var defaults = {
   // mode可以是history|hashbang|default
@@ -355,9 +336,7 @@ rprtt.init = function(options) {
 
   // 初始化配置
   this.configure(options);
-
-  // 一个Router实例对应一个listener，并按照初始化顺序添加到Router.listeners数组中
-  // handler单独处理该路由实例的所有路由
+  
   this.handler = function(onChangeEvent) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
     var url;

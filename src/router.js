@@ -1,10 +1,4 @@
 
-/// 可以用作分隔符的字符
-/// / - ~ = ! ; @ & #
-
-/// 可以用作匹配符的字符
-/// + * ? ( ) $
-
 var defaults = {
   // mode可以是history|hashbang|default
   // mode:history     使用HTML5 History API
@@ -56,9 +50,7 @@ rprtt.init = function(options) {
 
   // 初始化配置
   this.configure(options);
-
-  // 一个Router实例对应一个listener，并按照初始化顺序添加到Router.listeners数组中
-  // handler单独处理该路由实例的所有路由
+  
   this.handler = function(onChangeEvent) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
     var url;

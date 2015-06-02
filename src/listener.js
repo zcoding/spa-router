@@ -39,19 +39,6 @@ var Listener = {
     return this;
   },
 
-  // destroy: function (fn) {
-  //   var listeners = this.listeners;
-  //   if (!Router || !listeners) {
-  //     return;
-  //   }
-  //   for (var i = listeners - 1; i >= 0; --i) {
-  //     if (listeners[i] === fn) {
-  //       listeners.splice(i, 1);
-  //     }
-  //   }
-  //   return this;
-  // },
-
   setHashHistory: function (path) {
     if (this.history) {
       history.pushState({}, document.title, path);
