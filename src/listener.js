@@ -58,14 +58,18 @@ var Listener = {
     } else {
       if (path[0] === '/') {
         window.location.hash = path;
-      } else { // TODO: consider '?a=b'
-        if (/.*\/$/.test(window.location.hash)) {
-          window.location.hash += path;
+      } else {
+        var currentHash = window.location.hash;
+        var idf = currentHash.indexOf('?');
+        if (idf !== -1) {
+          currentHash = currentHash.slice(0, idf);
+        }
+        if (/.*\/$/.test(currentHash)) {
+          window.location.hash = currentHash + path;
         } else {
-          var hash = window.location.hash.replace(/([^\/]+|)$/, function($1) {
+          var hash = currentHash.replace(/([^\/]+|)$/, function($1) {
             return $1 === '' ? '/' + path : path;
           });
-          // if ()
           window.location.hash = hash;
         }
       }
