@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-06-02 version: 0.3.9 */
+/* spa-router by zcoding, MIT license, 2015-06-03 version: 0.3.10 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -211,17 +211,7 @@ nprtt.parent = function(parent) {
   return this;
 };
 
-var dloc = document.location;
-
 var historySupport = typeof window['history'] !== 'undefined';
-
-/**
- * Utils: dlocHashEmpty 判断当前location.hash是否为空
- * @return {Boolean}
- */
-var dlocHashEmpty = function() {
-  return dloc.hash === '' || dloc.hash === '#';
-};
 
 /// Listener
 var Listener = {
@@ -641,15 +631,5 @@ rprtt.once = function(path, handlers) {};
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
 rprtt.off = function(path) {};
-
-/**
- * 在路由触发前执行
- */
-rprtt.before = function() {};
-
-/**
- * 在路由触发后执行
- */
-rprtt.after = function() {};
 
 }));

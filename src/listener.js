@@ -1,15 +1,5 @@
 
-var dloc = document.location;
-
 var historySupport = typeof window['history'] !== 'undefined';
-
-/**
- * Utils: dlocHashEmpty 判断当前location.hash是否为空
- * @return {Boolean}
- */
-var dlocHashEmpty = function() {
-  return dloc.hash === '' || dloc.hash === '#';
-};
 
 /// Listener
 var Listener = {

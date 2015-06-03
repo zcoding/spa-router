@@ -355,13 +355,3 @@ rprtt.once = function(path, handlers) {};
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
 rprtt.off = function(path) {};
-
-/**
- * 在路由触发前执行
- */
-rprtt.before = function() {};
-
-/**
- * 在路由触发后执行
- */
-rprtt.after = function() {};
