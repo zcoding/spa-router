@@ -1,5 +1,5 @@
 
-var historySupport = typeof window['history'] !== 'undefined';
+var historySupport = typeof window.history !== 'undefined';
 
 /// Listener
 var Listener = {

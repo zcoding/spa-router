@@ -4,6 +4,10 @@ module.exports = function(grunt) {
 
     pkg: grunt.file.readJSON('package.json'),
 
+    jshint: {
+      beforeconcat: ['src/utils.js', 'src/rnode.js', 'src/listener.js', 'src/router.js']
+    },
+
     uglify: {
       options: {
         compress: {
@@ -40,7 +44,7 @@ module.exports = function(grunt) {
       },
       "router": {
         files: ['src/*.js'],
-        tasks: ['concat:router', 'uglify:router']
+        tasks: ['jshint:beforeconcat', 'concat:router', 'uglify:router']
       }
     },
 
@@ -61,8 +65,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-compress');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
 
-  grunt.registerTask('default', ['concat:router', 'uglify:router', 'watch:router']);
+  grunt.registerTask('default', ['jshint:beforeconcat', 'concat:router', 'uglify:router', 'watch:router']);
   grunt.registerTask('build', ['concat:router', 'uglify:router']);
   grunt.registerTask('release', ['concat:router', 'uglify:router', 'compress:release']);
 

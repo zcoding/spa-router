@@ -133,6 +133,7 @@ function findNode(tree, path) {
 
     var k = 0;
 
+    /* jshint ignore:start */
     realCurrentValue = realCurrentValue.replace(matcher, function($1, $2, $3) {
       params = params || [];
       params[k++] = $2;
@@ -142,6 +143,7 @@ function findNode(tree, path) {
         return $3;
       }
     });
+    /* jshint ignore:end */
 
     for (var j = 0; j < parent._children.length; ++j ) {
       if (parent._children[j].value === realCurrentValue) {
@@ -276,7 +278,7 @@ function searchRouteTree(tree, path) {
     return [null, {}];
   }
 
-  return [found[0].callbacks, found[1]]
+  return [found[0].callbacks, found[1]];
 
 }
 
@@ -355,3 +357,13 @@ rprtt.once = function(path, handlers) {};
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
 rprtt.off = function(path) {};
+
+rprtt.reload = function() {
+  var loc = window.location;
+  if (this.options.mode === 'history') {
+    this.dispatch(loc.pathname + loc.search + loc.hash);
+  } else {
+    this.dispatch(loc.hash.slice(1));
+  }
+  return this;
+};

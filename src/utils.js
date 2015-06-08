@@ -1,6 +1,5 @@
 
 var toString = Object.prototype.toString,
-  hasOwnProperty = Object.prototype.hasOwnProperty,
   decodeC = window.decodeURIComponent,
   encodeC = window.encodeURIComponent;
 /**
@@ -9,9 +8,7 @@ var toString = Object.prototype.toString,
  * @param {String} p
  * @return {Boolean}
  */
-var hasOwn = function(p) {
-    return this.hasOwnProperty(p);
-  },
+var hasOwn = Object.prototype.hasOwnProperty,
 
   /**
    * Utils: isArray
@@ -110,7 +107,7 @@ var queryHelper = {
     }
     var keys = [];
     for (var p in obj) {
-      if (hasOwnProperty.call(obj, p)) {
+      if (hasOwn.call(obj, p)) {
         keys.push(p);
       }
     }

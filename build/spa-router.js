@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-06-03 version: 0.3.10 */
+/* spa-router by zcoding, MIT license, 2015-06-08 version: 0.4.0 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -14,7 +14,6 @@
 }(function(exports) {
 
 var toString = Object.prototype.toString,
-  hasOwnProperty = Object.prototype.hasOwnProperty,
   decodeC = window.decodeURIComponent,
   encodeC = window.encodeURIComponent;
 /**
@@ -23,9 +22,7 @@ var toString = Object.prototype.toString,
  * @param {String} p
  * @return {Boolean}
  */
-var hasOwn = function(p) {
-    return this.hasOwnProperty(p);
-  },
+var hasOwn = Object.prototype.hasOwnProperty,
 
   /**
    * Utils: isArray
@@ -124,7 +121,7 @@ var queryHelper = {
     }
     var keys = [];
     for (var p in obj) {
-      if (hasOwnProperty.call(obj, p)) {
+      if (hasOwn.call(obj, p)) {
         keys.push(p);
       }
     }
@@ -211,7 +208,7 @@ nprtt.parent = function(parent) {
   return this;
 };
 
-var historySupport = typeof window['history'] !== 'undefined';
+var historySupport = typeof window.history !== 'undefined';
 
 /// Listener
 var Listener = {
@@ -409,6 +406,7 @@ function findNode(tree, path) {
 
     var k = 0;
 
+    /* jshint ignore:start */
     realCurrentValue = realCurrentValue.replace(matcher, function($1, $2, $3) {
       params = params || [];
       params[k++] = $2;
@@ -418,6 +416,7 @@ function findNode(tree, path) {
         return $3;
       }
     });
+    /* jshint ignore:end */
 
     for (var j = 0; j < parent._children.length; ++j ) {
       if (parent._children[j].value === realCurrentValue) {
@@ -552,7 +551,7 @@ function searchRouteTree(tree, path) {
     return [null, {}];
   }
 
-  return [found[0].callbacks, found[1]]
+  return [found[0].callbacks, found[1]];
 
 }
 
@@ -631,5 +630,15 @@ rprtt.once = function(path, handlers) {};
  * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
  */
 rprtt.off = function(path) {};
+
+rprtt.reload = function() {
+  var loc = window.location;
+  if (this.options.mode === 'history') {
+    this.dispatch(loc.pathname + loc.search + loc.hash);
+  } else {
+    this.dispatch(loc.hash.slice(1));
+  }
+  return this;
+};
 
 }));
