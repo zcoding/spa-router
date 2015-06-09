@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-06-08 version: 0.4.0 */
+/* spa-router by zcoding, MIT license, 2015-06-09 version: 0.4.1 */
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -391,9 +391,11 @@ rprtt.on = rprtt.route = function(path, handlers) {
  * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
  * @param {RNode} tree
  * @param {String} path
+ * @param {Boolean} onlyFind 只找节点，当节点不存在时不要创建新节点
  * @return {RNode}
  * */
-function findNode(tree, path) {
+function findNode(tree, path, onlyFind) {
+  onlyFind = !!onlyFind;
   var parts = path.split('/');
   var target = null, found = false;
   var parent = tree;
@@ -426,6 +428,7 @@ function findNode(tree, path) {
       }
     }
     if (!found) { // 不存在，创建新节点
+      if (onlyFind) return false;
       var extendNode = new RNode(realCurrentValue);
       parent.children(extendNode);
       extendNode.parent(parent);
@@ -455,7 +458,7 @@ function createRouteTree(root, routes) {
   }
 
   for (var path in routes) {
-    if (routes.hasOwnProperty(path)) {
+    if (hasOwn.call(routes, path)) {
 
       var fns = routes[path];
 
@@ -487,8 +490,8 @@ function dfs(root, parts, ci, ri, params) {
   var value = parts[ci];
 
   var newParams = {};
-  for (var p in params) { // 将旧参数对象复制到新参数对象
-    if (params.hasOwnProperty(p)) {
+  for (var p in params) { // copy: params => newParams
+    if (hasOwn.call(params, p)) {
       newParams[p] = params[p];
     }
   }
@@ -521,15 +524,13 @@ function dfs(root, parts, ci, ri, params) {
     return [root, newParams];
   }
 
-  // matched, go ahead
   for (var i = 0; i < root._children.length; ++i) {
-    var found = dfs(root._children[i], parts, ci+1, i, newParams);
+    var found = dfs(root._children[i], parts, ci+1, i, newParams); // matched, go ahead
     if (!found[0]) continue;
     return found;
   }
 
-  // not matched, go back
-  return dfs(root, parts, ci, ri+1, params);
+  return dfs(root, parts, ci, ri+1, params); // not matched, go back
 
 }
 
@@ -614,23 +615,40 @@ rprtt.setRoute = function(path) {
 };
 
 /**
- * the same as .setRoute()
+ * alias: `setRoute`
  */
 rprtt.redirect = rprtt.setRoute;
 
 /**
+ * TODO: once
  * 和.on()方法类似，但只会触发一次
  * @param {String|RegExp} path
  * @param {Function|Array} handlers
  * @return this
  */
-rprtt.once = function(path, handlers) {};
+rprtt.once = function(path, handlers) {
+  return this;
+};
 
 /**
- * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks、before、after、params移除
+ * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks移除
+ * @return this
  */
-rprtt.off = function(path) {};
+rprtt.off = function(path) {
+  if (path !== '' && path[0] === '/') {
+    path = path.slice(1);
+  }
+  var n = findNode(this.routeTree, path);
+  if (n !== null && n.callbacks !== null) {
+    n.callbacks.splice(0, n.callbacks.length);
+  }
+  return this;
+};
 
+/**
+ * reload page: redispatch current path
+ * @return this
+ */
 rprtt.reload = function() {
   var loc = window.location;
   if (this.options.mode === 'history') {
