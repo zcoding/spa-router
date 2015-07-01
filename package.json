@@ -1,8 +1,11 @@
 {
   "name": "spa-router",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "single page application router module",
   "main": "zrouter.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/zcoding/spa-router.git"

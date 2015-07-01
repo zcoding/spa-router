@@ -50,7 +50,7 @@ rprtt.init = function(options) {
 
   // 初始化配置
   this.configure(options);
-  
+
   this.handler = function(onChangeEvent) {
     var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
     var url;
@@ -328,15 +328,18 @@ rprtt.dispatch = function(path) {
  * 这个方法会改变当前的`url`，从而触发路由（和dispatch类似，但是dispatch不会改动`url`）
  * 这个方法对于hash/hashbang模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
  * 改方法相当于调用一次history.pushState()然后再调用.dispatch()
+ * 如果url没有改变，则不"刷新"
  *
  * @param {String} path
  * @return this
  */
 rprtt.setRoute = function(path) {
+  var loc = window.location;
+  var oldURI = loc.pathname + loc.search;
   Listener.setHashHistory(path);
-  if (this.options.mode === 'history') {
-    var loc = window.location;
-    this.dispatch(loc.pathname + loc.search + loc.hash);
+  var newURI = loc.pathname + loc.search;
+  if (this.options.mode === 'history' && oldURI !== newURI) {
+    this.dispatch(newURI);
   }
   return this;
 };

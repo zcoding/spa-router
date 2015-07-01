@@ -110,7 +110,7 @@
   var basicExampleRoutes = {
     '/': [log, show],
     '/product': [log, show],
-    '/product/:color-:size-:price': [log, show],
+    '/product/:color(r.+)-:size-:price': [log, show],
     '/product/:id': [log, show],
     '/about': [log, show],
   };

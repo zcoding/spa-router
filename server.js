@@ -15,5 +15,5 @@ app.get('/', function(req, res) {
 });
 
 app.listen(9090, function() {
-  console.log('listening at 9090...');
+  console.log('Open browser and goto http://localhost:9090/');
 });
