@@ -4,13 +4,8 @@
 /// history.pushState: [IE 10.0]
 
 (function(factory) {
-  if (typeof define === 'function' && define.cmd) {
-    define(function(require, exports, module) {
-      factory(exports);
-    });
-  } else {
-    factory(window)
-  }
+  // window wrapper
+  factory(window);
 }(function(exports) {
 
 

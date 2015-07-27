@@ -1,6 +1,6 @@
 {
   "name": "spa-router",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "single page application router module",
   "main": "index.js",
   "scripts": {
