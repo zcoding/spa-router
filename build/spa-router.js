@@ -1,4 +1,4 @@
-/* spa-router by zcoding, MIT license, 2015-07-01 version: 0.4.2 */
+
 /// 浏览器兼容性：
 /// onhashchange: [IE 8.0]
 /// history.pushState: [IE 10.0]
@@ -13,14 +13,14 @@
   }
 }(function(exports) {
 
-var toString = Object.prototype.toString,
-  decodeC = window.decodeURIComponent,
-  encodeC = window.encodeURIComponent;
+
+var Win = window,
+  toString = Object.prototype.toString,
+  decodeC = Win.decodeURIComponent,
+  encodeC = Win.encodeURIComponent;
 /**
  * Shorthand: hasOwn
  * stand for hasOwnProperty
- * @param {String} p
- * @return {Boolean}
  */
 var hasOwn = Object.prototype.hasOwnProperty,
 
@@ -62,12 +62,12 @@ var hasOwn = Object.prototype.hasOwnProperty,
   },
 
   addEvent = function(name, handler) {
-    if (window.addEventListener) {
-      window.addEventListener(name, handler, false);
-    } else if (window.attachEvent) {
-      window.attachEvent('on' + name, handler);
+    if (Win.addEventListener) {
+      Win.addEventListener(name, handler, false);
+    } else if (Win.attachEvent) {
+      Win.attachEvent('on' + name, handler);
     } else {
-      window['on' + name] = handler;
+      Win['on' + name] = handler;
     }
   };
 
@@ -75,8 +75,7 @@ var queryHelper = {
   /**
    * parse query string
    * @param {String} queryString
-   * @erturn {Object}
-   *
+   * @erturn {Object} query object
    */
   parse: function(queryString) {
     if (typeof queryString !== 'string') {
@@ -115,6 +114,11 @@ var queryHelper = {
 
   },
 
+  /**
+   * stringify query object
+   * @param {Object} obj
+   * @return {String} query string
+   */
   stringify: function(obj) {
     if (!obj) {
       return '';
@@ -148,6 +152,7 @@ var queryHelper = {
   }
 
 };
+
 
 /**
  * RNode
@@ -208,7 +213,8 @@ nprtt.parent = function(parent) {
   return this;
 };
 
-var historySupport = typeof window.history !== 'undefined';
+
+var historySupport = typeof Win.history !== 'undefined';
 
 /// Listener
 var Listener = {
@@ -243,20 +249,20 @@ var Listener = {
       history.pushState({}, document.title, path);
     } else {
       if (path[0] === '/') {
-        window.location.hash = path;
+        Win.location.hash = path;
       } else {
-        var currentHash = window.location.hash;
+        var currentHash = Win.location.hash;
         var idf = currentHash.indexOf('?');
         if (idf !== -1) {
           currentHash = currentHash.slice(0, idf);
         }
         if (/.*\/$/.test(currentHash)) {
-          window.location.hash = currentHash + path;
+          Win.location.hash = currentHash + path;
         } else {
           var hash = currentHash.replace(/([^\/]+|)$/, function($1) {
             return $1 === '' ? '/' + path : path;
           });
-          window.location.hash = hash;
+          Win.location.hash = hash;
         }
       }
     }
@@ -271,6 +277,7 @@ function onchange(onChangeEvent) {
     listeners[i](onChangeEvent);
   }
 }
+
 
 var defaults = {
   // mode可以是history|hashbang|default
@@ -661,5 +668,6 @@ rprtt.reload = function() {
   }
   return this;
 };
+
 
 }));

@@ -67,9 +67,9 @@ var routes = {
 }
 ```
 关于query的注意事项：
-+ 对于形如`a=1&a=2`的query字符串，将被解析为`a:['1','2']`
-+ 只有key没有value的query会被忽略，例如`a&b=2`将被解析为`b:'2'`
-+ 注意query中的`+`表示空白符，例如`a=1+1`将被解析为`a:'1 1'`，如果要传`+`字符，应该先编码，即`encodeURIComponent('a=1+1')`将被解析为`a:'1+1'`
++ 对于形如`a=1&a=2`的query字符串，将被解析为`{"a":['1','2']}`
++ 只有key没有value的query会被忽略，例如`a&b=2`将被解析为`{"b":"2"}`
++ 注意query中的`+`表示空白符，例如`a=1+1`将被解析为`{"a":"1 1"}`，如果要传`+`字符，应该先编码，即`encodeURIComponent('a=1+1')`将被解析为`{"a":"1+1"}`
 + 所有的query解析出来都是字符串或字符串数组（不会转换为数字）
 
 ##API
@@ -95,12 +95,17 @@ router.on('/test', function(req) {
 ####.configure([options])
 可配置项：
 + notFound 找不到路由时触发
-+ <s>on 找到任意路由时触发</s>
-+ <s>always 总是触发（无论是否存在路由）</s>
-+ <s>mode ['history'|'hash'|'hashbang'] 默认为'hashbang'，如果使用'history'，请保证浏览器支持HTML5 History API否则不起作用（如果浏览器不支持，默认仍然会使用hashbang模式）</s>
++ <del>on 找到任意路由时触发
++ <del>always 总是触发（无论是否存在路由）
++ <del>mode ['history'|'hash'|'hashbang'] 默认为'hashbang'，如果使用'history'，请保证浏览器支持HTML5 History API否则不起作用（如果浏览器不支持，默认仍然会使用hashbang模式）
 
 ####.dispatch(path)
 触发path对应的路由（但不会改变URL）
 
 ####.setRoute(path)
 改变当前的URL，由此触发对应的路由。这个方法适用于`'history'`模式。在`'history'`模式下，如果点击`<a>`标签默认会发生页面跳转行为，无法达到SPA的效果。一般我们使用`PJAX`的方法禁止`<a>`标签跳转，但为了改变URL并且触发路由，就需要调用`.setRoute()`方法。
++ 如果path未改变则不会产生影响，或者说，setRoute方法不能实现当前页面的"刷新"。要实现当前页的刷新，使用`.reload()`方法
+
+####.reload()
+对当前的路由重新适配一次，实现当前页的"刷新"
++ 该方法不带任何参数

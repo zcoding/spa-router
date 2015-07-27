@@ -1,5 +1,5 @@
 
-var historySupport = typeof window.history !== 'undefined';
+var historySupport = typeof Win.history !== 'undefined';
 
 /// Listener
 var Listener = {
@@ -34,20 +34,20 @@ var Listener = {
       history.pushState({}, document.title, path);
     } else {
       if (path[0] === '/') {
-        window.location.hash = path;
+        Win.location.hash = path;
       } else {
-        var currentHash = window.location.hash;
+        var currentHash = Win.location.hash;
         var idf = currentHash.indexOf('?');
         if (idf !== -1) {
           currentHash = currentHash.slice(0, idf);
         }
         if (/.*\/$/.test(currentHash)) {
-          window.location.hash = currentHash + path;
+          Win.location.hash = currentHash + path;
         } else {
           var hash = currentHash.replace(/([^\/]+|)$/, function($1) {
             return $1 === '' ? '/' + path : path;
           });
-          window.location.hash = hash;
+          Win.location.hash = hash;
         }
       }
     }

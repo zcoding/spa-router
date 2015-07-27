@@ -1,12 +1,11 @@
 
-var toString = Object.prototype.toString,
-  decodeC = window.decodeURIComponent,
-  encodeC = window.encodeURIComponent;
+var Win = window,
+  toString = Object.prototype.toString,
+  decodeC = Win.decodeURIComponent,
+  encodeC = Win.encodeURIComponent;
 /**
  * Shorthand: hasOwn
  * stand for hasOwnProperty
- * @param {String} p
- * @return {Boolean}
  */
 var hasOwn = Object.prototype.hasOwnProperty,
 
@@ -48,12 +47,12 @@ var hasOwn = Object.prototype.hasOwnProperty,
   },
 
   addEvent = function(name, handler) {
-    if (window.addEventListener) {
-      window.addEventListener(name, handler, false);
-    } else if (window.attachEvent) {
-      window.attachEvent('on' + name, handler);
+    if (Win.addEventListener) {
+      Win.addEventListener(name, handler, false);
+    } else if (Win.attachEvent) {
+      Win.attachEvent('on' + name, handler);
     } else {
-      window['on' + name] = handler;
+      Win['on' + name] = handler;
     }
   };
 
@@ -61,8 +60,7 @@ var queryHelper = {
   /**
    * parse query string
    * @param {String} queryString
-   * @erturn {Object}
-   *
+   * @erturn {Object} query object
    */
   parse: function(queryString) {
     if (typeof queryString !== 'string') {
@@ -101,6 +99,11 @@ var queryHelper = {
 
   },
 
+  /**
+   * stringify query object
+   * @param {Object} obj
+   * @return {String} query string
+   */
   stringify: function(obj) {
     if (!obj) {
       return '';
