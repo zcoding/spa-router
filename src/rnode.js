@@ -14,7 +14,7 @@
  * _parent:   父节点引用
  */
 var RNode = function(value) {
-  if (typeof value === 'undefined') throw new TypeError('The RNode Constructor Need A Value.');
+  if (typeof value === TYPE_UNDEFINED) throw new TypeError('The RNode Constructor Need A Value.');
   this.value = value;
   this.params = {};
   this.callbacks = null;
@@ -32,7 +32,7 @@ var nprtt = RNode.prototype;
  * @return {[RNode]|RNode} return children node list or this
  */
 nprtt.children = function(children) {
-  if (typeof children === 'undefined') {
+  if (typeof children === TYPE_UNDEFINED) {
     return this._children;
   }
   if (children instanceof RNode) {
@@ -49,7 +49,7 @@ nprtt.children = function(children) {
  * @return {RNode} return parent node or this
  */
 nprtt.parent = function(parent) {
-  if (typeof parent === 'undefined') {
+  if (typeof parent === TYPE_UNDEFINED) {
     return this._parent;
   }
   if (parent instanceof RNode) {

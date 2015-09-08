@@ -1,10 +1,10 @@
 {
   "name": "spa-router",
-  "version": "0.4.4",
+  "version": "0.5.0",
   "description": "single page application router module",
   "main": "index.js",
   "scripts": {
-    "server": "node --harmony scripts/server.js",
+    "start": "node --harmony scripts/server.js",
     "build": "gulp build"
   },
   "repository": {

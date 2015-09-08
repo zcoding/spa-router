@@ -10,13 +10,13 @@ var config = require('./package.json');
 var source = ['utils.js', 'rnode.js', 'listener.js', 'router.js'];
 
 var sources = {
-  "window": ['intro-window.js'].concat(source).concat(['outro-wrapper.js']),
+  "global": ['intro-global.js'].concat(source).concat(['outro-wrapper.js']),
   "cmd": ['intro-cmd.js'].concat(source).concat(['outro-wrapper.js']),
   "amd": ['intro-amd.js'].concat(source).concat(['outro-wrapper.js']),
   "commonjs": ['intro.js'].concat(source).concat(['outro.js'])
 };
 
-var exportsTypes = ['window', 'commonjs', 'cmd', 'amd'];
+var exportsTypes = ['global', 'commonjs', 'cmd', 'amd'];
 
 exportsTypes.forEach(function(eType) {
 
@@ -43,9 +43,9 @@ gulp.task('build', exportsTypes.map(function(eType) {
   return 'build-' + eType;
 }));
 
-gulp.task('release', function() {
+gulp.task('release', ['build'], function() {
 
-  return gulp.src(['src/**/*', 'scripts/**/*', 'build/**/*', 'demo/**/*', 'gulpfile.js', 'LICENSE', 'package.json', 'README.md'], {base: '.'})
+  return gulp.src(['src/**/*', 'scripts/**/*', 'build/**/*', 'demo/**/*', 'index.js', 'gulpfile.js', 'LICENSE', 'package.json', 'README.md'], {base: '.'})
     .pipe(zip('spa-router-' + config.version + '.zip'))
     .pipe(gulp.dest('release'));
 
@@ -53,7 +53,12 @@ gulp.task('release', function() {
 
 gulp.task('dev', ['build'], function() {
 
-  var watcher = gulp.watch(source, ['build']);
+  var source = sources['global'];
+  var sourcePath = source.map(function(file) {
+    return './src/' + file;
+  });
+
+  var watcher = gulp.watch(sourcePath, ['build']);
 
   watcher.on('change', function(event) {
     console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');

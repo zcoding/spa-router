@@ -1,5 +1,5 @@
 
-var historySupport = typeof Win.history !== 'undefined';
+var historySupport = typeof Win.history['pushState'] !== TYPE_UNDEFINED;
 
 /// Listener
 var Listener = {
@@ -34,20 +34,20 @@ var Listener = {
       history.pushState({}, document.title, path);
     } else {
       if (path[0] === '/') {
-        Win.location.hash = path;
+        Loc.hash = '!' + path;
       } else {
-        var currentHash = Win.location.hash;
-        var idf = currentHash.indexOf('?');
+        var currentURL = Loc.hash.slice(2); // 去掉前面的#!
+        var idf = currentURL.indexOf('?');
         if (idf !== -1) {
-          currentHash = currentHash.slice(0, idf);
+          currentURL = currentURL.slice(0, idf);
         }
-        if (/.*\/$/.test(currentHash)) {
-          Win.location.hash = currentHash + path;
+        if (/.*\/$/.test(currentURL)) {
+          Loc.hash = '!' + currentURL + path;
         } else {
-          var hash = currentHash.replace(/([^\/]+|)$/, function($1) {
+          var hash = currentURL.replace(/([^\/]+|)$/, function($1) {
             return $1 === '' ? '/' + path : path;
           });
-          Win.location.hash = hash;
+          Loc.hash = '!' + hash;
         }
       }
     }

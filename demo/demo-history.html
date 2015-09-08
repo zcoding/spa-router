@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>router.js</title>
-  <link rel="stylesheet" href="css/demo.css">
+  <title>History Mode Demo</title>
+  <link rel="stylesheet" href="/css/demo.css">
 </head>
 <body>
   <div id="main-container">
@@ -47,7 +47,7 @@
       <li><a href="/notfound" data-pjax>Not Found</a></li>
     </ul>
   </div>
-  <script src="/window/spa-router.js"></script>
+  <script src="/global/spa-router.js"></script>
   <script>
 
   var mainContainer = document.querySelectorAll('#main-container')[0];
@@ -109,13 +109,11 @@
   var basicExampleRouter = new Router(basicExampleRoutes);
 
   /// .configure()
-  /// e.g.
   basicExampleRouter.configure({
     notFound: notFound
   });
 
   /// .mount()
-  /// e.g.
   basicExampleRouter.mount('/admin', {
     '/': [log, show],
     '/product': {
@@ -126,7 +124,7 @@
     }
   });
 
-  basicExampleRouter.init({
+  basicExampleRouter.start({
     mode: 'history'
   });
 

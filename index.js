@@ -1,3 +1,3 @@
-var Router = require('./build/spa-router');
+var Router = require('./build/commonjs/spa-router');
 
 module.exports = Router;

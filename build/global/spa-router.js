@@ -10,9 +10,13 @@
 
 
 var Win = window,
+  Loc = Win.location,
   toString = Object.prototype.toString,
   decodeC = Win.decodeURIComponent,
   encodeC = Win.encodeURIComponent;
+
+var TYPE_UNDEFINED = "undefined";
+
 /**
  * Shorthand: hasOwn
  * stand for hasOwnProperty
@@ -164,7 +168,7 @@ var queryHelper = {
  * _parent:   父节点引用
  */
 var RNode = function(value) {
-  if (typeof value === 'undefined') throw new TypeError('The RNode Constructor Need A Value.');
+  if (typeof value === TYPE_UNDEFINED) throw new TypeError('The RNode Constructor Need A Value.');
   this.value = value;
   this.params = {};
   this.callbacks = null;
@@ -182,7 +186,7 @@ var nprtt = RNode.prototype;
  * @return {[RNode]|RNode} return children node list or this
  */
 nprtt.children = function(children) {
-  if (typeof children === 'undefined') {
+  if (typeof children === TYPE_UNDEFINED) {
     return this._children;
   }
   if (children instanceof RNode) {
@@ -199,7 +203,7 @@ nprtt.children = function(children) {
  * @return {RNode} return parent node or this
  */
 nprtt.parent = function(parent) {
-  if (typeof parent === 'undefined') {
+  if (typeof parent === TYPE_UNDEFINED) {
     return this._parent;
   }
   if (parent instanceof RNode) {
@@ -209,7 +213,7 @@ nprtt.parent = function(parent) {
 };
 
 
-var historySupport = typeof Win.history !== 'undefined';
+var historySupport = typeof Win.history['pushState'] !== TYPE_UNDEFINED;
 
 /// Listener
 var Listener = {
@@ -244,20 +248,20 @@ var Listener = {
       history.pushState({}, document.title, path);
     } else {
       if (path[0] === '/') {
-        Win.location.hash = path;
+        Loc.hash = '!' + path;
       } else {
-        var currentHash = Win.location.hash;
-        var idf = currentHash.indexOf('?');
+        var currentURL = Loc.hash.slice(2); // 去掉前面的#!
+        var idf = currentURL.indexOf('?');
         if (idf !== -1) {
-          currentHash = currentHash.slice(0, idf);
+          currentURL = currentURL.slice(0, idf);
         }
-        if (/.*\/$/.test(currentHash)) {
-          Win.location.hash = currentHash + path;
+        if (/.*\/$/.test(currentURL)) {
+          Loc.hash = '!' + currentURL + path;
         } else {
-          var hash = currentHash.replace(/([^\/]+|)$/, function($1) {
+          var hash = currentURL.replace(/([^\/]+|)$/, function($1) {
             return $1 === '' ? '/' + path : path;
           });
-          Win.location.hash = hash;
+          Loc.hash = '!' + hash;
         }
       }
     }
@@ -275,17 +279,13 @@ function onchange(onChangeEvent) {
 
 
 var defaults = {
-  // mode可以是history|hashbang|default
+  // mode可以是history|hashbang
   // mode:history     使用HTML5 History API
   // mode:hashbang    使用hash（hashbang模式）
-  // mode:[default]   使用hash（非hashbang模式）
-  mode: 'default',
+  root: '/', // TODO
+  mode: 'hashbang',
   notFound: false,
-  always: false,
-  on: false,
-  before: false,
-  after: false,
-  recurse: false // 参考director
+  recurse: false // TODO
 };
 
 /**
@@ -296,7 +296,7 @@ var defaults = {
 var Router = exports.Router = function(routes) {
   routes = routes || {};
   if (!(this instanceof Router)) return new Router(routes);
-  var root = new RNode(''); // 根路径的value指定为空字符串
+  var root = new RNode('');
   root.params = false;
   this.routeTree = createRouteTree(root, routes);
   this.options = {};
@@ -306,6 +306,8 @@ var Router = exports.Router = function(routes) {
 var rprtt = Router.prototype;
 
 /**
+ * .configure()
+ * @method
  * @param {Object} options **Optional**
  * @return this
  */
@@ -315,46 +317,55 @@ rprtt.configure = function(options) {
   return this;
 };
 
+// TODO: root怎么处理？
+function handler(onChangeEvent) {
+  var mode = this.options.mode;
+  var url;
+  switch(mode) {
+    case 'history':
+      url = Loc.pathname + Loc.search + Loc.hash;
+      if (url.substr(0, 1) !== '/') {
+        url = '/' + url;
+      }
+      break;
+    case 'hashbang':
+    default:
+      var hash = Loc.hash.slice(1);
+      if (hash === '' || hash === '!') {
+        return this.redirect(this.options.root);
+      }
+      var newURL = onChangeEvent && onChangeEvent.newURL || Loc.hash;
+      url = newURL.replace(/.*#!/, '');
+  }
+  this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
+};
+
 /**
+ * .start()
+ * @method
  * @param {Object} options
  * @return this
  */
-rprtt.init = function(options) {
+rprtt.start = function(options) {
   options = options || {};
   var self = this;
 
   // 初始化配置
   this.configure(options);
 
-  this.handler = function(onChangeEvent) {
-    var newURL = onChangeEvent && onChangeEvent.newURL || window.location.hash; // 兼容hashchange事件中调用和第一次调用
-    var url;
-    switch(self.options.mode) {
-      case 'history':
-        url = window.location.pathname + window.location.search + window.location.hash;
-        if (url.substr(0, 1) !== '/') {
-          url = '/' + url;
-        }
-        break;
-      case 'hashbang':
-        url = newURL.replace(/.*#!/, '');
-        break;
-      default:
-        url = newURL.replace(/.*#/, '');
-    }
-    self.dispatch(url.charAt(0) === '/' ? url : '/' + url);
-  };
-  Listener.init(this.options.mode).add(this.handler);
+  Listener.init(this.options.mode).add(function() {
+    return handler.call(self);
+  });
 
   // 首次触发
-  this.handler();
+  handler.call(this);
 
   return this;
 };
 
 /**
- * 将路由挂载到某个节点上
- * e.g. router.mount('/user', {'/list': function() {}});
+ * .mount() 将路由挂载到某个节点上
+ * @method
  * @param {String} path
  * @param {Object} routes
  * @return this
@@ -369,12 +380,12 @@ rprtt.mount = function(path, routes) {
 
 /**
  * .on()
- *
+ * @method
  * @param {String|RegExp} path
  * @param {Function|Array} handlers
  * @return this
  */
-rprtt.on = rprtt.route = function(path, handlers) {
+rprtt.on = function(path, handlers) {
   if (path !== '' && path[0] === '/') {
     path = path.slice(1);
   }
@@ -559,8 +570,8 @@ function searchRouteTree(tree, path) {
 }
 
 /**
- * dispatch
- * 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
+ * .dispatch() 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
+ * @method
  * @param {String} path
  * @return this
  */
@@ -651,7 +662,9 @@ rprtt.off = function(path) {
 };
 
 /**
+ * .reload()
  * reload page: redispatch current path
+ * @method
  * @return this
  */
 rprtt.reload = function() {
