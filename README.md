@@ -42,10 +42,13 @@ router.start({
 ## 传值
 
 通过url传值有两种方式：
+
 1. 通过参数传值
 2. 通过query传值
 
-通过参数传值需要先定义后获取，有利于构造出RESTful风格的路由。使用query传值则更加灵活，可以传多个值，不限定值的类型、个数和顺序。
+通过参数传值需要先定义后获取，有利于构造出RESTful风格的路由。
+
+使用query传值则更加灵活，可以传多个值，不限定值的类型、个数和顺序。
 
 ### 参数传值
 
@@ -62,7 +65,7 @@ router.start({
 ```javascript
 var routes = {
   '/product/:color(red|blue|black)-:size-:price([0-9]{1,2})': function(req) {
-    var params = req.param
+    var params = req.param;
     console.log('product list with ' + params.color + ' color, ' + params.size + ' size and ' + params.price + ' price');
   }
 };
