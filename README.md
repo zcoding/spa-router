@@ -9,6 +9,14 @@ Router Module for Single Page Application
 
 spa-router是一个前端路由模块，适用于单页应用程序的开发。如果你正在使用[vue.js](https://github.com/yyx990803/vue)进行单页应用开发，spa-router可以作为路由模块使用。
 
+## Install
+
+`npm install spa-router-better`
+
+OR
+
+Use the dist files in the build folder.
+
 ## 使用方法
 
 1. 构造路由表
