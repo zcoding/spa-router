@@ -2,6 +2,9 @@
 
 Router Module for Single Page Application
 
+[![版本](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "版本")](https://www.npmjs.com/package/spa-router-better)
+[![协议](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "协议")](./LICENSE)
+
 ## 介绍
 
 spa-router是一个前端路由模块，适用于单页应用程序的开发。如果你正在使用[vue.js](https://github.com/yyx990803/vue)进行单页应用开发，spa-router可以作为路由模块使用。

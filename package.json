@@ -1,5 +1,5 @@
 {
-  "name": "spa-router",
+  "name": "spa-router-better",
   "version": "0.5.1",
   "description": "single page application router module",
   "main": "index.js",
