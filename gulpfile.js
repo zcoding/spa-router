@@ -26,12 +26,12 @@ exportsTypes.forEach(function(eType) {
 
     return gulp.src(sourcePath)
         .pipe(concat('spa-router.js'), {newLine: '\n'})
-        .pipe(gulp.dest('./build/' + eType))
+        .pipe(gulp.dest('./dist/' + eType))
         .pipe(sourcemaps.init())
         .pipe(uglify())
         .pipe(rename('spa-router.min.js'))
         .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest('./build/' + eType));
+        .pipe(gulp.dest('./dist/' + eType));
 
   });
 });
