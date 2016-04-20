@@ -39,6 +39,12 @@ router.start({
 });
 ```
 
+## 和vue.js一起使用
+
+在`demo-vuejs`目录有一个vue.js的实例项目，使用了spa-router作为路由，如果想查看这个例子的效果，请运行`npm run vuejs`，然后打开`http://localhost:9999`即可。
+
+这个例子使用了webpack-dev-server并且支持live-reload，因此你可以随时修改源码以测试更多的使用技巧。
+
 ## 传值
 
 通过url传值有两种方式：

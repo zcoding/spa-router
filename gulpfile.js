@@ -3,9 +3,6 @@ var concat = require('gulp-concat');
 var sourcemaps = require('gulp-sourcemaps');
 var rename = require('gulp-rename');
 var uglify = require('gulp-uglify');
-var zip = require('gulp-zip');
-
-var config = require('./package.json');
 
 var source = ['utils.js', 'rnode.js', 'listener.js', 'router.js'];
 
@@ -42,14 +39,6 @@ exportsTypes.forEach(function(eType) {
 gulp.task('build', exportsTypes.map(function(eType) {
   return 'build-' + eType;
 }));
-
-gulp.task('release', ['build'], function() {
-
-  return gulp.src(['src/**/*', 'scripts/**/*', 'build/**/*', 'demo/**/*', 'index.js', 'gulpfile.js', 'LICENSE', 'package.json', 'README.md'], {base: '.'})
-    .pipe(zip('spa-router-' + config.version + '.zip'))
-    .pipe(gulp.dest('release'));
-
-});
 
 gulp.task('dev', ['build'], function() {
 
