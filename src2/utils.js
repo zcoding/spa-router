@@ -1,6 +1,4 @@
-
 var Win = window,
-  Loc = Win.location,
   toString = Object.prototype.toString,
   decodeC = Win.decodeURIComponent,
   encodeC = Win.encodeURIComponent;
