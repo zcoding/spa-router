@@ -6,7 +6,8 @@
   "scripts": {
     "vuejs": "webpack-dev-server --progress --inline --hot --config demo-vuejs/webpack.demo.js --content-base demo-vuejs/ --port 9999",
     "dev": "gulp dev",
-    "build": "gulp build"
+    "build": "gulp build",
+    "git-log": "git log --graph --all --decorate --stat"
   },
   "repository": {
     "type": "git",

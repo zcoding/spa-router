@@ -1,13 +1,14 @@
 # spa-router
 
-Router Module for Single Page Application
+A Router Module for Single Page Application
 
-[![版本](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "版本")](https://www.npmjs.com/package/spa-router-better)
-[![协议](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "协议")](./LICENSE)
+[![Versoin](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "Version")](https://www.npmjs.com/package/spa-router-better)
+[![License](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "License")](./LICENSE)
 
-## 介绍
+## Introduction
 
-spa-router是一个前端路由模块，适用于单页应用程序的开发。如果你正在使用[vue.js](https://github.com/yyx990803/vue)进行单页应用开发，spa-router可以作为路由模块使用。
+`spa-router` is a router module for building large single-page-application(SPA).If you are using [vue.js]((https://github.com/yyx990803/vue), it's easy for you to handle routing.
+
 
 ## Install
 
@@ -17,14 +18,14 @@ OR
 
 Use the dist files in the build folder.
 
-## 使用方法
+## Basic Usage
 
-1. 构造路由表
-2. 使用构造函数，创建一个路由对象
-3. 调用`.start()`方法，初始化路由
+1. config your routes
+2. create a new `Router`
+3. invoke `.start()` method
 
 ```javascript
-////////// 一个完整的例子
+////////// a complete demo
 var routes = {
   '/': function(req) {
     console.log('This is the index route!');
@@ -50,34 +51,29 @@ router.start({
 });
 ```
 
-## 和vue.js一起使用
+## Basic Uasge with Vue.js
 
-在`demo-vuejs`目录有一个vue.js的实例项目，使用了spa-router作为路由，如果想查看这个例子的效果，请运行`npm run vuejs`，然后打开`http://localhost:9999`即可。
+You can see the demo's source files in the `demo-vuejs` folder.
 
-这个例子使用了webpack-dev-server并且支持live-reload，因此你可以随时修改源码以测试更多的使用技巧。
+In the project's root directory, run `npm run vuejs` to start the demo, and then open `http://localhost:9999`.
 
-## 传值
+This demo use [webpack-dev-server](https://github.com/webpack/webpack-dev-server) and support livereload. Try to change the demo's source and learn more usage about spa-router.
 
-通过url传值有两种方式：
+## Params and Query
 
-1. 通过参数传值
-2. 通过query传值
+You can get params or query from the `req` argument in the callback handler.
 
-通过参数传值需要先定义后获取，有利于构造出RESTful风格的路由。
+### Params
 
-使用query传值则更加灵活，可以传多个值，不限定值的类型、个数和顺序。
+How to define a param:
++ `:paramName`, the `paramName` matches `[a-zA-Z0-9_]+`
++ `:paramName(matchRule)`, the `matchRule` is a RegExp string
++ if you insert a `matchRule` without a `paramName`, the match rule still works, but you cannot get the params from `req.params`
 
-### 参数传值
-
-定义：
-+ 普通参数通过`:`+`参数名`声明，普通参数匹配规则为`[a-zA-Z0-9_]+`，即字母数字下划线
-+ 特殊参数通过`:`+`参数名`+`(匹配规则)`声明，匹配规则为正则表达式字符串（注意不要在匹配规则里面写小括号）
-+ 虽然正则表达式字符串可以直接作为匹配串，但是如果没有声明为参数，则无法通过`req.params`获取
-
-获取：
+How to get the params:
 + `req.params`
 
-例子：
+Examples:
 
 ```javascript
 var routes = {
@@ -88,43 +84,41 @@ var routes = {
 };
 ```
 
-参数不一定是用来传值的，参数的主要作用是限制路由规则。
+### Query
 
-### query传值
-
-例子：
+Example
 
 ```javascript
 var routes = {
   '/product': function(req) {
     var query = req.query;
-    // 假设当前请求为/produce?color=red&size=normal&price=low
+    // current request url is "/produce?color=red&size=normal&price=low"
     console.log(query.color, query.size, query.price);
-    // console: red normal low
+    // log: red normal low
   }
 }
 ```
 
-注意事项：
-+ 对于形如`a=1&a=2`的query字符串，将被解析为`{"a":['1','2']}`
-+ 只有key没有value的query会被忽略，例如`a&b=2`将被解析为`{"b":"2"}`
-+ 注意query中的`+`表示空白符，例如`a=1+1`将被解析为`{"a":"1 1"}`，如果要传`+`字符，应该先编码，即`encodeURIComponent('a=1+1')`将被解析为`{"a":"1+1"}`
-+ 所有的query解析出来都是字符串或字符串数组（不会转换为数值或其它类型）
+Notice:
++ `a=1&a=2` will be parsed into `{"a":['1','2']}`
++ if the query is not a `key:value` mapping, it will not be parsed, e.g. `a&b=2` will be parsed into `{"b":"2"}`
++ `+` in query string will be parsed into a whitespace string `" "`, e.g. `a=1+1` will be parsed into `{"a":"1 1"}`. If you need to pass a real `+` string from the query, you should wrap the query string with `encodeURIComponent`, e.g. `encodeURIComponent('a=1+1')` will be parsed into `{"a":"1+1"}`
++ all the query strings will be parsed into an `Object` or `Array`
 
 ## API
 ### Instance method
 #### `.start([options])`
 
-初始化方法。这个方法有一个可选的参数options
+start the router
 
-可配置项：
-+ `root`: `[String]` 根路径的开始，默认值为'/'，在默认的hashbang模式下，在实际URL上就是'/#!/'
-+ `notFound` `[Function]` 找不到路由时触发的回调
-+ `mode` `['history'|'hashbang']` 默认为`'hashbang'`，如果使用`'history'`，请保证浏览器支持HTML5 History API（如果浏览器不支持，仍然会使用hashbang mode）
+Options
++ `root`: `[String]` where to begin
++ `notFound` `[Function]` this function will be called if current url do not match any routes
++ `mode` `['history'|'hashbang']` url mode, `history` need HTML5 History API support
 
 #### `.on(path, handler)`
 
-这个方法用于添加路由
+add a route to the route table
 
 ```javascript
 router.on('/test', function(req) {
@@ -132,37 +126,35 @@ router.on('/test', function(req) {
 });
 ```
 
-+ `.on()`方法添加的路由将和当前的路由表合并
-+ `.on()`方法如果在`.start()`之后执行，不会立即触发，必须等到下一次url发生改变或者调用`.dispatch()`方法才会触发
++ this method will merge the route with current route table
++ if this method is called after the `.start()` method, this route will not dispatch immediately, you must wait until next time the url change or you can call `dispatch` method to trigger the route
 
 #### `.off(path)`
 
-这个方法用于移除路由
+remove a route from route table
 
 #### `.mount(routes)`
 
-这个方法用于挂载路由表
+merge another route table with current route table
 
-+ `.mount()`方法挂载的路由表会和原来的路由表合并
-+ `.mount()`方法如果在`.start()`之后执行，不会立即触发，必须等到下一次url发生改变或者调用`.dispatch()`方法才会触发
++ routes will be merged with current route table
++ if this method is called after the `.start()` method, this route will not dispatch immediately, you must wait until next time the url change or you can call `dispatch` method to trigger the route
 
 #### .dispatch(path)
 
-触发path对应的路由，但不会改变URL
+dispatch a route
 
 #### .setRoute(path)
 
-改变当前的URL，由此触发对应的路由。
+change the url to `path` and dispatch a route
 
-这个方法适用于`'history'`模式。在`'history'`模式下，如果点击`<a>`标签默认会发生页面跳转行为，无法达到单页应用的效果。此时通过捕获点击事件禁止`<a>`标签跳转，然后调用`.setRoute(path)`方法，就实现了改变URL并且触发路由。
-
-+ 如果path未改变则不会产生影响。换句话说，`.setRoute()`方法不能实现当前页面的"刷新"。要实现当前页的刷新，使用`.reload()`方法。`.setRoute()`的意义在于改变，如果不改变则不响应。
-+ 虽然通常在history模式下使用，但该方法同样适用于hashbang模式
++ if the path has not changed, no routes will be dispatched, so do not use this method to reload a page
++ usually used in `history` mode
 
 #### .reload()
 
-对当前的路由重新适配一次，实现当前页的"刷新"
+reload the page(dispatch current route again)
 
-+ 该方法不带任何参数
++ no arguments
 
 ### API method
