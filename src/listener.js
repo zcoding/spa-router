@@ -1,9 +1,9 @@
+import { extend, addEvent } from './utils';
 
-var historySupport = typeof Win.history['pushState'] !== TYPE_UNDEFINED;
+var historySupport = typeof window.history['pushState'] !== "undefined";
 
 /// Listener
 var Listener = {
-
   listeners: null,
 
   history: false,
@@ -19,13 +19,10 @@ var Listener = {
   },
 
   add: function (fn) {
-
     if (!this.listeners) {
       this.listeners = [];
     }
-
     this.listeners.push(fn);
-
     return this;
   },
 
@@ -34,26 +31,25 @@ var Listener = {
       history.pushState({}, document.title, path);
     } else {
       if (path[0] === '/') {
-        Loc.hash = '!' + path;
+        location.hash = '!' + path;
       } else {
-        var currentURL = Loc.hash.slice(2); // 去掉前面的#!
+        var currentURL = location.hash.slice(2); // 去掉前面的#!
         var idf = currentURL.indexOf('?');
         if (idf !== -1) {
           currentURL = currentURL.slice(0, idf);
         }
         if (/.*\/$/.test(currentURL)) {
-          Loc.hash = '!' + currentURL + path;
+          location.hash = '!' + currentURL + path;
         } else {
           var hash = currentURL.replace(/([^\/]+|)$/, function($1) {
             return $1 === '' ? '/' + path : path;
           });
-          Loc.hash = '!' + hash;
+          location.hash = '!' + hash;
         }
       }
     }
     return this;
   }
-
 };
 
 function onchange(onChangeEvent) {
@@ -62,3 +58,5 @@ function onchange(onChangeEvent) {
     listeners[i](onChangeEvent);
   }
 }
+
+export default Listener;

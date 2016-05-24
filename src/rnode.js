@@ -1,4 +1,3 @@
-
 /**
  * RNode
  * @constructor
@@ -13,47 +12,55 @@
  * _children: 子节点引用列表
  * _parent:   父节点引用
  */
-var RNode = function(value) {
-  if (typeof value === TYPE_UNDEFINED) throw new TypeError('The RNode Constructor Need A Value.');
-  this.value = value;
-  this.params = {};
-  this.callbacks = null;
-  this.before = null;
-  this.after = null;
-  this._children = [];
-  this._parent = null;
-};
 
-var nprtt = RNode.prototype;
+export default class RNode {
+  constructor(value) {
+    var valueType = typeof value;
+    if (valueType !== 'string') {
+      throw new TypeError(`Expected a string in the first argument, got ${ valueType }`);
+    }
+    this.value = value;
+    this.params = {};
+    this.callbacks = null;
+    this.before = null;
+    this.after = null;
+    this._children = [];
+    this._parent = null;
+  }
 
-/**
- * set/get children
- * @param {RNode|[RNode]} children **optional**
- * @return {[RNode]|RNode} return children node list or this
- */
-nprtt.children = function(children) {
-  if (typeof children === TYPE_UNDEFINED) {
-    return this._children;
+  /**
+   * set/get children
+   * @param {RNode|[RNode]} children **optional**
+   * @return {[RNode]|RNode} return children node list or this
+   */
+  children(children) {
+    if (undefined === children) {
+      return this._children;
+    }
+    if (children instanceof RNode) {
+      this._children.push(children);
+    } else if (isArray(children)) {
+      this._children = this._children.concat(children);
+    } else {
+      throw new TypeError(`Expected RNode or Array in the first argument, got ${ Object.prototype.toString.call(children) }`);
+    }
+    return this;
   }
-  if (children instanceof RNode) {
-    this._children.push(children);
-  } else if (isArray(children)) {
-    this._children = this.children.concat(children);
-  }
-  return this;
-};
 
-/**
- * set/get parent
- * @param {RNode} parent **optional**
- * @return {RNode} return parent node or this
- */
-nprtt.parent = function(parent) {
-  if (typeof parent === TYPE_UNDEFINED) {
-    return this._parent;
+  /**
+   * set/get parent
+   * @param {RNode} parent **optional**
+   * @return {RNode} return parent node or this
+   */
+  parent(parent) {
+    if (undefined === parent) {
+      return this._parent;
+    }
+    if (parent instanceof RNode) {
+      this._parent = parent;
+    } else {
+      throw new TypeError(`Expected RNode in the first argument, got ${ Object.prototype.toString.call(parent) }`);
+    }
+    return this;
   }
-  if (parent instanceof RNode) {
-    this._parent = parent;
-  }
-  return this;
-};
+}

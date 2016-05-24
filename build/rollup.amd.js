@@ -1,7 +1,7 @@
 import babel from 'rollup-plugin-babel';
 
 export default {
-  entry: 'es2015/main.js',
+  entry: 'src/main.js',
   format: 'amd',
   dest: 'dist/amd/spa-router.js',
   sourceMap: true,
