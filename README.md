@@ -16,7 +16,7 @@ A Router Module for Single Page Application
 
 OR
 
-Use the dist files in the build folder.
+Use the dist files in the dist folder.
 
 ## Basic Usage
 
@@ -45,7 +45,6 @@ var routes = {
   }
 };
 var router = new Router(routes);
-// var router = Router(routes);
 router.start({
   root: '/'
 });
@@ -53,9 +52,9 @@ router.start({
 
 ## Basic Uasge with Vue.js
 
-You can see the demo's source files in the `demo-vuejs` folder.
+You can see the demo's source files in the `vue-router` folder.
 
-In the project's root directory, run `npm run vuejs` to start the demo, and then open `http://localhost:9999`.
+In the project's root directory, run `npm run vue` to start the demo, and then open `http://localhost:9999`.
 
 This demo use [webpack-dev-server](https://github.com/webpack/webpack-dev-server) and support livereload. Try to change the demo's source and learn more usage about spa-router.
 

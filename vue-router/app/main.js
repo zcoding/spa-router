@@ -53,7 +53,7 @@ let App = new Vue({
 
 });
 
-let spaRouter = Router.Router({
+let spaRouter = new Router({
   "/": function(req) {
     App.currentView = 'pageHome';
   },
