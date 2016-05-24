@@ -5,7 +5,7 @@ export default {
   format: 'iife',
   dest: 'dist/iife/spa-router.js',
   sourceMap: true,
-  moduleName: 'spaRouter',
+  moduleName: 'Router',
   plugins: [
     babel({
       exclude: 'node_modules/**',

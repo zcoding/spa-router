@@ -23,9 +23,6 @@ const optionDefaults = {
 export default class Router {
   constructor(routes) {
     routes = routes || {};
-    if (!(this instanceof Router)) {
-      throw new TypeError('Use "new" to create a Router instance');
-    }
     var root = new RNode('');
     root.params = false;
     this.routeTree = createRouteTree(root, routes);
@@ -71,7 +68,7 @@ export default class Router {
    * @param {Object} routes
    * @return this
    */
-  mount() {
+  mount(path, routes) {
     if (path !== '' && path[0] === '/') {
       path = path.slice(1);
     }
@@ -86,15 +83,15 @@ export default class Router {
    * @param {Function|Array} handlers
    * @return this
    */
-  on() {
+  on(path, handlers) {
     if (path !== '' && path[0] === '/') {
       path = path.slice(1);
     }
     var n = findNode(this.routeTree, path);
     n.callbacks = n.callbacks || [];
-    if (isArray(handlers)) {
+    if (Array.isArray(handlers)) {
       n.callbacks = n.callbacks.concat(handlers);
-    } else if (isFunction(handlers)) {
+    } else if (typeof handlers === 'function') {
       n.callbacks.push(handlers);
     }
     return this;
@@ -106,7 +103,7 @@ export default class Router {
    * @param {String} path
    * @return this
    */
-  dispatch() {
+  dispatch(path) {
     var routeTree = this.routeTree;
     // 保存原始请求uri
     var uri = path;
@@ -125,7 +122,7 @@ export default class Router {
     var callbacks = result[0];
     req.params = result[1];
     if (callbacks !== null) {
-      if (isArray(callbacks)) {
+      if (Array.isArray(callbacks)) {
         for (var i = 0, len = callbacks.length; i < len; ++i) { // 不考虑异步操作
           callbacks[i].call(this, req);
         }

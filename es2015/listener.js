@@ -11,9 +11,9 @@ var Listener = {
   init: function(mode) {
     this.history = mode === 'history';
     if (this.history && historySupport) { // IE 10+
-      utils.addEvent('popstate', onchange);
+      addEvent('popstate', onchange);
     } else {
-      utils.addEvent('hashchange', onchange);
+      addEvent('hashchange', onchange);
     }
     return this;
   },

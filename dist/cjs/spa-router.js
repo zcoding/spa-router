@@ -47,6 +47,16 @@ function extend() {
   return obj;
 }
 
+function addEvent(name, handler) {
+  if (window.addEventListener) {
+    window.addEventListener(name, handler, false);
+  } else if (window.attachEvent) {
+    window.attachEvent('on' + name, handler);
+  } else {
+    window['on' + name] = handler;
+  }
+}
+
 /**
  * RNode
  * @constructor
@@ -62,7 +72,7 @@ function extend() {
  * _parent:   父节点引用
  */
 
-var RNode$1 = function () {
+var RNode = function () {
   function RNode(value) {
     babelHelpers.classCallCheck(this, RNode);
 
@@ -137,9 +147,9 @@ var Listener = {
     this.history = mode === 'history';
     if (this.history && historySupport) {
       // IE 10+
-      utils.addEvent('popstate', onchange);
+      addEvent('popstate', onchange);
     } else {
-      utils.addEvent('hashchange', onchange);
+      addEvent('hashchange', onchange);
     }
     return this;
   },
@@ -225,6 +235,9 @@ var querystring = {
    * querystring.parse
    * @param { String } queryString
    * @return { Object }
+   * 
+   * 'x=1&y=2' => {x: 1, y: 2}
+   * 'x=1&x=2' => {x: 2}
    */
   parse: function parse(queryString) {
     if (typeof queryString !== 'string') {
@@ -243,14 +256,14 @@ var querystring = {
 
     for (var i = 0; i < queryParts.length; ++i) {
       var parts = queryParts[i].replace(/\+/g, '%20').split('='); // 特殊字符`+`转换为空格
-      var name = parts[0];
-      var value = parts[1];
+      var name = parts[0],
+          value = parts[1];
 
       name = decodeURIComponent(name);
 
       value = value === undefined ? null : decodeURIComponent(value);
 
-      if (query.hasOwnProperty(name)) {
+      if (!query.hasOwnProperty(name)) {
         query[name] = value;
       } else if (Array.isArray(query[name])) {
         query[name].push(value);
@@ -268,18 +281,18 @@ function handler(onChangeEvent) {
   var url = void 0;
   switch (mode) {
     case 'history':
-      url = Loc.pathname + Loc.search + Loc.hash;
+      url = location.pathname + location.search + location.hash;
       if (url.substr(0, 1) !== '/') {
         url = '/' + url;
       }
       break;
     case 'hashbang':
     default:
-      var hash = Loc.hash.slice(1);
+      var hash = location.hash.slice(1);
       if (hash === '' || hash === '!') {
         return this.redirect(this.options.root);
       }
-      var newURL = onChangeEvent && onChangeEvent.newURL || Loc.hash;
+      var newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
       url = newURL.replace(/.*#!/, '');
   }
   this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
@@ -350,16 +363,16 @@ function findNode(tree, path, onlyFind) {
  * */
 function createRouteTree(root, routes) {
 
-  if (isFunction(routes)) {
+  if (typeof routes === 'function') {
     root.callbacks = [routes];
     return root;
-  } else if (isArray(routes)) {
+  } else if (Array.isArray(routes)) {
     root.callbacks = routes;
     return root;
   }
 
   for (var path in routes) {
-    if (hasOwn.call(routes, path)) {
+    if (routes.hasOwnProperty(path)) {
 
       var fns = routes[path];
 
@@ -392,7 +405,7 @@ function dfs(root, parts, ci, ri, params) {
   var newParams = {};
   for (var p in params) {
     // copy: params => newParams
-    if (hasOwn.call(params, p)) {
+    if (params.hasOwnProperty(p)) {
       newParams[p] = params[p];
     }
   }
@@ -479,10 +492,7 @@ var Router = function () {
     babelHelpers.classCallCheck(this, Router);
 
     routes = routes || {};
-    if (!(this instanceof Router)) {
-      throw new TypeError('Use "new" to create a Router instance');
-    }
-    var root = new RNode$1('');
+    var root = new RNode('');
     root.params = false;
     this.routeTree = createRouteTree(root, routes);
     this.options = {};
@@ -537,7 +547,7 @@ var Router = function () {
 
   }, {
     key: 'mount',
-    value: function mount() {
+    value: function mount(path, routes) {
       if (path !== '' && path[0] === '/') {
         path = path.slice(1);
       }
@@ -555,15 +565,15 @@ var Router = function () {
 
   }, {
     key: 'on',
-    value: function on() {
+    value: function on(path, handlers) {
       if (path !== '' && path[0] === '/') {
         path = path.slice(1);
       }
       var n = findNode(this.routeTree, path);
       n.callbacks = n.callbacks || [];
-      if (isArray(handlers)) {
+      if (Array.isArray(handlers)) {
         n.callbacks = n.callbacks.concat(handlers);
-      } else if (isFunction(handlers)) {
+      } else if (typeof handlers === 'function') {
         n.callbacks.push(handlers);
       }
       return this;
@@ -578,7 +588,7 @@ var Router = function () {
 
   }, {
     key: 'dispatch',
-    value: function dispatch() {
+    value: function dispatch(path) {
       var routeTree = this.routeTree;
       // 保存原始请求uri
       var uri = path;
@@ -597,7 +607,7 @@ var Router = function () {
       var callbacks = result[0];
       req.params = result[1];
       if (callbacks !== null) {
-        if (isArray(callbacks)) {
+        if (Array.isArray(callbacks)) {
           for (var i = 0, len = callbacks.length; i < len; ++i) {
             // 不考虑异步操作
             callbacks[i].call(this, req);

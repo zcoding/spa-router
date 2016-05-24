@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="css/demo.css">
 </head>
 <body>
-  <div id="main-container">
+  <div class="fixed-container">
     <table>
       <thead>
         <tr>
@@ -28,38 +28,88 @@
         </tr>
       </tbody>
     </table>
-
-    <h2>Basic Example</h2>
-    <ul>
-      <li><a href="#!/">Home</a></li>
-      <li><a href="#!/product">Product List</a></li>
-      <li><a href="#!/product/red-small-low">Category Product List</a></li>
-      <li><a href="#!/product?color=red&size=small&price=low">Category Product List With Query</a></li>
-      <li><a href="#!/product/12345">Product Detail</a></li>
-      <li><a href="#!/about">About</a></li>
-      <li><a href="#!/admin">Admin Home</a></li>
-      <li><a href="#!/admin/product">Admin Product List</a></li>
-      <li><a href="#!/admin/product?page=3">Admin Product List With Query</a></li>
-      <li><a href="#!/admin/product/red-small-low">Admin Category Product List</a></li>
-      <li><a href="#!/admin/product/red-small-low?page=2">Admin Category Product List With Query</a></li>
-      <li><a href="#!/admin/product/add">Admin Product Add</a></li>
-      <li><a href="#!/admin/product/12345">Admin Product Edit</a></li>
-      <li><a href="#!/notfound">Not Found</a></li>
-    </ul>
-    <h2>Separators</h2>
-    <ul>
-      <li><a href="#!/test/a/b/c">/test/a/b/c</a></li>
-      <li><a href="#!/test/a&b&c">/test/a&b&c</a></li>
-      <li><a href="#!/test/a!b!c">/test/a!b!c</a></li>
-      <li><a href="#!/test/a=b=c">/test/a=b=c</a></li>
-      <li><a href="#!/test/a@b@c">/test/a@b@c</a></li>
-      <li><a href="#!/test/hello@world&and!hahaha=shit-ok">/test/hello@world&and!hahaha=shit</a></li>
-    </ul>
   </div>
-  <script src="../build/global/spa-router.js"></script>
+  <div class="main-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Rules</th>
+          <th>URI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="#!/">Home</a></td><td>/</td><td>/</td>
+        </tr>
+        <tr>
+          <td><a href="#!/product">Product List</a></td><td>/product</td><td>/product</td>
+        </tr>
+        <tr>
+          <td><a href="#!/product/red-small-low">Category Product List</a></td><td>/product/:color(r.+)-:size-:price</td><td>/product/red-small-low</td>
+        </tr>
+        <tr>
+          <td><a href="#!/product?color=red&size=small&price=low">Category Product List With Query</a></td><td>/product</td><td>/product?color=red&size=small&price=low</td>
+        </tr>
+        <tr>
+          <td><a href="#!/product/12345">Product Detail</a></td><td>/product/:id</td><td>/product/12345</td>
+        </tr>
+        <tr>
+          <td><a href="#!/about">About</a></td><td>/about</td><td>/about</td>
+        </tr>
+        <tr>
+          <td><a href="#!/admin">Admin Home</a></td><td>/admin</td><td>/admin</td>
+        </tr>
+        <tr>
+          <td><a href="#!/admin/product">Admin Product List</a></td><td>/admin/product</td><td>/admin/product</td>
+        </tr>
+        <tr>
+          <td><a href="#!/admin/product?page=3">Admin Product List With Query</a></td><td>/admin/product</td><td>/admin/product?page=3</td>
+        </tr>
+        <tr>
+          <td><a href="#!/admin/product/red-small-low">Admin Category Product List</a></td><td>/admin/product/:color-:size-:price</td><td>/admin/product/red-small-low</td>
+        </tr>
+        <tr>
+          <td><a href="#!/admin/product/red-small-low?page=2">Admin Category Product List With Query</a></td><td>/admin/product/:color-:size-:price</td><td>/admin/product/red-small-low?page=2</td>
+        </tr>
+        <tr>
+          <td><a href="#!/admin/product/add">Admin Product Add</a></td><td>/admin/product/:id</td><td>/admin/product/add</td>
+        </tr>
+        <tr>
+          <td><a href="#!/admin/product/12345">Admin Product Edit</a></td><td>/admin/product/:id</td><td>/admin/product/12345</td>
+        </tr>
+        <tr>
+          <td><a href="#!/notfound">Not Found</a></td><td>none</td><td>/notfound</td>
+        </tr>
+      </tbody>
+      <tbody>
+        <tr>
+          <td><a href="#!/test/a/b/c">separator: /</a></td><td>/test/:p1/:p2/:p3</td><td>/test/a/b/c</td>
+        </tr>
+        <tr>
+          <td><a href="#!/test/a&b&c">separator: &</a></td><td>/test/:p1&:p2&:p3</td><td>/test/a&b&c</td>
+        </tr>
+        <tr>
+          <td><a href="#!/test/a!b!c">separator: !</a></td><td>/test/:p1!:p2!:p3</td><td>/test/a!b!c</td>
+        </tr>
+        <tr>
+          <td><a href="#!/test/a=b=c">separator: =</a></td><td>/test/:p1=:p2=:p3</td><td>/test/a=b=c</td>
+        </tr>
+        <tr>
+          <td><a href="#!/test/a@b@c">separator: @</a></td><td>/test/:p1@:p2@:p3</td><td>/test/a@b@c</td>
+        </tr>
+        <tr>
+          <td><a href="#!/test/hello@world&and!hahaha=shit-ok">one param</a></td><td>/test/hello@world&and!hahaha=shit-:haha</td><td>#!/test/hello@world&and!hahaha=shit-ok</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <script src="../dist/iife/spa-router.js"></script>
   <script>
 
-  var mainContainer = document.querySelectorAll('#main-container')[0];
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  var mainContainer = document.querySelectorAll('.fixed-container')[0];
   var getDom = function(selector) {
     return mainContainer.querySelectorAll(selector)[0];
   };
@@ -151,11 +201,11 @@
     '/test/:p1=:p2=:p3': show,
     '/test/:p1@:p2@:p3': show,
     '/test/hello@world&and!hahaha=shit-:haha': [show, function(req) {
-      getDom('[data-msg]').innerHTML = '"hello@world&and!hahaha=shit" is not a parameter.';
+      getDom('[data-msg]').innerHTML = '"hello@world&and!hahaha=shit-" is not a parameter.';
     }]
   };
 
-  var separatorExampleRouter = Router(separatorExampleRoutes);
+  var separatorExampleRouter = new Router(separatorExampleRoutes);
   separatorExampleRouter.start();
 
   </script>

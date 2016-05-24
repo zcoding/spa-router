@@ -1,3 +1,11 @@
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 html, body, div {
   margin: 0;
   padding: 0;
@@ -5,14 +13,28 @@ html, body, div {
   font-family: Consolas;
 }
 
-#main-container {
-  width: 1200px;
-  margin: 10px auto;
+body {
+  padding: 10px;
+}
+
+.main-container {
+  margin: 250px auto 0;
+}
+
+.fixed-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 0 10px;
+  margin: 0 auto;
+  background: #fff;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 1em;
 }
 
 th {

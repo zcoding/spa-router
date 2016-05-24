@@ -1,21 +1,23 @@
+import RNode from './rnode';
+
 // TODO: root怎么处理？
 export function handler(onChangeEvent) {
   let mode = this.options.mode;
   let url;
   switch(mode) {
     case 'history':
-      url = Loc.pathname + Loc.search + Loc.hash;
+      url = location.pathname + location.search + location.hash;
       if (url.substr(0, 1) !== '/') {
         url = '/' + url;
       }
       break;
     case 'hashbang':
     default:
-      var hash = Loc.hash.slice(1);
+      var hash = location.hash.slice(1);
       if (hash === '' || hash === '!') {
         return this.redirect(this.options.root);
       }
-      var newURL = onChangeEvent && onChangeEvent.newURL || Loc.hash;
+      var newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
       url = newURL.replace(/.*#!/, '');
   }
   this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
@@ -84,16 +86,16 @@ export function findNode(tree, path, onlyFind) {
  * */
 export function createRouteTree(root, routes) {
 
-  if (isFunction(routes)) {
+  if (typeof routes === 'function') {
     root.callbacks = [routes];
     return root;
-  } else if (isArray(routes)) {
+  } else if (Array.isArray(routes)) {
     root.callbacks = routes;
     return root;
   }
 
   for (var path in routes) {
-    if (hasOwn.call(routes, path)) {
+    if (routes.hasOwnProperty(path)) {
 
       var fns = routes[path];
 
@@ -126,7 +128,7 @@ export function dfs(root, parts, ci, ri, params) {
 
   var newParams = {};
   for (var p in params) { // copy: params => newParams
-    if (hasOwn.call(params, p)) {
+    if (params.hasOwnProperty(p)) {
       newParams[p] = params[p];
     }
   }

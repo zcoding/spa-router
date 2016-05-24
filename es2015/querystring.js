@@ -38,6 +38,9 @@ export default {
    * querystring.parse
    * @param { String } queryString
    * @return { Object }
+   * 
+   * 'x=1&y=2' => {x: 1, y: 2}
+   * 'x=1&x=2' => {x: 2}
    */
   parse: function(queryString) {
     if (typeof queryString !== 'string') {
@@ -52,18 +55,17 @@ export default {
 
     var queryParts = queryString.split('&');
 
-    var query = {};
+    let query = {};
 
-    for (var i = 0; i < queryParts.length; ++i) {
+    for (let i = 0; i < queryParts.length; ++i) {
       var parts = queryParts[i].replace(/\+/g, '%20').split('='); // 特殊字符`+`转换为空格
-      var name = parts[0];
-      var value = parts[1];
+      var name = parts[0], value = parts[1];
 
       name = decodeURIComponent(name);
 
       value = value === undefined ? null : decodeURIComponent(value);
 
-      if (query.hasOwnProperty(name)) {
+      if (!query.hasOwnProperty(name)) {
         query[name] = value;
       } else if (Array.isArray(query[name])) {
         query[name].push(value);
