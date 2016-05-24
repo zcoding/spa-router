@@ -1,10 +1,9 @@
-import utils from './utils';
+import { extend, addEvent } from './utils';
 
 var historySupport = typeof window.history['pushState'] !== "undefined";
 
 /// Listener
 var Listener = {
-
   listeners: null,
 
   history: false,
@@ -51,7 +50,6 @@ var Listener = {
     }
     return this;
   }
-
 };
 
 function onchange(onChangeEvent) {
@@ -60,3 +58,5 @@ function onchange(onChangeEvent) {
     listeners[i](onChangeEvent);
   }
 }
+
+export default Listener;

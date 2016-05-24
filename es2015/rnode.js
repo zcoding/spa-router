@@ -15,7 +15,10 @@
 
 export default class RNode {
   constructor(value) {
-    if (typeof value === "undefined") throw new TypeError('The RNode Constructor Need A Value.');
+    var valueType = typeof value;
+    if (valueType !== 'string') {
+      throw new TypeError(`Expected a string in the first argument, got ${ valueType }`);
+    }
     this.value = value;
     this.params = {};
     this.callbacks = null;
@@ -31,13 +34,15 @@ export default class RNode {
    * @return {[RNode]|RNode} return children node list or this
    */
   children(children) {
-    if (typeof children === "undefined") {
+    if (undefined === children) {
       return this._children;
     }
     if (children instanceof RNode) {
       this._children.push(children);
     } else if (isArray(children)) {
-      this._children = this.children.concat(children);
+      this._children = this._children.concat(children);
+    } else {
+      throw new TypeError(`Expected RNode or Array in the first argument, got ${ Object.prototype.toString.call(children) }`);
     }
     return this;
   }
@@ -48,11 +53,13 @@ export default class RNode {
    * @return {RNode} return parent node or this
    */
   parent(parent) {
-    if (typeof parent === "undefined") {
+    if (undefined === parent) {
       return this._parent;
     }
     if (parent instanceof RNode) {
       this._parent = parent;
+    } else {
+      throw new TypeError(`Expected RNode in the first argument, got ${ Object.prototype.toString.call(parent) }`);
     }
     return this;
   }

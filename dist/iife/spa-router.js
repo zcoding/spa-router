@@ -1,4 +1,5 @@
-define('spa-router', function () { 'use strict';
+var spaRouter = (function () {
+  'use strict';
 
   var babelHelpers = {};
   babelHelpers.typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -699,5 +700,5 @@ define('spa-router', function () { 'use strict';
 
   return Router;
 
-});
+}());
 //# sourceMappingURL=spa-router.js.map
