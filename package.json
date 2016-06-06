@@ -13,7 +13,7 @@
     "rollup-es6": "rollup --config build/rollup.es6.js",
     "rollup-amd": "rollup --config build/rollup.amd.js",
     "rollup-cjs": "rollup --config build/rollup.cjs.js",
-    "server": "pushd demo;python -m SimpleHTTPServer 9998;popd;"
+    "server": "node scripts/pjax-server.js"
   },
   "repository": {
     "type": "git",
@@ -46,6 +46,9 @@
     "karma-jasmine": "^0.3.8",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^1.7.0",
+    "koa": "^1.2.0",
+    "koa-static": "^2.0.0",
+    "open": "0.0.5",
     "rollup": "^0.26.3",
     "rollup-plugin-babel": "^2.4.0",
     "vue": "^1.0.21",

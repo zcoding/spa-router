@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="/css/demo.css">
 </head>
 <body>
-  <div id="main-container">
+  <div class="fixed-container">
     <table>
       <thead>
         <tr>
@@ -28,35 +28,68 @@
         </tr>
       </tbody>
     </table>
-
-    <h2>Basic Example</h2>
-    <ul>
-      <li><a href="/" data-pjax>Home</a></li>
-      <li><a href="/product" data-pjax>Product List</a></li>
-      <li><a href="/product/red-small-low" data-pjax>Category Product List</a></li>
-      <li><a href="/product?color=red&size=small&price=low" data-pjax>Category Product List With Query</a></li>
-      <li><a href="/product/12345" data-pjax>Product Detail</a></li>
-      <li><a href="/about" data-pjax>About</a></li>
-      <li><a href="/admin" data-pjax>Admin Home</a></li>
-      <li><a href="/admin/product" data-pjax>Admin Product List</a></li>
-      <li><a href="/admin/product?page=3" data-pjax>Admin Product List With Query</a></li>
-      <li><a href="/admin/product/red-small-low" data-pjax>Admin Category Product List</a></li>
-      <li><a href="/admin/product/red-small-low?page=2" data-pjax>Admin Category Product List With Query</a></li>
-      <li><a href="/admin/product/add" data-pjax>Admin Product Add</a></li>
-      <li><a href="/admin/product/12345" data-pjax>Admin Product Edit</a></li>
-      <li><a href="/notfound" data-pjax>Not Found</a></li>
-    </ul>
   </div>
-  <script src="/global/spa-router.js"></script>
+  <div class="main-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Rules</th>
+          <th>URI</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="/" data-pjax>Home</a></td><td>/</td><td>/</td>
+        </tr>
+        <tr>
+          <td><a href="/product" data-pjax>Product List</a></td><td>/product</td><td>/product</td>
+        </tr>
+        <tr>
+          <td><a href="/product/red-small-low" data-pjax>Category Product List</a></td><td>/product/:color-:size-:price</td><td>/product/red-small-low</td>
+        </tr>
+        <tr>
+          <td><a href="/product?color=red&size=small&price=low" data-pjax>Category Product List With Query</a></td><td>/product</td><td>/product?color=red&size=small&price=low</td>
+        </tr>
+        <tr>
+          <td><a href="/product/12345" data-pjax>Product Detail</a></td><td>/product/:id</td><td>/product/12345</td>
+        </tr>
+        <tr>
+          <td><a href="/about" data-pjax>About</a></td><td>/about</td><td>/about</td>
+        </tr>
+        <tr>
+          <td><a href="/admin" data-pjax>Admin Home</a></td><td>/admin</td><td>/admin</td>
+        </tr>
+        <tr>
+          <td><a href="/admin/product" data-pjax>Admin Product List</a></td><td>/admin/product</td><td>/admin/product</td>
+        </tr>
+        <tr>
+          <td><a href="/admin/product?page=3" data-pjax>Admin Product List With Query</a></td><td>/admin/product</td><td>/admin/product?page=3</td>
+        </tr>
+        <tr>
+          <td><a href="/admin/product/red-small-low" data-pjax>Admin Category Product List</a></td><td>/admin/product/:color-:size-:price</td><td>/admin/product/red-small-low</td>
+        </tr>
+        <tr>
+          <td><a href="/admin/product/red-small-low?page=2" data-pjax>Admin Category Product List With Query</a></td><td>/admin/product/:color-:size-:price</td><td>/admin/product/red-small-low?page=2</td>
+        </tr>
+        <tr>
+          <td><a href="/admin/product/add" data-pjax>Admin Product Add</a></td><td>/admin/product/add</td><td>/admin/product/add</td>
+        </tr>
+        <tr>
+          <td><a href="/admin/product/12345" data-pjax>Admin Product Edit</a></td><td>/admin/product/:id</td><td>/admin/product/12345</td>
+        </tr>
+        <tr>
+          <td><a href="/notfound" data-pjax>Not Found</a></td><td></td><td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <script src="/spa-router.js"></script>
   <script>
-
-  var mainContainer = document.querySelectorAll('#main-container')[0];
   var getDom = function(selector) {
-    return mainContainer.querySelectorAll(selector)[0];
+    return document.querySelectorAll(selector)[0];
   };
-  var lightStyle = 'padding: 0 5px;background: #aaa;color: #333;font-size: 18px;font-family: Consolas;font-weight: bold;';
-  var darkStyle = 'padding: 0 5px;background: #333;color: #eee;font-size: 18px;font-family: Consolas;font-weight: bold;';
-
+  var mainContainer = getDom('.fixed-container');
   var show = (function () {
     var uriD = getDom('[data-uri]');
     var pathD = getDom('[data-path]');
@@ -82,7 +115,8 @@
       getDom('[data-msg]').innerText = msg;
     }
   })();
-
+  var lightStyle = 'padding: 0 5px;background: #aaa;color: #333;font-size: 18px;font-family: Consolas;font-weight: bold;';
+  var darkStyle = 'padding: 0 5px;background: #333;color: #eee;font-size: 18px;font-family: Consolas;font-weight: bold;';
   function log (req) {
     console.log('%cGet: ' + req.path, lightStyle);
   }
