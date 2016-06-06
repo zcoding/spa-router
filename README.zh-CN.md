@@ -1,19 +1,25 @@
 # spa-router
 
-Router Module for Single Page Application
+单页Web应用的路有模块
 
 [![版本](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "版本")](https://www.npmjs.com/package/spa-router-better)
 [![协议](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "协议")](./LICENSE)
 
 ## 介绍
 
-spa-router是一个前端路由模块，适用于单页应用程序的开发。如果你正在使用[vue.js](https://github.com/yyx990803/vue)进行单页应用开发，spa-router可以作为路由模块使用。
+spa-router-better是一个前端路由模块，适用于单页Web应用的开发。如果你正在使用[vue.js](https://github.com/vuejs/vue)进行单页Web应用开发，spa-router-better可以作为路由模块使用。
 
-## Install
+## 安装
 
-`npm install spa-router-better`
+如果你的项目使用CommonJS规范组织模块，直接用NPM可以安装：
 
-或者使用其它载入方式：在dist目录有支持4种模块再入方式的打包文件，其中iife下的spa-router.js可以直接在页面使用`script`标签引入。
+```bash
+npm install spa-router-better --save
+```
+
+如果你需要其它模块规范的支持，在dist目录有4种模块载入方式的打包文件，其中iife下的spa-router.js可以直接在页面使用`script`标签引入（会产生一个全局变量`Router`）。
+
+es6目录下的spa-router.js可以使用es6模块规范导入。
 
 ## 使用方法
 
@@ -23,7 +29,9 @@ spa-router是一个前端路由模块，适用于单页应用程序的开发。�
 
 ```javascript
 ////////// 一个完整的例子
-var routes = {
+import Router from 'spa-router-better';
+
+const routes = {
   '/': function(req) {
     console.log('This is the index route!');
   },
@@ -41,9 +49,14 @@ var routes = {
     }
   }
 };
-var router = new Router(routes);
+
+let router = new Router(routes);
+
 router.start({
-  root: '/'
+  root: '/',
+  notFound: function() {
+    console.log('Page not found.');
+  }
 });
 ```
 
@@ -85,7 +98,7 @@ var routes = {
 };
 ```
 
-参数不一定是用来传值的，参数的主要作用是限制路由规则。
+参数不一定是用来传值的，参数的主要作用是过滤路由规则。
 
 ### query传值
 
@@ -97,7 +110,8 @@ var routes = {
     var query = req.query;
     // 假设当前请求为/produce?color=red&size=normal&price=low
     console.log(query.color, query.size, query.price);
-    // console: red normal low
+    // console输出:
+    // > red normal low
   }
 }
 ```
@@ -109,7 +123,7 @@ var routes = {
 + 所有的query解析出来都是字符串或字符串数组（不会转换为数值或其它类型）
 
 ## API
-### Instance method
+### 实例方法
 #### `.start([options])`
 
 初始化方法。这个方法有一个可选的参数options
@@ -162,4 +176,4 @@ router.on('/test', function(req) {
 
 + 该方法不带任何参数
 
-### API method
+### API方法

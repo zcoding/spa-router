@@ -7,8 +7,15 @@ A Router Module for Single Page Application
 
 ## Introduction
 
-`spa-router` is a router module for building large single-page-application(SPA).If you are using [vue.js](https://github.com/yyx990803/vue), it's easy for you to handle routing.
+`spa-router-better` is a router module for building large single-page-application(SPA).If you are using [vue.js](https://github.com/yyx990803/vue), it's easy for you to handle routing.
 
+[中文](./README.zh-CN.md)
+
+## Demo
+
+See demos in the `demo` folder.
+
+If you want to see demos with `history mode`, run `npm run server`.
 
 ## Install
 
