@@ -297,7 +297,7 @@ var Router = (function () {
         url = newURL.replace(/.*#!/, '');
     }
     this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
-  };
+  }
 
   /**
    * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
@@ -535,6 +535,15 @@ var Router = (function () {
         });
         // 首次触发
         handler.call(this);
+        return this;
+      }
+
+      // 停止路由监听
+
+    }, {
+      key: 'stop',
+      value: function stop() {
+        Listener.stop();
         return this;
       }
 

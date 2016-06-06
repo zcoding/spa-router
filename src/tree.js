@@ -21,7 +21,7 @@ export function handler(onChangeEvent) {
       url = newURL.replace(/.*#!/, '');
   }
   this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
-};
+}
 
 /**
  * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点

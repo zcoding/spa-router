@@ -2,80 +2,157 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>params</title>
+  <title>Test params</title>
   <link rel="stylesheet" href="css/demo.css">
 </head>
 <body>
-  <div id="main-container">
-    <div class="field">
-      <input type="text" placeholder="parameter string">
-      <button id="add2">add to router</button>
-    </div>
-    <div class="field">
-      <input type="text" placeholder="url">
-      <button id="dispatch2">Dispatch</button>
-    </div>
-    <div class="field" id="show">
-
-    </div>
+  <div class="fixed-container">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50%;">req.uri</th>
+          <th style="width: 30%;">req.path</th>
+          <th style="width: 10%;">req.params</th>
+          <th style="width: 10%;">req.query</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height: 150px;">
+          <td data-uri>-</td>
+          <td data-path>-</td>
+          <td data-param>-</td>
+          <td data-query>-</td>
+        </tr>
+        <tr style="height: 50px;">
+          <td colspan="4" data-msg></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-  <script src="../build/global/spa-router.js"></script>
+  <div class="main-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Input</th>
+          <th>Trigger</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <input type="text" placeholder="url pattern" id="url-pattern">
+          </td>
+          <td>
+            <button id="add2">Add to routerA</button>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <input type="text" placeholder="url" id="url-dispatch">
+          </td>
+          <td>
+            <button id="dispatch-router-a">Dispatch routerA</button>
+            <button id="dispatch-router-b">Dispatch routerB</button>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <input type="text" placeholder="redirect url" id="url-redirect">
+          </td>
+          <td>
+            <button id="redirect-router-a">Redirect routerA</button>
+            <button id="redirect-router-b">Redirect routerB</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <script src="../dist/iife/spa-router.js"></script>
   <script>
-  var aRouter = new Router();
-  aRouter.init();
-  var show = document.getElementById('show');
-  document.getElementById('add2').addEventListener('click', function(evt) {
-    var input = this.parentNode.children[0];
-    var path = input.value.replace(/^\s*|\s*$/g, '');
-    aRouter.on(path, function(req) {
-      var html = '';
-      for (var p in req.params) {
-        if (req.params.hasOwnProperty(p)) {
-          html += '<p>' + p + ':' + req.params[p] + '</p>';
-        }
-      }
-      show.innerHTML = html;
-    });
-    console.log(aRouter.routeTree);
-  });
-  document.getElementById('dispatch2').addEventListener('click', function(evt) {
-    var input = this.parentNode.children[0];
-    var url = input.value.replace(/^\s*|\s*$/g, '');
-    aRouter.dispatch(url);
-  });
+  var getDom = function(selector) {
+    return document.querySelectorAll(selector)[0];
+  };
+  var mainContainer = getDom('.fixed-container');
+  var show = (function () {
+    var uriD = getDom('[data-uri]');
+    var pathD = getDom('[data-path]');
+    var paramD = getDom('[data-param]');
+    var queryD = getDom('[data-query]');
 
-  var zRouter = new Router({
-    '/': function(req) {
-      console.log(req.params);
-    },
-    '/admin': {
-      '/:id([1-4]+)': function(req) {
-        console.log(req.params);
-      },
-      '/([5-6]+)': function(req) {
-        console.log(req.params);
-      },
-      '/edit': {
-        '/': function(req) {
-          console.log(req.params);
-        },
-        '/:id([0-9]+)': function(req) {
-          console.log(req.params);
+    return function process (req, msg) {
+      msg = msg || '';
+      uriD.innerText = req.uri;
+      pathD.innerText = req.path;
+      var params = req.params, query = req.query;
+      var paramString = '', queryString = '';
+      for (var p in params) {
+        if (params.hasOwnProperty(p)) {
+          paramString += '<p>' + p + ': ' + params[p] + '</p>';
         }
-      },
-      '/list/:color([a-z]+)-:size([0-9]{4})-:price([0-9]+)': function(req) { // ([a-z]+-[0-9]+-[0-9]+)
-        console.log(req.params); // {color: 'red', size: '12', price: '23'}
-      },
-      '/post/:id(integer)/:time(date)': function(req) { // ([0-9]+), ()
-        console.log(req.params); // {id: '12', time: '2015-05-20'}
       }
+      paramD.innerHTML = paramString || '-';
+      for (var q in query) {
+        queryString += '<p>' + q + ': ' + query[q] + '</p>';
+      }
+      queryD.innerHTML = queryString || '-';
+      getDom('[data-msg]').innerText = msg;
+    }
+  })();
+  function notFound(req) {
+    getDom('[data-uri]').innerText = '-';
+    getDom('[data-path]').innerText = '-';
+    getDom('[data-param]').innerHTML = '-';
+    getDom('[data-query]').innerHTML = '-';
+    getDom('[data-msg]').innerText = 'page not found';
+  }
+
+  var routerA = new Router();
+  routerA.start({
+    notFound: notFound
+  });
+  var routerB = new Router({
+    '/': show,
+    '/admin': {
+      '/:id([1-4]+)': show,
+      '/([5-6]+)': show,
+      '/edit': {
+        '/': show,
+        '/:id([0-9]+)': show
+      },
+      '/list/:color([a-z]+)-:size([0-9]{4})-:price([0-9]+)': show,
+      '/post/:id(integer)/:time(date)': show
     }
   });
-  zRouter.configure({
-    notFound: function(req) { console.log('not found'); }
+  routerB.configure({
+    notFound: notFound
   });
-  zRouter.init();
-  console.log(zRouter.routeTree);
+  routerB.start();
+
+  getDom('#add2').addEventListener('click', function(evt) {
+    var input = getDom('#url-pattern');
+    var path = input.value.replace(/^\s*|\s*$/g, '');
+    routerA.on(path, show);
+  });
+  getDom('#dispatch-router-a').addEventListener('click', function(evt) {
+    var input = getDom('#url-dispatch');
+    var url = input.value.replace(/^\s*|\s*$/g, '');
+    routerA.dispatch(url);
+  });
+  getDom('#dispatch-router-b').addEventListener('click', function(evt) {
+    var input = getDom('#url-dispatch');
+    var url = input.value.replace(/^\s*|\s*$/g, '');
+    routerB.dispatch(url);
+  });
+  getDom('#redirect-router-a').addEventListener('click', function(evt) {
+    var input = getDom('#url-redirect');
+    var url = input.value.replace(/^\s*|\s*$/g, '');
+    routerA.setRoute(url);
+  });
+  getDom('#redirect-router-b').addEventListener('click', function(evt) {
+    var input = getDom('#url-redirect');
+    var url = input.value.replace(/^\s*|\s*$/g, '');
+    routerB.setRoute(url);
+  });
   </script>
 </body>
 </html>

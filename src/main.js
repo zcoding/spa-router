@@ -61,6 +61,12 @@ export default class Router {
     return this;
   }
 
+  // 停止路由监听
+  stop() {
+    Listener.stop();
+    return this;
+  }
+
   /**
    * .mount() 将路由挂载到某个节点上
    * @method
