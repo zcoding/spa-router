@@ -1,0 +1,53 @@
+.container-header {
+  height: 250px;
+}
+
+.container-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.container-code, .container-render {
+  flex: 1;
+}
+
+.render-tree ul, .render-tree li {
+  list-style-type: none;
+  margin: 0;
+}
+
+.render-tree ul {
+  padding: 0;
+}
+
+.render-tree li:not([data-node^="1-"]) {
+  position: relative;
+  padding-left: 50px;
+}
+
+.render-tree li:before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+}
+
+.render-tree li a {
+  text-decoration: none;
+  display: block;
+  height: 20px;
+  line-height: 20px;
+}
+
+.render-tree li a:hover {
+  background: rgba(0, 0, 0, .1);
+}
+
+[data-node^="1-"] {
+}
+
+[data-node^="2-"] {
+}
+
+[data-node^="3-"] {
+}

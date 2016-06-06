@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>spa-router-better</title>
+    <link rel="stylesheet" href="demo/css/demo.css">
+    <link rel="stylesheet" href="demo/css/parse.css">
+  </head>
+  <body>
+    <div class="container-header">
+      <h1></h1>
+      <a href="https://raw.githubusercontent.com/zcoding/spa-router/master/dist/iife/spa-router.js" download class="btn btn-download">Download</a>
+      <p>当前URL：<span data-uri></span></p>
+      <p>当前匹配规则：<span data-path></span></p>
+      <p>当前匹配参数：<span data-param></span></p>
+      <p>当前匹配query：<span data-query></span></p>
+      <p><span data-msg></span></p>
+    </div>
+    <div class="container-wrapper">
+      <div class="container-code">
+        <h2>路由表的构建</h2>
+        <pre><code>var routesTable = {
+  '/': [show],
+  '/product': [show],
+  '/product/:color(r.+)-:size-:price': [show],
+  '/product/:id': [show],
+  '/about': [show],
+};
+
+var routerA = new Router(routesTable);
+
+// .mount()
+routerA.mount('/admin', {
+  '/': show,
+  '/product': {
+    '/': show,
+    '/:color-:size-:price': show,
+    '/:id': [show, function(req) { console.log(req.params['id']); }],
+    '/add': function(req) { console.log('You will never make it work.'); }
+  }
+});
+
+routerA.start({
+  notFound: notFound
+});
+
+// .route() & .dispatch()
+routerA.on('/whatever/foo', show)
+  .on('/whatever/bar', [show, function() { console.log('done'); }])
+  .dispatch('/whatever/bar');</code></pre>
+      </div>
+      <div class="container-render">
+        <h2>路由表解析 -> 路由树</h2>
+        <div class="render-tree"><ul></ul></div>
+      </div>
+    </div>
+    <div class="container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Rules</th>
+            <th>URI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="#!/">Home</a></td><td>/</td><td>/</td>
+          </tr>
+          <tr>
+            <td><a href="#!/product">Product List</a></td><td>/product</td><td>/product</td>
+          </tr>
+          <tr>
+            <td><a href="#!/product/red-small-low">Category Product List</a></td><td>/product/:color(r.+)-:size-:price</td><td>/product/red-small-low</td>
+          </tr>
+          <tr>
+            <td><a href="#!/product?color=red&size=small&price=low">Category Product List With Query</a></td><td>/product</td><td>/product?color=red&size=small&price=low</td>
+          </tr>
+          <tr>
+            <td><a href="#!/product/12345">Product Detail</a></td><td>/product/:id</td><td>/product/12345</td>
+          </tr>
+          <tr>
+            <td><a href="#!/about">About</a></td><td>/about</td><td>/about</td>
+          </tr>
+          <tr>
+            <td><a href="#!/admin">Admin Home</a></td><td>/admin</td><td>/admin</td>
+          </tr>
+          <tr>
+            <td><a href="#!/admin/product">Admin Product List</a></td><td>/admin/product</td><td>/admin/product</td>
+          </tr>
+          <tr>
+            <td><a href="#!/admin/product?page=3">Admin Product List With Query</a></td><td>/admin/product</td><td>/admin/product?page=3</td>
+          </tr>
+          <tr>
+            <td><a href="#!/admin/product/red-small-low">Admin Category Product List</a></td><td>/admin/product/:color-:size-:price</td><td>/admin/product/red-small-low</td>
+          </tr>
+          <tr>
+            <td><a href="#!/admin/product/red-small-low?page=2">Admin Category Product List With Query</a></td><td>/admin/product/:color-:size-:price</td><td>/admin/product/red-small-low?page=2</td>
+          </tr>
+          <tr>
+            <td><a href="#!/admin/product/add">Admin Product Add</a></td><td>/admin/product/:id</td><td>/admin/product/add</td>
+          </tr>
+          <tr>
+            <td><a href="#!/admin/product/12345">Admin Product Edit</a></td><td>/admin/product/:id</td><td>/admin/product/12345</td>
+          </tr>
+          <tr>
+            <td><a href="#!/notfound">Not Found</a></td><td>none</td><td>/notfound</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script src="dist/iife/spa-router.js"></script>
+    <script src="demo/parseRouterTree.js"></script>
+    <script src="demo/main.js"></script>
+  </body>
+</html>

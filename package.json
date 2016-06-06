@@ -13,7 +13,8 @@
     "rollup-es6": "rollup --config build/rollup.es6.js",
     "rollup-amd": "rollup --config build/rollup.amd.js",
     "rollup-cjs": "rollup --config build/rollup.cjs.js",
-    "server": "node scripts/pjax-server.js"
+    "server": "node scripts/pjax-server.js",
+    "start": "python -m SimpleHTTPServer 9898"
   },
   "repository": {
     "type": "git",
