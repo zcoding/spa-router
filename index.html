@@ -3,56 +3,52 @@
   <head>
     <meta charset="UTF-8">
     <title>spa-router-better</title>
-    <link rel="stylesheet" href="demo/css/demo.css">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="codingcat">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="octicons/octicons.css">
     <link rel="stylesheet" href="demo/css/parse.css">
   </head>
   <body>
-    <div class="container-header">
-      <h1></h1>
-      <a href="https://raw.githubusercontent.com/zcoding/spa-router/master/dist/iife/spa-router.js" download class="btn btn-download">Download</a>
-      <p>当前URL：<span data-uri></span></p>
-      <p>当前匹配规则：<span data-path></span></p>
-      <p>当前匹配参数：<span data-param></span></p>
-      <p>当前匹配query：<span data-query></span></p>
-      <p><span data-msg></span></p>
-    </div>
-    <div class="container-wrapper">
-      <div class="container-code">
-        <h2>路由表的构建</h2>
-        <pre><code>var routesTable = {
-  '/': [show],
-  '/product': [show],
-  '/product/:color(r.+)-:size-:price': [show],
-  '/product/:id': [show],
-  '/about': [show],
-};
-
-var routerA = new Router(routesTable);
-
-// .mount()
-routerA.mount('/admin', {
-  '/': show,
-  '/product': {
-    '/': show,
-    '/:color-:size-:price': show,
-    '/:id': [show, function(req) { console.log(req.params['id']); }],
-    '/add': function(req) { console.log('You will never make it work.'); }
-  }
-});
-
-routerA.start({
-  notFound: notFound
-});
-
-// .route() & .dispatch()
-routerA.on('/whatever/foo', show)
-  .on('/whatever/bar', [show, function() { console.log('done'); }])
-  .dispatch('/whatever/bar');</code></pre>
-      </div>
-      <div class="container-render">
-        <h2>路由表解析 -> 路由树</h2>
-        <div class="render-tree"><ul></ul></div>
-      </div>
+    <header class="container-header">
+      <h1 class="text-center">spa-router-better</h1>
+      <p class="text-center">A router module for building large single-page-application. <a href="https://github.com/zcoding/spa-router" class="icon-link" target="_blank"><span class="mega-octicon octicon-mark-github"></span></a></p>
+      <p class="text-center">
+        <a href="https://raw.githubusercontent.com/zcoding/spa-router/master/dist/iife/spa-router.js" download class="btn btn-download">Download</a>
+      </p>
+      <p class="text-center">or</p>
+      <p class="text-center"><code class="text-code">npm install spa-router-better --save</code></p>
+    </header>
+    <div class="container">
+      <table>
+        <thead>
+          <tr>
+            <th>Current URL</th>
+            <th>Matching rules</th>
+            <th>Matching params</th>
+            <th>Matching query</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-uri></td>
+            <td data-path></td>
+            <td data-param></td>
+            <td data-query></td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr>
+            <td colspan="4" data-msg></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div class="container">
       <table>
@@ -109,6 +105,51 @@ routerA.on('/whatever/foo', show)
         </tbody>
       </table>
     </div>
+    <div class="container">
+      <h2>How it works</h2>
+      <div class="container-flexbox">
+        <div class="container-flex">
+          <h3 class="text-center">Define routes table</h3>
+          <pre><code><span class="keyword">const</span> routesTable = {
+  <span class="string">'/'</span>: [callback1, callback2],
+  <span class="string">'/product'</span>: callback,
+  <span class="string">'/product/:color(r.+)-:size-:price'</span>: callback,
+  <span class="string">'/product/:id'</span>: callback,
+  <span class="string">'/about'</span>: callback,
+};
+
+<span class="keyword">let</span> routerA = <span class="keyword">new</span> Router(routesTable);
+
+<span class="comment">// use .mount() to dynamicly mount a sub-route</span>
+routerA.mount('/admin', {
+  <span class="string">'/'</span>: callback,
+  <span class="string">'/product'</span>: {
+    <span class="string">'/'</span>: callback,
+    <span class="string">'/:color-:size-:price'</span>: callback,
+    <span class="string">'/:id'</span>: callback,
+    <span class="string">'/add'</span>: callback
+  }
+});
+
+routerA.start({
+  notFound: notFoundCallback
+});
+
+<span class="comment">// .route() & .dispatch()</span>
+routerA.on(<span class="string">'/whatever/foo'</span>, callback)
+  .on(<span class="string">'/whatever/bar'</span>, callback)
+  .dispatch(<span class="string">'/whatever/bar'</span>);</code></pre>
+        </div>
+        <div class="container-flex">
+          <h3 class="text-center">Parse routes table into a tree</h3>
+          <div class="render-tree"><ul></ul></div>
+        </div>
+      </div>
+    </div>
+    <footer class="layout-footer">
+      <p class="text-center">Need more help? <a href="https://github.com/zcoding/spa-router">Learn more from Github. <span class="octicon octicon-mark-github"></span></a></p>
+      <p class="text-center">Or just <a href="https://github.com/zcoding/spa-router">download</a> and start your router.</p>
+    </footer>
     <script src="dist/iife/spa-router.js"></script>
     <script src="demo/parseRouterTree.js"></script>
     <script src="demo/main.js"></script>

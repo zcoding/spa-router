@@ -12,12 +12,12 @@ var show = (function () {
     var paramString = '', queryString = '';
     for (var p in params) {
       if (params.hasOwnProperty(p)) {
-        paramString += '<p>' + p + ': ' + params[p] + '</p>';
+        paramString += '<span class="label">' + p + ': ' + params[p] + '</span>';
       }
     }
     paramD.innerHTML = paramString || '-';
     for (var q in query) {
-      queryString += '<p>' + q + ': ' + query[q] + '</p>';
+      queryString += '<span class="label">' + q + ': ' + query[q] + '</span>';
     }
     queryD.innerHTML = queryString || '-';
     getDom('[data-msg]').innerText = msg;
