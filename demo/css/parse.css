@@ -100,7 +100,7 @@ a.btn:hover {
 .container-flex {
   width: 50%;
   padding: 10px;
-  border: 1px solid #333;
+  border: 1px solid #ccc;
   overflow-x: auto;
 }
 
