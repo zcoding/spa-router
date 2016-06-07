@@ -3,9 +3,22 @@
   <head>
     <meta charset="UTF-8">
     <title>spa-router with vue.js</title>
+    <link rel="stylesheet" href="/assets/css/demo.css">
   </head>
   <body id="app-root">
-    <component :is="currentView"></component>
+    <div class="layout-header">
+      <h1 class="text-center">spa-router-better <a href="https://www.npmjs.com/package/spa-router-better"><img src="https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square" alt="Version"></a></h1>
+      <p class="text-center">install with NPM</p>
+      <p class="text-center">
+        <code class="text-code">npm install spa-router-better --save</code>
+      </p>
+      <p class="text-center">or</p>
+      <p class="text-center"><a href="https://raw.githubusercontent.com/zcoding/spa-router/master/dist/iife/spa-router.js" download class="btn-download">Download standalone version</a></p>
+    </div>
+    <div class="layout-main">
+      <component :is="currentView"></component>
+    </div>
+    <div class="layout-footer"></div>
     <script src="/assets/app/app.js"></script>
   </body>
 </html>

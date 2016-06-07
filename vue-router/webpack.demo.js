@@ -35,7 +35,7 @@ module.exports = {
     alias: {
       "views": path.resolve(__dirname, './app/views'),
       "components": path.resolve(__dirname, './app/components'),
-      "spa-router": path.resolve(__dirname, '..')
+      "spa-router-better": path.resolve(__dirname, '..')
     }
   },
 

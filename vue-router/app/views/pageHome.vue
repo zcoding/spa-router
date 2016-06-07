@@ -1,15 +1,18 @@
 <template>
   
 <div>
-  <h1>Home Page</h1>
-  <ul>
-    <li>
-      <a href="/#!/">Page Home</a>
-    </li>
-    <li>
-      <a href="/#!/one">Page 1</a>
-    </li>
-  </ul>
+  <component-header></component-header>
+  <div>Page home</div>
 </div>
 
 </template>
+
+<script>
+
+import componentHeader from './componentHeader.vue';
+  
+export default {
+  components: { componentHeader }
+};
+
+</script>

@@ -1,17 +1,20 @@
 import Vue    from 'vue';
-import Router from 'spa-router';
+import Router from 'spa-router-better';
 
 Vue.config.debug = true;
 
-let App = new Vue({
+let app = new Vue({
   el: '#app-root',
 
   components: {
-    pageHome: function(resolve, reject) {
+    pageHome: function(resolve) {
       require(['views/pageHome.vue'], resolve);
     },
-    pageOne: function(resolve, reject) {
+    pageOne: function(resolve) {
       require(['views/pageOne.vue'], resolve);
+    },
+    page404: function(resolve) {
+      require(['views/page404.vue'], resolve);
     }
   },
 
@@ -55,13 +58,16 @@ let App = new Vue({
 
 let spaRouter = new Router({
   "/": function(req) {
-    App.currentView = 'pageHome';
+    app.currentView = 'pageHome';
   },
   "/one": function(req) {
-    App.currentView = 'pageOne';
+    app.currentView = 'pageOne';
   }
 });
 
 spaRouter.start({
-  root: '/'
+  root: '/',
+  notFound: function() {
+    app.currentView = 'page404';
+  }
 });
