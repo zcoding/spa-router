@@ -1,6 +1,6 @@
 # spa-router
 
-单页Web应用的路有模块
+[单页Web应用的路有模块](http://zcoding.github.io/spa-router)
 
 [![版本](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "版本")](https://www.npmjs.com/package/spa-router-better)
 [![协议](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "协议")](./LICENSE)

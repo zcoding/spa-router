@@ -1,6 +1,6 @@
 # spa-router
 
-A Router Module for Single Page Application
+[A Router Module for Single Page Application](http://zcoding.github.io/spa-router)
 
 [![Versoin](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "Version")](https://www.npmjs.com/package/spa-router-better)
 [![License](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "License")](./LICENSE)
