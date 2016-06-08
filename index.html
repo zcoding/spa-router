@@ -25,7 +25,7 @@
       <p class="text-center">or</p>
       <p class="text-center"><code class="text-code">npm install spa-router-better --save</code></p>
     </header>
-    <div class="container">
+    <div class="container" data-fixed>
       <table>
         <thead>
           <tr>
@@ -38,7 +38,7 @@
         <tbody>
           <tr>
             <td data-uri></td>
-            <td data-path></td>
+            <td class="text-bold" data-path></td>
             <td data-param></td>
             <td data-query></td>
           </tr>
@@ -50,7 +50,7 @@
         </tbody>
       </table>
     </div>
-    <div class="container">
+    <div class="container" data-fixed-after>
       <table>
         <thead>
           <tr>
@@ -153,5 +153,6 @@ routerA.on(<span class="string">'/whatever/foo'</span>, callback)
     <script src="dist/iife/spa-router.js"></script>
     <script src="demo/parseRouterTree.js"></script>
     <script src="demo/main.js"></script>
+    <script src="demo/scrollcheck.js"></script>
   </body>
 </html>

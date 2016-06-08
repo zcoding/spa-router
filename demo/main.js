@@ -12,7 +12,7 @@ var show = (function () {
     var paramString = '', queryString = '';
     for (var p in params) {
       if (params.hasOwnProperty(p)) {
-        paramString += '<span class="label">' + p + ': ' + params[p] + '</span>';
+        paramString += '<span class="label green">' + p + ': ' + params[p] + '</span>';
       }
     }
     paramD.innerHTML = paramString || '-';
