@@ -66,6 +66,30 @@ router.start({
 
 这个例子使用了webpack-dev-server并且支持live-reload，因此你可以随时修改源码以测试更多的使用技巧。
 
+## 和vue.js一起使用
+
+```javascript
+import Vue from 'vue';
+import Router from 'spa-router-better';
+
+Vue.use(Router.install);
+
+var router = new Router({
+  "/home": {
+    "name": "pageHome",
+    "component": function(req, resolve) {
+      require(['views/pageHome.vue'], resolve);
+    }
+  }
+});
+
+var app = new Vue({
+  // options
+});
+
+router.start(app);
+```
+
 ## 传值
 
 通过url传值有两种方式：
