@@ -1,6 +1,6 @@
 # spa-router
 
-[单页Web应用的路有模块](http://zcoding.github.io/spa-router)
+[单页Web应用的路由模块](http://zcoding.github.io/spa-router)
 
 [![版本](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "版本")](https://www.npmjs.com/package/spa-router-better)
 [![协议](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "协议")](./LICENSE)
@@ -17,9 +17,9 @@ spa-router-better是一个前端路由模块，适用于单页Web应用的开发
 npm install spa-router-better --save
 ```
 
-如果你需要其它模块规范的支持，在dist目录有4种模块载入方式的打包文件，其中iife下的spa-router.js可以直接在页面使用`script`标签引入（会产生一个全局变量`Router`）。
+如果你需要其它模块规范的支持，在dist目录有4种模块载入方式（使用Rollup打包）的打包文件。其中iife下的spa-router.js可以直接在页面通过`script`标签引入（会产生一个全局变量`Router`）。
 
-es6目录下的spa-router.js可以使用es6模块规范导入。
+es6目录下的spa-router.js可以使用ES6模块规范导入。
 
 ## 使用方法
 
