@@ -21,3 +21,9 @@ export function addEvent(name, handler) {
     window['on' + name] = handler;
   }
 }
+
+const isArray = Array.isArray ? Array.isArray : function(obj) {
+  return Object.prototype.toString.call(obj) === '[object Array]';
+};
+
+export { isArray };

@@ -26,7 +26,7 @@ var Listener = {
     return this;
   },
 
-  setHashHistory: function (path) {
+  setHashHistory (path) {
     if (this.history) {
       history.pushState({}, document.title, path);
     } else {

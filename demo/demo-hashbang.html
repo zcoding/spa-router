@@ -179,7 +179,13 @@
   });
 
   basicExampleRouter.start({
-    notFound: notFound
+    notFound: notFound,
+    beforeEach: function() {
+      console.log('before each');
+    },
+    afterEach: function() {
+      console.log('after each');
+    }
   });
 
   /// .route() & .dispatch()

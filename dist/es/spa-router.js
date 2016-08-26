@@ -1,5 +1,3 @@
-define('spa-router', function () { 'use strict';
-
 function extend() {
   var obj = {};
   var srcList = Array.prototype.slice.call(arguments, 0);
@@ -687,7 +685,5 @@ proto._callHooks = function (hookName) {
   }
 };
 
-return Router;
-
-});
+export default Router;
 //# sourceMappingURL=spa-router.js.map
