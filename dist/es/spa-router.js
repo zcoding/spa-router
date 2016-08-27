@@ -270,6 +270,7 @@ var querystring = {
   }
 };
 
+// TODO: root怎么处理？
 function handler(onChangeEvent) {
   var mode = this.options.mode;
   var url = void 0;
@@ -585,7 +586,7 @@ proto.dispatch = function (path) {
   hashIndex = hashIndex === -1 ? path.length : hashIndex;
   var queryString = queryIndex === -1 ? '' : path.slice(queryIndex + 1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
-  var req = { uri: uri, path: path, query: querystring.parse(queryString) };
+  var req = { uri: uri, path: path, query: querystring.parse(queryString), $router: this };
 
   if (path === '/') {
     path = '';

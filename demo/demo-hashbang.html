@@ -169,7 +169,9 @@
 
   /// .mount()
   basicExampleRouter.mount('/admin', {
-    '/': [log, show],
+    '/': [log, show, function(req) {
+      console.log(req);
+    }],
     '/product': {
       '/': [log, show],
       '/:color-:size-:price': [log, show],

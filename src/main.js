@@ -2,7 +2,7 @@ import { extend, addEvent, isArray } from './utils';
 import RNode from './rnode';
 import Listener from './listener';
 import querystring from './querystring';
-import { handler, findNode, createRouteTree, dfs, searchRouteTree } from './tree';
+import { handler, findNode, createRouteTree, searchRouteTree } from './tree';
 
 const optionDefaults = {
   // mode可以是history|hashbang
@@ -122,7 +122,7 @@ proto.dispatch = function(path) {
   hashIndex = hashIndex === -1 ? path.length : hashIndex;
   var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
-  var req = {uri: uri, path: path, query: querystring.parse(queryString)};
+  var req = {uri: uri, path: path, query: querystring.parse(queryString), $router: this};
 
   if (path === '/') {
     path = '';
