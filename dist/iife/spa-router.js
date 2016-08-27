@@ -676,6 +676,8 @@ proto.off = function (path) {
 proto.reload = function () {
   if (this.options.mode === 'history') {
     this.dispatch(location.pathname + location.search + location.hash);
+  } else if (this.options.mode === 'hashbang') {
+    this.dispatch(location.hash.slice(2));
   } else {
     this.dispatch(location.hash.slice(1));
   }

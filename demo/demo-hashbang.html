@@ -171,6 +171,9 @@
   basicExampleRouter.mount('/admin', {
     '/': [log, show, function(req) {
       console.log(req);
+      // setTimeout(function() {
+      //   req.$router.reload();
+      // }, 1000);
     }],
     '/product': {
       '/': [log, show],

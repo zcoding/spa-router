@@ -19,7 +19,7 @@ npm install spa-router-better --save
 
 如果你需要其它模块规范的支持，在dist目录有4种模块载入方式的打包文件，其中iife下的spa-router.js可以直接在页面使用`script`标签引入（会产生一个全局变量`Router`）。
 
-es6目录下的spa-router.js可以使用es6模块规范导入。
+es目录下的spa-router.js可以使用es6模块规范导入。
 
 ## 使用方法
 
@@ -121,6 +121,10 @@ var routes = {
 + 只有key没有value的query会被忽略，例如`a&b=2`将被解析为`{"b":"2"}`
 + 注意query中的`+`表示空白符，例如`a=1+1`将被解析为`{"a":"1 1"}`，如果要传`+`字符，应该先编码，即`encodeURIComponent('a=1+1')`将被解析为`{"a":"1+1"}`
 + 所有的query解析出来都是字符串或字符串数组（不会转换为数值或其它类型）
+
+## $router 对象
+
+可以通过 `req.$router` 获取当前 Router 实例，并调用实例方法。
 
 ## API
 ### 实例方法
