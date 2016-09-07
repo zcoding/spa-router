@@ -134,7 +134,10 @@ proto.dispatch = function(path) {
   if (callbacks !== null) {
     if (Array.isArray(callbacks)) {
       for (var i = 0, len = callbacks.length; i < len; ++i) { // 不考虑异步操作
-        callbacks[i].call(this, req);
+        var pre = callbacks[i].call(this, req); // @TODO 可以中断 callback 的调用
+        if (typeof pre === 'boolean' && !pre) { // 如果前一个 callback 返回了 false ，就不执行后面的 callback
+          break;
+        }
       }
     } else {
       throw new TypeError(`Expected Array, got ${ typeof callbacks }`);

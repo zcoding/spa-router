@@ -176,7 +176,7 @@
       // }, 1000);
     }],
     '/product': {
-      '/': [log, show],
+      '/': [function() {return false;}, log, show],
       '/:color-:size-:price': [log, show],
       '/:id': [log, show, function(req) { console.log(req.params['id']); }],
       '/add': function notAccessable() { console.log('you never get this route'); }
