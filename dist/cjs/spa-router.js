@@ -272,6 +272,7 @@ var querystring = {
   }
 };
 
+// TODO: root怎么处理？
 function handler(onChangeEvent) {
   var mode = this.options.mode;
   var url = void 0;
