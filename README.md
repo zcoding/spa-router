@@ -5,6 +5,10 @@
 [![Versoin](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "Version")](https://www.npmjs.com/package/spa-router-better)
 [![License](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "License")](./LICENSE)
 
+## Plan
+
++ [ ] add `redirect` option
+
 ## Introduction
 
 `spa-router-better` is a router module for building large single-page-application(SPA).If you are using [vue.js](https://github.com/yyx990803/vue), it's easy for you to handle routing.
