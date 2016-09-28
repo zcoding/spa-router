@@ -185,7 +185,8 @@
 
   basicExampleRouter.start({
     notFound: notFound,
-    beforeEach: function() {
+    beforeEach: function(req) {
+      console.log(req);
       console.log('before each');
     },
     afterEach: function() {

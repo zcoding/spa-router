@@ -594,7 +594,7 @@ proto.dispatch = function (path) {
   var result = searchRouteTree(routeTree, path);
   var callbacks = result[0];
   req.params = result[1];
-  this._callHooks('beforeEach');
+  this._callHooks('beforeEach', req);
   if (callbacks !== null) {
     if (Array.isArray(callbacks)) {
       for (var i = 0, len = callbacks.length; i < len; ++i) {
@@ -611,7 +611,7 @@ proto.dispatch = function (path) {
   } else if (this.options.notFound) {
     this.options.notFound(req);
   }
-  this._callHooks('afterEach');
+  this._callHooks('afterEach', req);
   return this;
 };
 
@@ -685,10 +685,10 @@ proto.reload = function () {
   return this;
 };
 
-proto._callHooks = function (hookName) {
+proto._callHooks = function (hookName, req) {
   var callbacks = this._hooks[hookName] || [];
   for (var i = 0; i < callbacks.length; ++i) {
-    callbacks[i].call(this);
+    callbacks[i].call(this, req);
   }
 };
 

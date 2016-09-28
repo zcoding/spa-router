@@ -5,6 +5,11 @@
 [![版本](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "版本")](https://www.npmjs.com/package/spa-router-better)
 [![协议](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "协议")](./LICENSE)
 
+## Change Log
+
++ 2016-09-28 v0.5.6
+  + `beforeEach` 和 `afterEach` 增加了 `req` 参数
+
 ## 介绍
 
 spa-router-better是一个前端路由模块，适用于单页Web应用的开发。如果你正在使用[vue.js](https://github.com/vuejs/vue)进行单页Web应用开发，spa-router-better可以作为路由模块使用。
