@@ -140,6 +140,8 @@ var Listener = {
 
   history: false,
 
+  setUrlOnly: false,
+
   init: function init(mode) {
     this.history = mode === 'history';
     if (this.history && historySupport) {
@@ -186,6 +188,10 @@ var Listener = {
 };
 
 function onchange(onChangeEvent) {
+  if (Listener.setUrlOnly) {
+    Listener.setUrlOnly = false;
+    return false;
+  }
   var listeners = Listener.listeners;
   for (var i = 0, l = listeners.length; i < l; i++) {
     listeners[i](onChangeEvent);
@@ -634,6 +640,15 @@ proto.setRoute = function (path) {
   if (this.options.mode === 'history' && oldURI !== newURI) {
     this.dispatch(newURI);
   }
+  return this;
+};
+
+/**
+ * 这个方法会改变当前的 `url` 但是不触发路由
+ */
+proto.setUrl = function (path) {
+  Listener.setUrlOnly = true;
+  Listener.setHashHistory(path);
   return this;
 };
 

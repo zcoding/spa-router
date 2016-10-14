@@ -170,6 +170,15 @@ proto.setRoute = function(path) {
 };
 
 /**
+ * 这个方法会改变当前的 `url` 但是不触发路由
+ */
+proto.setUrl = function (path) {
+  Listener.setUrlOnly = true;
+  Listener.setHashHistory(path);
+  return this;
+};
+
+/**
  * alias: `setRoute`
  */
 proto.redirect = function(path) {
