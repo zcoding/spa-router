@@ -8,6 +8,8 @@ var Listener = {
 
   history: false,
 
+  setUrlOnly: false,
+
   init: function(mode) {
     this.history = mode === 'history';
     if (this.history && historySupport) { // IE 10+
@@ -53,6 +55,10 @@ var Listener = {
 };
 
 function onchange(onChangeEvent) {
+  if (Listener.setUrlOnly) {
+    Listener.setUrlOnly = false;
+    return false;
+  }
   var listeners = Listener.listeners;
   for (var i = 0, l = listeners.length; i < l; i++) {
     listeners[i](onChangeEvent);

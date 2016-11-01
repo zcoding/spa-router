@@ -1,6 +1,6 @@
 {
   "name": "spa-router-better",
-  "version": "0.5.4",
+  "version": "0.5.7",
   "description": "single page application router module",
   "main": "dist/cjs/spa-router.js",
   "jsnext:main": "dist/es6/spa-router.js",
