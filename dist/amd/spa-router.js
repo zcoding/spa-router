@@ -24,6 +24,12 @@ function addEvent(name, handler) {
   }
 }
 
+function warn(message) {
+  if (window['console'] && console.warn) {
+    console.warn(message);
+  }
+}
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -144,9 +150,16 @@ var Listener = {
 
   init: function init(mode) {
     this.history = mode === 'history';
-    if (this.history && historySupport) {
+    if (this.history) {
       // IE 10+
-      addEvent('popstate', onchange);
+      if (historySupport) {
+        addEvent('popstate', onchange);
+      } else {
+        this.history = false;
+        // warning
+        warn('你的浏览器不支持 History API ，只能使用 hashbang 模式');
+        addEvent('hashchange', onchange);
+      }
     } else {
       addEvent('hashchange', onchange);
     }

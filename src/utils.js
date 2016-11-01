@@ -26,4 +26,10 @@ const isArray = Array.isArray ? Array.isArray : function(obj) {
   return Object.prototype.toString.call(obj) === '[object Array]';
 };
 
+export function warn (message) {
+  if (window['console'] && console.warn) {
+    console.warn(message);
+  }
+}
+
 export { isArray };

@@ -1,4 +1,4 @@
-import { extend, addEvent } from './utils';
+import { extend, addEvent, warn } from './utils';
 
 var historySupport = typeof window.history['pushState'] !== "undefined";
 
@@ -12,8 +12,15 @@ var Listener = {
 
   init: function(mode) {
     this.history = mode === 'history';
-    if (this.history && historySupport) { // IE 10+
-      addEvent('popstate', onchange);
+    if (this.history) { // IE 10+
+      if (historySupport) {
+        addEvent('popstate', onchange);
+      } else {
+        this.history = false;
+        // warning
+        warn('你的浏览器不支持 History API ，只能使用 hashbang 模式');
+        addEvent('hashchange', onchange);
+      }
     } else {
       addEvent('hashchange', onchange);
     }
