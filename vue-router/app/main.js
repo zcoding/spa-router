@@ -1,5 +1,5 @@
 import Vue    from 'vue';
-import Router from 'spa-router';
+import Router from 'spa-router-better';
 
 Vue.config.debug = true;
 

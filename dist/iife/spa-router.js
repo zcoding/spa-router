@@ -342,7 +342,8 @@ function findNode(tree, path, onlyFind) {
     realCurrentValue = realCurrentValue.replace(matcher, function ($1, $2, $3) {
       params = params || [];
       params[k++] = $2;
-      if (typeof $3 === 'undefined') {
+      if (!$3) {
+        // In IE 8 , $3 is an empty String while in other browser it is undefined.
         return '([a-zA-Z0-9_]+)';
       } else {
         return $3;
