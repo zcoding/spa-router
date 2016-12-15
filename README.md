@@ -9,6 +9,15 @@
 
 + [ ] add `redirect` option
 
+## Change Log
+
++ 2016-12-15 v0.5.9
+  + finish `.once` method, change `.off` method
++ 2016-10-14 v0.5.7
+  + add `setUrl` method which will only change url but not dispatching any routes
++ 2016-09-28 v0.5.6
+  + add `req` params for `beforeEach` and `afterEach`
+
 ## Introduction
 
 `spa-router-better` is a router module for building large single-page-application(SPA).If you are using [vue.js](https://github.com/yyx990803/vue), it's easy for you to handle routing.

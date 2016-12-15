@@ -22,7 +22,7 @@ const optionDefaults = {
 
 export default function Router(routes) {
   routes = routes || {};
-  var root = new RNode('');
+  const root = new RNode('');
   root.params = false;
   this.routeTree = createRouteTree(root, routes);
   this.options = {};
@@ -133,8 +133,9 @@ proto.dispatch = function(path) {
   this._callHooks('beforeEach', req);
   if (callbacks !== null) {
     if (Array.isArray(callbacks)) {
-      for (var i = 0, len = callbacks.length; i < len; ++i) { // 不考虑异步操作
-        var pre = callbacks[i].call(this, req); // @TODO 可以中断 callback 的调用
+      let _cbs = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
+      for (let i = 0; i < _cbs.length; ++i) { // 不考虑异步操作
+        var pre = _cbs[i].call(this, req); // @TODO 可以中断 callback 的调用
         if (typeof pre === 'boolean' && !pre) { // 如果前一个 callback 返回了 false ，就不执行后面的 callback
           break;
         }
@@ -186,27 +187,48 @@ proto.redirect = function(path) {
 };
 
 /**
- * TODO: once
+ * .once(path, handlers)
  * 和.on()方法类似，但只会触发一次
  * @param {String|RegExp} path
  * @param {Function|Array} handlers
  * @return this
  */
 proto.once = function(path, handlers) {
-  return this;
+  const _this = this;
+  function onlyOnce (req) {
+    for (let i = 0; i < handlers.length; ++i) {
+      handlers[i].call(_this, req);
+    }
+    _this.off(path, onlyOnce);
+  }
+  return this.on(path, onlyOnce);
 };
 
 /**
- * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks移除
+ * .off() 方法表示不再侦听某个路由的某个 cb
+ * 如果没有指定 cb 则直接将该路由节点的所有 callbacks 移除并设置为 null
+ * 如果 callbacks 已经全部移除，则设置为 null
  * @return this
  */
-proto.off = function(path) {
+proto.off = function(path, cb) {
   if (path !== '' && path[0] === '/') {
     path = path.slice(1);
   }
-  var n = findNode(this.routeTree, path);
-  if (n !== null && n.callbacks !== null) {
-    n.callbacks.splice(0, n.callbacks.length);
+  var n = findNode(this.routeTree, path, true);
+  if (n && n.callbacks) {
+    if (cb) {
+      for (let i = 0; i < n.callbacks.length; ++i) {
+        if (n.callbacks[i] === cb) {
+          n.callbacks.splice(i, 1);
+          break;
+        }
+      }
+    } else {
+      n.callbacks.splice(0, n.callbacks.length);
+    }
+    if (n.callbacks.length === 0) {
+      n.callbacks = null;
+    }
   }
   return this;
 };

@@ -78,6 +78,19 @@ export function findNode(tree, path, onlyFind) {
   return target;
 }
 
+export function removeRNode (rnode) {
+  const _parent = rnode._parent;
+  if (_parent) {
+    for (let i = 0; i < _parent._children.length; ++i) {
+      if (_parent._children[i] === rnode) {
+        _parent._children.splice(i, 0);
+        break;
+      }
+    }
+  }
+  return rnode;
+}
+
 /**
  * 构造路由树/子树
  * @param {RNode} root 当前根节点
@@ -96,7 +109,7 @@ export function createRouteTree(root, routes) {
 
   for (var path in routes) {
     if (routes.hasOwnProperty(path)) {
-
+      // @TODO 如何实现 beforeLeave
       var fns = routes[path];
 
       if (path === '/') {

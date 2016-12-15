@@ -12,10 +12,12 @@
 
 ## Change Log
 
-+ 2016-09-28 v0.5.6
-  + `beforeEach` 和 `afterEach` 增加了 `req` 参数
++ 2016-12-15 v0.5.9
+  + 完成 once 方法，修正 off 方法
 + 2016-10-14 v0.5.7
   + 新增 `setUrl` 方法，允许只改变 url 但不会触发响应
++ 2016-09-28 v0.5.6
+  + `beforeEach` 和 `afterEach` 增加了 `req` 参数
 
 ## 介绍
 

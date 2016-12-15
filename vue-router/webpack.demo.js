@@ -25,12 +25,6 @@ module.exports = {
     ]
   },
 
-  vue: {
-    loaders: {
-      html: 'vue-html?removeRedundantAttributes=false'
-    }
-  },
-
   resolve: {
     alias: {
       "views": path.resolve(__dirname, './app/views'),

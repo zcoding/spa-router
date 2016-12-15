@@ -1,9 +1,9 @@
 import { extend, addEvent, warn } from './utils';
 
-var historySupport = typeof window.history['pushState'] !== "undefined";
+const historySupport = typeof window.history['pushState'] !== "undefined";
 
 /// Listener
-var Listener = {
+const Listener = {
   listeners: null,
 
   history: false,

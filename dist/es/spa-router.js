@@ -31,8 +31,18 @@ function warn(message) {
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
+
+
+
+
+
+
+
+
+
+
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -57,6 +67,75 @@ var createClass = function () {
     return Constructor;
   };
 }();
+
+
+
+
+
+
+
+var get = function get(object, property, receiver) {
+  if (object === null) object = Function.prototype;
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent === null) {
+      return undefined;
+    } else {
+      return get(parent, property, receiver);
+    }
+  } else if ("value" in desc) {
+    return desc.value;
+  } else {
+    var getter = desc.get;
+
+    if (getter === undefined) {
+      return undefined;
+    }
+
+    return getter.call(receiver);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var set = function set(object, property, value, receiver) {
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent !== null) {
+      set(parent, property, value, receiver);
+    }
+  } else if ("value" in desc && desc.writable) {
+    desc.value = value;
+  } else {
+    var setter = desc.set;
+
+    if (setter !== undefined) {
+      setter.call(receiver, value);
+    }
+  }
+
+  return value;
+};
 
 /**
  * RNode
@@ -370,6 +449,8 @@ function findNode(tree, path, onlyFind) {
   return target;
 }
 
+
+
 /**
  * 构造路由树/子树
  * @param {RNode} root 当前根节点
@@ -388,7 +469,7 @@ function createRouteTree(root, routes) {
 
   for (var path in routes) {
     if (routes.hasOwnProperty(path)) {
-
+      // @TODO 如何实现 beforeLeave
       var fns = routes[path];
 
       if (path === '/') {
@@ -533,7 +614,7 @@ proto.configure = function (options) {
  * @return this
  */
 proto.start = function (options) {
-  var _this = this;
+  var _this2 = this;
 
   options = options || {};
   this._hooks['beforeEach'] = options.beforeEach ? [options.beforeEach] : [];
@@ -541,7 +622,7 @@ proto.start = function (options) {
   // 初始化配置
   this.configure(options);
   Listener.init(this.options.mode).add(function () {
-    return handler.call(_this);
+    return handler.call(_this2);
   });
   // 首次触发
   handler.call(this);
@@ -617,9 +698,10 @@ proto.dispatch = function (path) {
   this._callHooks('beforeEach', req);
   if (callbacks !== null) {
     if (Array.isArray(callbacks)) {
-      for (var i = 0, len = callbacks.length; i < len; ++i) {
+      var _cbs = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
+      for (var i = 0; i < _cbs.length; ++i) {
         // 不考虑异步操作
-        var pre = callbacks[i].call(this, req); // @TODO 可以中断 callback 的调用
+        var pre = _cbs[i].call(this, req); // @TODO 可以中断 callback 的调用
         if (typeof pre === 'boolean' && !pre) {
           // 如果前一个 callback 返回了 false ，就不执行后面的 callback
           break;
@@ -672,27 +754,48 @@ proto.redirect = function (path) {
 };
 
 /**
- * TODO: once
+ * .once(path, handlers)
  * 和.on()方法类似，但只会触发一次
  * @param {String|RegExp} path
  * @param {Function|Array} handlers
  * @return this
  */
 proto.once = function (path, handlers) {
-  return this;
+  var _this = this;
+  function onlyOnce(req) {
+    for (var i = 0; i < handlers.length; ++i) {
+      handlers[i].call(_this, req);
+    }
+    _this.off(path, onlyOnce);
+  }
+  return this.on(path, onlyOnce);
 };
 
 /**
- * .off()方法表示不再侦听某个路由，直接将该路由节点的所有callbacks移除
+ * .off() 方法表示不再侦听某个路由的某个 cb
+ * 如果没有指定 cb 则直接将该路由节点的所有 callbacks 移除并设置为 null
+ * 如果 callbacks 已经全部移除，则设置为 null
  * @return this
  */
-proto.off = function (path) {
+proto.off = function (path, cb) {
   if (path !== '' && path[0] === '/') {
     path = path.slice(1);
   }
-  var n = findNode(this.routeTree, path);
-  if (n !== null && n.callbacks !== null) {
-    n.callbacks.splice(0, n.callbacks.length);
+  var n = findNode(this.routeTree, path, true);
+  if (n && n.callbacks) {
+    if (cb) {
+      for (var i = 0; i < n.callbacks.length; ++i) {
+        if (n.callbacks[i] === cb) {
+          n.callbacks.splice(i, 1);
+          break;
+        }
+      }
+    } else {
+      n.callbacks.splice(0, n.callbacks.length);
+    }
+    if (n.callbacks.length === 0) {
+      n.callbacks = null;
+    }
   }
   return this;
 };
