@@ -39,14 +39,23 @@ function makeSureArray(obj) {
 function RNode(value) {
   this.path = value;
   this.params = {};
-  this.callbacks = null;
-  this.beforeLeave = null;
-  this.beforeEnter = null;
+  this._hooks = {};
   this.children = [];
   this.parent = null;
 }
 
 var proto$1 = RNode.prototype;
+
+proto$1.callHooks = function _callHooks(hookName, Req) {
+  var callbacks = this._hooks[hookName] || [];
+  for (var i = 0; i < callbacks.length; ++i) {
+    callbacks[i].call(this, Req);
+  }
+};
+
+proto$1.addHooks = function addHooks(hookName, callbacks) {
+  this._hooks[hookName] = makeSureArray(callbacks);
+};
 
 // add children
 proto$1.addChildren = function addChildren(children) {
@@ -379,9 +388,9 @@ function createRouteNodeInPath(rootNode, routePath) {
 // 构造路由树
 function createRouteTree(routeNode, routeOptions) {
 
-  routeNode.beforeEnter = makeSureArray(routeOptions.beforeEnter);
-  routeNode.callbacks = makeSureArray(routeOptions.controllers);
-  routeNode.beforeLeave = makeSureArray(routeOptions.beforeLeave);
+  routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
+  routeNode.addHooks('callbacks', routeOptions.controllers);
+  routeNode.addHooks('beforeLeave', routeOptions.beforeLeave);
   if (routeOptions.sub) {
     // 子路由
     for (var subRoutePath in routeOptions.sub) {
@@ -403,14 +412,14 @@ function createRootRouteTree(routes) {
 }
 
 /**
- * @param {RNode} root 当前节点
+ * @param {RNode} currentRouteNode 当前节点
  * @param {Array} parts 路径分段数组
  * @param {Integer} ci 当前路径分段索引
  * @param {Integer} ri 当前节点所在兄弟节点列表的位置
  * @params {Object} params 记录参数的对象
  * @return {[RNode, Object]} 同时返回节点和参数
  */
-function dfs(root, parts, ci, ri, params) {
+function dfs(currentRouteNode, parts, ci, ri, params) {
 
   var value = parts[ci];
 
@@ -422,7 +431,7 @@ function dfs(root, parts, ci, ri, params) {
     }
   }
 
-  var parent = root.parent;
+  var parent = currentRouteNode.parent;
 
   if (parent === null && ri > 0) {
     // finally not matched
@@ -436,30 +445,30 @@ function dfs(root, parts, ci, ri, params) {
 
   if (ci > parts.length - 1 || ci < 0) return [false, newParams];
 
-  var matcher = new RegExp('^' + root.value + '$');
+  var matcher = new RegExp('^' + currentRouteNode.path + '$');
   var matches = value.match(matcher);
 
   if (matches === null) return [false, newParams]; // not matched, go back
 
-  if (!!root.params) {
+  if (!!currentRouteNode.params) {
     matches = [].slice.apply(matches, [1]);
     for (var k = 0; k < matches.length; ++k) {
-      newParams[root.params[k]] = matches[k];
+      newParams[currentRouteNode.params[k]] = matches[k];
     }
   }
 
-  if (ci === parts.length - 1 && root.callbacks !== null) {
+  if (ci === parts.length - 1 && currentRouteNode.callbacks !== null) {
     // finally matched
-    return [root, newParams];
+    return [currentRouteNode, newParams];
   }
 
-  for (var i = 0; i < root.children.length; ++i) {
-    var found = dfs(root.children[i], parts, ci + 1, i, newParams); // matched, go ahead
+  for (var i = 0; i < currentRouteNode.children.length; ++i) {
+    var found = dfs(currentRouteNode.children[i], parts, ci + 1, i, newParams); // matched, go ahead
     if (!found[0]) continue;
     return found;
   }
 
-  return dfs(root, parts, ci, ri + 1, params); // not matched, go back
+  return dfs(currentRouteNode, parts, ci, ri + 1, params); // not matched, go back
 }
 
 /**
@@ -467,20 +476,20 @@ function dfs(root, parts, ci, ri, params) {
  * @todo 只返回第一个匹配到的路由（如果存在多个匹配？）
  * @param {RNode} tree 树根
  * @param {String} path 要匹配的路径
- * 返回值包含两个，用数组表示[callbacks, params]
+ * 返回值包含两个，用数组表示[rnode, params]
  * @return {Function|Array|null} 如果存在就返回相应的回调，否则返回null
  * @return {[Array, Object]} 同时返回回调和参数
  *
  * */
 function searchRouteTree(tree, path) {
 
-  var found = dfs(tree, path.split('/'), 0, 0, {});
+  var result = dfs(tree, path.split('/'), 0, 0, {});
 
-  if (!found[0]) {
+  if (!result[0]) {
     return [null, {}];
   }
 
-  return [found[0].callbacks, found[1]];
+  return [result[0], result[1]];
 }
 
 // export function removeRNode (rnode) {
@@ -495,6 +504,8 @@ function searchRouteTree(tree, path) {
 //   }
 //   return rnode;
 // }
+
+var lastReq = null;
 
 function handlerHashbangMode(onChangeEvent) {
   var hash = location.hash.slice(1);
@@ -547,6 +558,9 @@ function mount(path, routes) {
 
 // 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
 function dispatch(path) {
+  if (lastReq) {
+    this._callHooks('beforeEachLeave', lastReq);
+  }
   var routeTree = this._rtree;
   // 保存原始请求uri
   var uri = path;
@@ -561,18 +575,23 @@ function dispatch(path) {
     path = '';
   }
   var result = searchRouteTree(routeTree, path);
-  var callbacks = result[0];
+  // const callbacks = result[0].callbacks;
   Req.params = result[1];
   this._callHooks('beforeEachEnter', Req);
-  if (callbacks !== null) {
-    var _callbacksCopy = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
-    for (var i = 0; i < _callbacksCopy.length; ++i) {
-      var previousCallbackReturnValue = _callbacksCopy[i].call(this, Req);
-      if (previousCallbackReturnValue === false) {
-        break;
-      }
-    }
+  if (result[0]) {
+    result[0].callHooks('beforeEnter', Req);
+    result[0].callHooks('callbacks', Req);
   }
+  // if (callbacks !== null) {
+  //   const _callbacksCopy = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
+  //   for (let i = 0; i < _callbacksCopy.length; ++i) {
+  //     const previousCallbackReturnValue = _callbacksCopy[i].call(this, Req);
+  //     if (previousCallbackReturnValue === false) {
+  //       break;
+  //     }
+  //   }
+  // }
+  lastReq = Req;
   return this;
 }
 
@@ -725,6 +744,7 @@ proto._init = function _init(options) {
   options = options || {};
   this.options = extend({}, optionDefaults, options);
   this._hooks['beforeEachEnter'] = makeSureArray(options.beforeEachEnter);
+  this._hooks['beforeEachLeave'] = makeSureArray(options.beforeEachLeave);
 };
 
 // 调用全局钩子

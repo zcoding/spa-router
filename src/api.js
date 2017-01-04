@@ -4,6 +4,10 @@ import Listener from './listener';
 import QS from './querystring';
 import { findNode, createRouteTree, searchRouteTree } from './rtree';
 
+let lastReq = null;
+
+const BeforeLeaveCallbacksQueue = []; // 待调用的 beforeLeave 钩子队列
+
 function handlerHashbangMode (onChangeEvent) {
   var hash = location.hash.slice(1);
   if (hash === '' || hash === '!') {
@@ -55,13 +59,16 @@ export function mount (path, routes) {
 
 // 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
 export function dispatch (path) {
+  if (lastReq) {
+    this._callHooks('beforeEachLeave', lastReq);
+  }
   let routeTree = this._rtree;
   // 保存原始请求uri
   let uri = path;
   var queryIndex = path.indexOf('?');
   var hashIndex = path.indexOf('#');
   hashIndex = hashIndex === -1 ? path.length : hashIndex;
-  var queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1, hashIndex);
+  const queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
   const Req = {uri: uri, path: path, query: QS.parse(queryString), $router: this};
 
@@ -69,18 +76,23 @@ export function dispatch (path) {
     path = '';
   }
   const result = searchRouteTree(routeTree, path);
-  const callbacks = result[0];
+  // const callbacks = result[0].callbacks;
   Req.params = result[1];
   this._callHooks('beforeEachEnter', Req);
-  if (callbacks !== null) {
-    const _callbacksCopy = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
-    for (let i = 0; i < _callbacksCopy.length; ++i) {
-      const previousCallbackReturnValue = _callbacksCopy[i].call(this, Req);
-      if (previousCallbackReturnValue === false) {
-        break;
-      }
-    }
+  if (result[0]) {
+    result[0].callHooks('beforeEnter', Req);
+    result[0].callHooks('callbacks', Req);
   }
+  // if (callbacks !== null) {
+  //   const _callbacksCopy = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
+  //   for (let i = 0; i < _callbacksCopy.length; ++i) {
+  //     const previousCallbackReturnValue = _callbacksCopy[i].call(this, Req);
+  //     if (previousCallbackReturnValue === false) {
+  //       break;
+  //     }
+  //   }
+  // }
+  lastReq = Req;
   return this;
 }
 

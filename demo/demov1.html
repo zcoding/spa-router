@@ -113,7 +113,7 @@
   var getDom = function(selector) {
     return mainContainer.querySelectorAll(selector)[0];
   };
-  var lightStyle = 'padding: 0 5px;background: #aaa;color: #333;font-size: 18px;font-family: Consolas;font-weight: bold;';
+  var lightStyle = 'padding: 0 5px;background: #fff;color: #333;font-size: 18px;font-family: Consolas;font-weight: bold;';
   var darkStyle = 'padding: 0 5px;background: #333;color: #eee;font-size: 18px;font-family: Consolas;font-weight: bold;';
 
   var show = (function () {
@@ -163,6 +163,12 @@
           controllers: [log, show]
         },
         '/product/:color(r.+)-:size-:price': {
+          beforeEnter: function () {
+            console.log('准备进入 product 页面');
+          },
+          beforeLeave: function () {
+            console.log('准备离开 product 页面');
+          },
           controllers: [log, show]
         },
         '/product/:id': {
@@ -176,9 +182,19 @@
     '/shit': {
       controllers: [function oh () {console.log('ohshit');}]
     }
+    // '*': {
+    //   controllers: [function notfound () {console.log('not found');}]
+    // }
   };
 
-  var basicExampleRouter = new Router(basicExampleRoutes);
+  var basicExampleRouter = new Router(basicExampleRoutes, {
+    beforeEachEnter: function (req) {
+      console.log('正在进入: ' + req.uri);
+    },
+    beforeEachLeave: function (req) {
+      console.log('正在离开: ' + req.uri);
+    }
+  });
 
   console.log(basicExampleRouter);
 

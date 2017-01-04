@@ -1,4 +1,4 @@
-import { isArray } from './utils';
+import { isArray, makeSureArray } from './utils';
 
 /**
  * RNode
@@ -16,14 +16,23 @@ import { isArray } from './utils';
 function RNode(value) {
   this.path = value;
   this.params = {};
-  this.callbacks = null;
-  this.beforeLeave = null;
-  this.beforeEnter = null;
+  this._hooks = {};
   this.children = [];
   this.parent = null;
 }
 
 const proto = RNode.prototype;
+
+proto.callHooks = function _callHooks (hookName, Req) {
+  const callbacks = this._hooks[hookName] || [];
+  for (let i = 0; i < callbacks.length; ++i) {
+    callbacks[i].call(this, Req);
+  }
+};
+
+proto.addHooks = function addHooks (hookName, callbacks) {
+  this._hooks[hookName] = makeSureArray(callbacks);
+};
 
 // add children
 proto.addChildren = function addChildren (children) {

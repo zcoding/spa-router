@@ -57,6 +57,7 @@ proto._init = function _init (options) {
   options = options || {};
   this.options = extend({}, optionDefaults, options);
   this._hooks['beforeEachEnter'] = makeSureArray(options.beforeEachEnter);
+  this._hooks['beforeEachLeave'] = makeSureArray(options.beforeEachLeave);
 };
 
 // 调用全局钩子
