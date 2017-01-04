@@ -1,66 +1,41 @@
+import { isArray } from './utils';
+
 /**
  * RNode
  * @constructor
- * @param {String} value 必须
+ * @param {String} value
  *
- * value:     区分同级节点的唯一标识
- * params:    value包含的参数，使用{参数名:参数规则}键值对表示
- * before:    路由匹配时，url改变之前执行的回调函数或队列
- * callbacks: 路由匹配时执行的回调函数或队列
- * after:     路由匹配时，url改变之后，callbacks执行完再执行的回调函数或队列
- *
- * _children: 子节点引用列表
- * _parent:   父节点引用
+ * path:          区分同级节点的唯一标识
+ * params:        path 包含的参数，使用{参数名:参数规则}键值对表示
+ * callbacks:     路由匹配时执行的回调函数或队列
+ * beforeEnter:   路由匹配时，callbacks 执行之前执行的回调函数或队列（如果 beforeEnter 返回 false 则不会进入 callbacks 执行阶段）
+ * beforeLeave:   路由匹配时，进入下一个路由之前（也就是当前路由离开之前）执行的回调函数或队列
+ * children:      子节点列表引用
+ * parent:        父节点引用
  */
+function RNode(value) {
+  this.path = value;
+  this.params = {};
+  this.callbacks = null;
+  this.beforeLeave = null;
+  this.beforeEnter = null;
+  this.children = [];
+  this.parent = null;
+}
 
-export default class RNode {
-  constructor(value) {
-    var valueType = typeof value;
-    if (valueType !== 'string') {
-      throw new TypeError(`Expected a string in the first argument, got ${ valueType }`);
-    }
-    this.value = value;
-    this.params = {};
-    this.callbacks = null;
-    this.before = null;
-    this.after = null;
-    this._children = [];
-    this._parent = null;
-  }
+const proto = RNode.prototype;
 
-  /**
-   * set/get children
-   * @param {RNode|[RNode]} children **optional**
-   * @return {[RNode]|RNode} return children node list or this
-   */
-  children(children) {
-    if (undefined === children) {
-      return this._children;
-    }
-    if (children instanceof RNode) {
-      this._children.push(children);
-    } else if (isArray(children)) {
-      this._children = this._children.concat(children);
-    } else {
-      throw new TypeError(`Expected RNode or Array in the first argument, got ${ Object.prototype.toString.call(children) }`);
-    }
-    return this;
+// add children
+proto.addChildren = function addChildren (children) {
+  if (isArray(children)) {
+    this.children = this.children.concat(children);
+  } else {
+    this.children.push(children);
   }
+  return this;
+};
 
-  /**
-   * set/get parent
-   * @param {RNode} parent **optional**
-   * @return {RNode} return parent node or this
-   */
-  parent(parent) {
-    if (undefined === parent) {
-      return this._parent;
-    }
-    if (parent instanceof RNode) {
-      this._parent = parent;
-    } else {
-      throw new TypeError(`Expected RNode in the first argument, got ${ Object.prototype.toString.call(parent) }`);
-    }
-    return this;
-  }
+
+export default function createRNode (value) {
+  return new RNode(value);
 }

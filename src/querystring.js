@@ -1,3 +1,5 @@
+const encode = encodeURIComponent, decode = decodeURIComponent;
+
 export default {
   /**
    * querystring.stringify
@@ -24,12 +26,12 @@ export default {
         value.sort();
         var _parts = [];
         for (var j = 0; j < value.length; ++j) {
-          _parts.push(`${encodeURIComponent(name).replace(/%20/g, '+')}${appendString}=${encodeURIComponent(value[j]).replace(/%20/g, '+')}`);
+          _parts.push(`${encode(name).replace(/%20/g, '+')}${appendString}=${encode(value[j]).replace(/%20/g, '+')}`);
         }
         parts.push(_parts.join('&'));
         continue;
       }
-      parts.push(`${encodeURIComponent(name).replace(/%20/g, '+')}=${encodeURIComponent(value).replace(/%20/g, '+')}`);
+      parts.push(`${encode(name).replace(/%20/g, '+')}=${encode(value).replace(/%20/g, '+')}`);
     }
     return parts.join('&');
   },
@@ -61,9 +63,9 @@ export default {
       var parts = queryParts[i].replace(/\+/g, '%20').split('='); // 特殊字符`+`转换为空格
       var name = parts[0], value = parts[1];
 
-      name = decodeURIComponent(name);
+      name = decode(name);
 
-      value = value === undefined ? null : decodeURIComponent(value);
+      value = value === undefined ? null : decode(value);
 
       if (!query.hasOwnProperty(name)) {
         query[name] = value;

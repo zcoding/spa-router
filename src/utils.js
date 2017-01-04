@@ -22,14 +22,16 @@ export function addEvent(name, handler) {
   }
 }
 
-const isArray = Array.isArray ? Array.isArray : function(obj) {
-  return Object.prototype.toString.call(obj) === '[object Array]';
-};
-
 export function warn (message) {
   if (window['console'] && console.warn) {
     console.warn(message);
   }
 }
 
-export { isArray };
+export const isArray = Array.isArray ? Array.isArray : function(obj) {
+  return Object.prototype.toString.call(obj) === '[object Array]';
+};
+
+export function makeSureArray (obj) {
+  return isArray(obj) ? obj : (obj ? [obj] : []);
+}

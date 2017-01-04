@@ -2,16 +2,15 @@ import { extend, addEvent, warn } from './utils';
 
 const historySupport = typeof window.history['pushState'] !== "undefined";
 
+let _mode = 'hashbang';
+
 /// Listener
 const Listener = {
-  listeners: null,
-
-  history: false,
+  listeners: [],
 
   setUrlOnly: false,
 
-  init: function(mode) {
-    this.history = mode === 'history';
+  init () {
     if (this.history) { // IE 10+
       if (historySupport) {
         addEvent('popstate', onchange);
@@ -27,10 +26,7 @@ const Listener = {
     return this;
   },
 
-  add: function (fn) {
-    if (!this.listeners) {
-      this.listeners = [];
-    }
+  add (fn) {
     this.listeners.push(fn);
     return this;
   },
@@ -58,7 +54,9 @@ const Listener = {
       }
     }
     return this;
-  }
+  },
+
+  stop () {}
 };
 
 function onchange(onChangeEvent) {
@@ -66,8 +64,8 @@ function onchange(onChangeEvent) {
     Listener.setUrlOnly = false;
     return false;
   }
-  var listeners = Listener.listeners;
-  for (var i = 0, l = listeners.length; i < l; i++) {
+  let listeners = Listener.listeners;
+  for (let i = 0, l = listeners.length; i < l; i++) {
     listeners[i](onChangeEvent);
   }
 }

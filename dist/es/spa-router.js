@@ -28,6 +28,188 @@ function warn(message) {
   }
 }
 
+var isArray = Array.isArray ? Array.isArray : function (obj) {
+  return Object.prototype.toString.call(obj) === '[object Array]';
+};
+
+function makeSureArray(obj) {
+  return isArray(obj) ? obj : obj ? [obj] : [];
+}
+
+function RNode(value) {
+  this.path = value;
+  this.params = {};
+  this.callbacks = null;
+  this.beforeLeave = null;
+  this.beforeEnter = null;
+  this.children = [];
+  this.parent = null;
+}
+
+var proto$1 = RNode.prototype;
+
+// add children
+proto$1.addChildren = function addChildren(children) {
+  if (isArray(children)) {
+    this.children = this.children.concat(children);
+  } else {
+    this.children.push(children);
+  }
+  return this;
+};
+
+function createRNode(value) {
+  return new RNode(value);
+}
+
+var historySupport = typeof window.history['pushState'] !== "undefined";
+
+var Listener = {
+  listeners: [],
+
+  setUrlOnly: false,
+
+  init: function init() {
+    if (this.history) {
+      // IE 10+
+      if (historySupport) {
+        addEvent('popstate', onchange);
+      } else {
+        this.history = false;
+        // warning
+        warn('你的浏览器不支持 History API ，只能使用 hashbang 模式');
+        addEvent('hashchange', onchange);
+      }
+    } else {
+      addEvent('hashchange', onchange);
+    }
+    return this;
+  },
+  add: function add(fn) {
+    this.listeners.push(fn);
+    return this;
+  },
+  setHashHistory: function setHashHistory(path) {
+    if (this.history) {
+      history.pushState({}, document.title, path);
+    } else {
+      if (path[0] === '/') {
+        location.hash = '!' + path;
+      } else {
+        var currentURL = location.hash.slice(2); // 去掉前面的#!
+        var idf = currentURL.indexOf('?');
+        if (idf !== -1) {
+          currentURL = currentURL.slice(0, idf);
+        }
+        if (/.*\/$/.test(currentURL)) {
+          location.hash = '!' + currentURL + path;
+        } else {
+          var hash = currentURL.replace(/([^\/]+|)$/, function ($1) {
+            return $1 === '' ? '/' + path : path;
+          });
+          location.hash = '!' + hash;
+        }
+      }
+    }
+    return this;
+  },
+  stop: function stop() {}
+};
+
+function onchange(onChangeEvent) {
+  if (Listener.setUrlOnly) {
+    Listener.setUrlOnly = false;
+    return false;
+  }
+  var listeners = Listener.listeners;
+  for (var i = 0, l = listeners.length; i < l; i++) {
+    listeners[i](onChangeEvent);
+  }
+}
+
+var encode = encodeURIComponent;
+var decode = decodeURIComponent;
+
+var QS = {
+  /**
+   * querystring.stringify
+   * @param { Object } obj
+   * @param { Boolean } traditional [default:false]
+   * @return { String }
+   *
+   * traditional is true:  {x: [1, 2]} => 'x=1&x=2'
+   * traditional is false: {x: [1, 2]} => 'x[]=1&x[]=2'
+   */
+  stringify: function stringify(obj, traditional) {
+    if (!obj) {
+      return '';
+    }
+    var appendString = traditional ? '' : '[]';
+    var names = Object.keys(obj).sort();
+
+    var parts = [];
+    for (var i = 0; i < names.length; ++i) {
+      var name = names[i];
+      var value = obj[name];
+
+      if (Array.isArray(value)) {
+        value.sort();
+        var _parts = [];
+        for (var j = 0; j < value.length; ++j) {
+          _parts.push('' + encode(name).replace(/%20/g, '+') + appendString + '=' + encode(value[j]).replace(/%20/g, '+'));
+        }
+        parts.push(_parts.join('&'));
+        continue;
+      }
+      parts.push(encode(name).replace(/%20/g, '+') + '=' + encode(value).replace(/%20/g, '+'));
+    }
+    return parts.join('&');
+  },
+
+  /**
+   * querystring.parse
+   * @param { String } queryString
+   * @return { Object }
+   * 
+   * 'x=1&y=2' => {x: 1, y: 2}
+   * 'x=1&x=2' => {x: 2}
+   */
+  parse: function parse(queryString) {
+    if (typeof queryString !== 'string') {
+      return {};
+    }
+
+    queryString = queryString.trim().replace(/^(\?|#)/, '');
+
+    if (queryString === '') {
+      return {};
+    }
+
+    var queryParts = queryString.split('&');
+
+    var query = {};
+
+    for (var i = 0; i < queryParts.length; ++i) {
+      var parts = queryParts[i].replace(/\+/g, '%20').split('='); // 特殊字符`+`转换为空格
+      var name = parts[0],
+          value = parts[1];
+
+      name = decode(name);
+
+      value = value === undefined ? null : decode(value);
+
+      if (!query.hasOwnProperty(name)) {
+        query[name] = value;
+      } else if (Array.isArray(query[name])) {
+        query[name].push(value);
+      } else {
+        query[name] = [query[name], value];
+      }
+    }
+    return query;
+  }
+};
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -44,29 +226,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 
 
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
 
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
 
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
+
 
 
 
@@ -138,275 +300,27 @@ var set = function set(object, property, value, receiver) {
 };
 
 /**
- * RNode
- * @constructor
- * @param {String} value 必须
- *
- * value:     区分同级节点的唯一标识
- * params:    value包含的参数，使用{参数名:参数规则}键值对表示
- * before:    路由匹配时，url改变之前执行的回调函数或队列
- * callbacks: 路由匹配时执行的回调函数或队列
- * after:     路由匹配时，url改变之后，callbacks执行完再执行的回调函数或队列
- *
- * _children: 子节点引用列表
- * _parent:   父节点引用
- */
-
-var RNode = function () {
-  function RNode(value) {
-    classCallCheck(this, RNode);
-
-    var valueType = typeof value === 'undefined' ? 'undefined' : _typeof(value);
-    if (valueType !== 'string') {
-      throw new TypeError('Expected a string in the first argument, got ' + valueType);
-    }
-    this.value = value;
-    this.params = {};
-    this.callbacks = null;
-    this.before = null;
-    this.after = null;
-    this._children = [];
-    this._parent = null;
-  }
-
-  /**
-   * set/get children
-   * @param {RNode|[RNode]} children **optional**
-   * @return {[RNode]|RNode} return children node list or this
-   */
-
-
-  createClass(RNode, [{
-    key: 'children',
-    value: function children(_children) {
-      if (undefined === _children) {
-        return this._children;
-      }
-      if (_children instanceof RNode) {
-        this._children.push(_children);
-      } else if (isArray(_children)) {
-        this._children = this._children.concat(_children);
-      } else {
-        throw new TypeError('Expected RNode or Array in the first argument, got ' + Object.prototype.toString.call(_children));
-      }
-      return this;
-    }
-
-    /**
-     * set/get parent
-     * @param {RNode} parent **optional**
-     * @return {RNode} return parent node or this
-     */
-
-  }, {
-    key: 'parent',
-    value: function parent(_parent) {
-      if (undefined === _parent) {
-        return this._parent;
-      }
-      if (_parent instanceof RNode) {
-        this._parent = _parent;
-      } else {
-        throw new TypeError('Expected RNode in the first argument, got ' + Object.prototype.toString.call(_parent));
-      }
-      return this;
-    }
-  }]);
-  return RNode;
-}();
-
-var historySupport = typeof window.history['pushState'] !== "undefined";
-
-/// Listener
-var Listener = {
-  listeners: null,
-
-  history: false,
-
-  setUrlOnly: false,
-
-  init: function init(mode) {
-    this.history = mode === 'history';
-    if (this.history) {
-      // IE 10+
-      if (historySupport) {
-        addEvent('popstate', onchange);
-      } else {
-        this.history = false;
-        // warning
-        warn('你的浏览器不支持 History API ，只能使用 hashbang 模式');
-        addEvent('hashchange', onchange);
-      }
-    } else {
-      addEvent('hashchange', onchange);
-    }
-    return this;
-  },
-
-  add: function add(fn) {
-    if (!this.listeners) {
-      this.listeners = [];
-    }
-    this.listeners.push(fn);
-    return this;
-  },
-
-  setHashHistory: function setHashHistory(path) {
-    if (this.history) {
-      history.pushState({}, document.title, path);
-    } else {
-      if (path[0] === '/') {
-        location.hash = '!' + path;
-      } else {
-        var currentURL = location.hash.slice(2); // 去掉前面的#!
-        var idf = currentURL.indexOf('?');
-        if (idf !== -1) {
-          currentURL = currentURL.slice(0, idf);
-        }
-        if (/.*\/$/.test(currentURL)) {
-          location.hash = '!' + currentURL + path;
-        } else {
-          var hash = currentURL.replace(/([^\/]+|)$/, function ($1) {
-            return $1 === '' ? '/' + path : path;
-          });
-          location.hash = '!' + hash;
-        }
-      }
-    }
-    return this;
-  }
-};
-
-function onchange(onChangeEvent) {
-  if (Listener.setUrlOnly) {
-    Listener.setUrlOnly = false;
-    return false;
-  }
-  var listeners = Listener.listeners;
-  for (var i = 0, l = listeners.length; i < l; i++) {
-    listeners[i](onChangeEvent);
-  }
-}
-
-var querystring = {
-  /**
-   * querystring.stringify
-   * @param { Object } obj
-   * @param { Boolean } traditional [default:false]
-   * @return { String }
-   *
-   * traditional is true:  {x: [1, 2]} => 'x=1&x=2'
-   * traditional is false: {x: [1, 2]} => 'x[]=1&x[]=2'
-   */
-  stringify: function stringify(obj, traditional) {
-    if (!obj) {
-      return '';
-    }
-    var appendString = traditional ? '' : '[]';
-    var names = Object.keys(obj).sort();
-
-    var parts = [];
-    for (var i = 0; i < names.length; ++i) {
-      var name = names[i];
-      var value = obj[name];
-
-      if (Array.isArray(value)) {
-        value.sort();
-        var _parts = [];
-        for (var j = 0; j < value.length; ++j) {
-          _parts.push('' + encodeURIComponent(name).replace(/%20/g, '+') + appendString + '=' + encodeURIComponent(value[j]).replace(/%20/g, '+'));
-        }
-        parts.push(_parts.join('&'));
-        continue;
-      }
-      parts.push(encodeURIComponent(name).replace(/%20/g, '+') + '=' + encodeURIComponent(value).replace(/%20/g, '+'));
-    }
-    return parts.join('&');
-  },
-
-  /**
-   * querystring.parse
-   * @param { String } queryString
-   * @return { Object }
-   * 
-   * 'x=1&y=2' => {x: 1, y: 2}
-   * 'x=1&x=2' => {x: 2}
-   */
-  parse: function parse(queryString) {
-    if (typeof queryString !== 'string') {
-      return {};
-    }
-
-    queryString = queryString.trim().replace(/^(\?|#)/, '');
-
-    if (queryString === '') {
-      return {};
-    }
-
-    var queryParts = queryString.split('&');
-
-    var query = {};
-
-    for (var i = 0; i < queryParts.length; ++i) {
-      var parts = queryParts[i].replace(/\+/g, '%20').split('='); // 特殊字符`+`转换为空格
-      var name = parts[0],
-          value = parts[1];
-
-      name = decodeURIComponent(name);
-
-      value = value === undefined ? null : decodeURIComponent(value);
-
-      if (!query.hasOwnProperty(name)) {
-        query[name] = value;
-      } else if (Array.isArray(query[name])) {
-        query[name].push(value);
-      } else {
-        query[name] = [query[name], value];
-      }
-    }
-    return query;
-  }
-};
-
-// TODO: root怎么处理？
-function handler(onChangeEvent) {
-  var mode = this.options.mode;
-  var url = void 0;
-  switch (mode) {
-    case 'history':
-      url = location.pathname + location.search + location.hash;
-      if (url.substr(0, 1) !== '/') {
-        url = '/' + url;
-      }
-      break;
-    case 'hashbang':
-    default:
-      var hash = location.hash.slice(1);
-      if (hash === '' || hash === '!') {
-        return this.redirect(this.options.root);
-      }
-      var newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
-      url = newURL.replace(/.*#!/, '');
-  }
-  this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
-}
-
-/**
- * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
+ * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
+ * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
  * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
  * @param {RNode} tree
  * @param {String} path
- * @param {Boolean} onlyFind 只找节点，当节点不存在时不要创建新节点
+ * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
  * @return {RNode}
  * */
-function findNode(tree, path, onlyFind) {
-  onlyFind = !!onlyFind;
-  var parts = path.split('/');
+function findNode(routeTreeRoot, routePath, createIfNotFound) {
+  if (routePath === '') {
+    // 当前节点
+    return routeTreeRoot;
+  }
+  createIfNotFound = !!createIfNotFound;
+  var parts = routePath.split('/');
   var target = null,
       found = false;
-  var parent = tree;
-  var params;
-  for (var i = 0, len = parts.length; i < len; ++i) {
+  var parent = routeTreeRoot;
+  var params = void 0;
+
+  var _loop = function _loop(i, len) {
     params = false;
     var realCurrentValue = parts[i];
 
@@ -427,63 +341,65 @@ function findNode(tree, path, onlyFind) {
     });
     /* jshint ignore:end */
 
-    for (var j = 0; j < parent._children.length; ++j) {
-      if (parent._children[j].value === realCurrentValue) {
-        target = parent._children[j];
+    for (var j = 0; j < parent.children.length; ++j) {
+      if (parent.children[j].path === realCurrentValue) {
+        target = parent.children[j];
         found = true;
         break;
       }
     }
     if (!found) {
       // 不存在，创建新节点
-      if (onlyFind) return false;
-      var extendNode = new RNode(realCurrentValue);
-      parent.children(extendNode);
-      extendNode.parent(parent);
+      if (!createIfNotFound) return {
+          v: false
+        };
+      var extendNode = createRNode(realCurrentValue);
+      parent.addChildren(extendNode);
+      extendNode.parent = parent;
       extendNode.params = params;
       target = extendNode;
     }
     parent = target;
     found = false;
+  };
+
+  for (var i = 0, len = parts.length; i < len; ++i) {
+    var _ret = _loop(i, len);
+
+    if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
   }
   return target;
 }
 
+function createRouteNodeInPath(rootNode, routePath) {
+  routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
+  return findNode(rootNode, routePath, true);
+}
 
+// 构造路由树
+function createRouteTree(routeNode, routeOptions) {
 
-/**
- * 构造路由树/子树
- * @param {RNode} root 当前根节点
- * @param {Object} routes 当前节点的路由表
- * @return {RNode} 返回根节点
- * */
-function createRouteTree(root, routes) {
-
-  if (typeof routes === 'function') {
-    root.callbacks = [routes];
-    return root;
-  } else if (Array.isArray(routes)) {
-    root.callbacks = routes;
-    return root;
-  }
-
-  for (var path in routes) {
-    if (routes.hasOwnProperty(path)) {
-      // @TODO 如何实现 beforeLeave
-      var fns = routes[path];
-
-      if (path === '/') {
-        createRouteTree(root, fns);
-      } else {
-        if (path !== '' && path[0] === '/') {
-          path = path.slice(1);
-        }
-        createRouteTree(findNode(root, path), fns);
+  routeNode.beforeEnter = makeSureArray(routeOptions.beforeEnter);
+  routeNode.callbacks = makeSureArray(routeOptions.controllers);
+  routeNode.beforeLeave = makeSureArray(routeOptions.beforeLeave);
+  if (routeOptions.sub) {
+    // 子路由
+    for (var subRoutePath in routeOptions.sub) {
+      if (routeOptions.sub.hasOwnProperty(subRoutePath)) {
+        var subRouteNode = createRouteNodeInPath(routeNode, subRoutePath);
+        createRouteTree(subRouteNode, routeOptions.sub[subRoutePath]);
       }
     }
   }
+}
 
-  return root;
+// 创建根结点
+function createRootRouteTree(routes) {
+  var rootRouteNode = createRNode('');
+  createRouteTree(rootRouteNode, {
+    sub: routes
+  });
+  return rootRouteNode;
 }
 
 /**
@@ -506,14 +422,14 @@ function dfs(root, parts, ci, ri, params) {
     }
   }
 
-  var parent = root.parent();
+  var parent = root.parent;
 
   if (parent === null && ri > 0) {
     // finally not matched
     return [false, newParams];
   }
 
-  if (parent !== null && ri > parent._children.length - 1) {
+  if (parent !== null && ri > parent.children.length - 1) {
     // not matched, go back
     return [false, newParams];
   }
@@ -537,8 +453,8 @@ function dfs(root, parts, ci, ri, params) {
     return [root, newParams];
   }
 
-  for (var i = 0; i < root._children.length; ++i) {
-    var found = dfs(root._children[i], parts, ci + 1, i, newParams); // matched, go ahead
+  for (var i = 0; i < root.children.length; ++i) {
+    var found = dfs(root.children[i], parts, ci + 1, i, newParams); // matched, go ahead
     if (!found[0]) continue;
     return found;
   }
@@ -567,209 +483,117 @@ function searchRouteTree(tree, path) {
   return [found[0].callbacks, found[1]];
 }
 
-var optionDefaults = {
-  // mode可以是history|hashbang
-  // mode:history     使用HTML5 History API
-  // mode:hashbang    使用hash（hashbang模式）
-  root: '/', // TODO
-  mode: 'hashbang',
-  notFound: false,
-  recurse: false // TODO
-};
+// export function removeRNode (rnode) {
+//   const _parent = rnode._parent;
+//   if (_parent) {
+//     for (let i = 0; i < _parent.children.length; ++i) {
+//       if (_parent.children[i] === rnode) {
+//         _parent.children.splice(i, 0);
+//         break;
+//       }
+//     }
+//   }
+//   return rnode;
+// }
 
-/**
- * Router (routes)
- * @constructor
- * @param {Object} routes **Optional**
- */
-
-function Router(routes) {
-  routes = routes || {};
-  var root = new RNode('');
-  root.params = false;
-  this.routeTree = createRouteTree(root, routes);
-  this.options = {};
-  this._hooks = {};
-  this.configure(optionDefaults);
+function handlerHashbangMode(onChangeEvent) {
+  var hash = location.hash.slice(1);
+  if (hash === '' || hash === '!') {
+    return this.go('/');
+  }
+  var newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
+  var url = newURL.replace(/.*#!/, '');
+  this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
 }
 
-var proto = Router.prototype;
+function handlerHistoryMode(onChangeEvent) {
+  var url = location.pathname + location.search + location.hash;
+  if (url.substr(0, 1) !== '/') {
+    url = '/' + url;
+  }
+  this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
+}
 
-/**
- * .configure()
- * @method
- * @param {Object} options **Optional**
- * @return this
- */
-proto.configure = function (options) {
-  options = options || {};
-  this.options = extend(this.options, options);
-  return this;
-};
-
-/**
- * .start()
- * @method
- * @param {Object} options
- * @return this
- */
-proto.start = function (options) {
-  var _this2 = this;
-
-  options = options || {};
-  this._hooks['beforeEach'] = options.beforeEach ? [options.beforeEach] : [];
-  this._hooks['afterEach'] = options.afterEach ? [options.afterEach] : [];
-  // 初始化配置
-  this.configure(options);
-  Listener.init(this.options.mode).add(function () {
-    return handler.call(_this2);
+function start() {
+  var _handler = this._mode === 'history' ? handlerHistoryMode : handlerHashbangMode;
+  var _this = this;
+  Listener.init(this._mode).add(function () {
+    return _handler.call(_this);
   });
   // 首次触发
-  handler.call(this);
+  _handler.call(this);
   return this;
-};
+}
 
-// 停止路由监听
-proto.stop = function () {
+function stop$1() {
   Listener.stop();
   return this;
-};
+}
+
+function destroy() {}
 
 /**
- * .mount() 将路由挂载到某个节点上
- * @method
  * @param {String} path
  * @param {Object} routes
  * @return this
  */
-proto.mount = function (path, routes) {
+function mount(path, routes) {
   if (path !== '' && path[0] === '/') {
     path = path.slice(1);
   }
   createRouteTree(findNode(this.routeTree, path), routes);
   return this;
-};
+}
 
-/**
- * .on()
- * @method
- * @param {String|RegExp} path
- * @param {Function|Array} handlers
- * @return this
- */
-proto.on = function (path, handlers) {
-  if (path !== '' && path[0] === '/') {
-    path = path.slice(1);
-  }
-  var n = findNode(this.routeTree, path);
-  n.callbacks = n.callbacks || [];
-  if (Array.isArray(handlers)) {
-    n.callbacks = n.callbacks.concat(handlers);
-  } else if (typeof handlers === 'function') {
-    n.callbacks.push(handlers);
-  }
-  return this;
-};
-
-/**
- * .dispatch() 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
- * @method
- * @param {String} path
- * @return this
- */
-proto.dispatch = function (path) {
-  var routeTree = this.routeTree;
+// 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
+function dispatch(path) {
+  var routeTree = this._rtree;
   // 保存原始请求uri
   var uri = path;
-  // 取出query部分
   var queryIndex = path.indexOf('?');
   var hashIndex = path.indexOf('#');
   hashIndex = hashIndex === -1 ? path.length : hashIndex;
   var queryString = queryIndex === -1 ? '' : path.slice(queryIndex + 1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
-  var req = { uri: uri, path: path, query: querystring.parse(queryString), $router: this };
+  var Req = { uri: uri, path: path, query: QS.parse(queryString), $router: this };
 
   if (path === '/') {
     path = '';
   }
   var result = searchRouteTree(routeTree, path);
   var callbacks = result[0];
-  req.params = result[1];
-  this._callHooks('beforeEach', req);
+  Req.params = result[1];
+  this._callHooks('beforeEachEnter', Req);
   if (callbacks !== null) {
-    if (Array.isArray(callbacks)) {
-      var _cbs = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
-      for (var i = 0; i < _cbs.length; ++i) {
-        // 不考虑异步操作
-        var pre = _cbs[i].call(this, req); // @TODO 可以中断 callback 的调用
-        if (typeof pre === 'boolean' && !pre) {
-          // 如果前一个 callback 返回了 false ，就不执行后面的 callback
-          break;
-        }
+    var _callbacksCopy = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
+    for (var i = 0; i < _callbacksCopy.length; ++i) {
+      var previousCallbackReturnValue = _callbacksCopy[i].call(this, Req);
+      if (previousCallbackReturnValue === false) {
+        break;
       }
-    } else {
-      throw new TypeError('Expected Array, got ' + (typeof callbacks === 'undefined' ? 'undefined' : _typeof(callbacks)));
     }
-  } else if (this.options.notFound) {
-    this.options.notFound(req);
-  }
-  this._callHooks('afterEach', req);
-  return this;
-};
-
-/**
- * 这个方法会改变当前的`url`，从而触发路由（和dispatch类似，但是dispatch不会改动`url`）
- * 这个方法对于hash/hashbang模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
- * 改方法相当于调用一次history.pushState()然后再调用.dispatch()
- * 如果url没有改变，则不"刷新"
- *
- * @param {String} path
- * @return this
- */
-proto.setRoute = function (path) {
-  var loc = window.location;
-  var oldURI = loc.pathname + loc.search;
-  Listener.setHashHistory(path);
-  var newURI = loc.pathname + loc.search;
-  if (this.options.mode === 'history' && oldURI !== newURI) {
-    this.dispatch(newURI);
   }
   return this;
-};
+}
 
 /**
- * 这个方法会改变当前的 `url` 但是不触发路由
- */
-proto.setUrl = function (path) {
-  Listener.setUrlOnly = true;
-  Listener.setHashHistory(path);
-  return this;
-};
-
-/**
- * alias: `setRoute`
- */
-proto.redirect = function (path) {
-  return this.setRoute(path);
-};
-
-/**
- * .once(path, handlers)
- * 和.on()方法类似，但只会触发一次
  * @param {String|RegExp} path
  * @param {Function|Array} handlers
  * @return this
  */
-proto.once = function (path, handlers) {
-  var _this = this;
-  function onlyOnce(req) {
-    for (var i = 0; i < handlers.length; ++i) {
-      handlers[i].call(_this, req);
-    }
-    _this.off(path, onlyOnce);
+function on(path, handlers) {
+  if (path !== '' && path[0] === '/') {
+    path = path.slice(1);
   }
-  return this.on(path, onlyOnce);
-};
+  var n = findNode(this.routeTree, path);
+  n.callbacks = n.callbacks || [];
+  if (isArray(handlers)) {
+    n.callbacks = n.callbacks.concat(handlers);
+  } else if (typeof handlers === 'function') {
+    n.callbacks.push(handlers);
+  }
+  return this;
+}
 
 /**
  * .off() 方法表示不再侦听某个路由的某个 cb
@@ -777,7 +601,7 @@ proto.once = function (path, handlers) {
  * 如果 callbacks 已经全部移除，则设置为 null
  * @return this
  */
-proto.off = function (path, cb) {
+function off(path, cb) {
   if (path !== '' && path[0] === '/') {
     path = path.slice(1);
   }
@@ -798,15 +622,62 @@ proto.off = function (path, cb) {
     }
   }
   return this;
-};
+}
 
 /**
- * .reload()
+ * 和.on()方法类似，但只会触发一次
+ * @param {String|RegExp} path
+ * @param {Function|Array} handlers
+ * @return this
+ */
+function once(path, handlers) {
+  var _this = this;
+  function onlyOnce(req) {
+    for (var i = 0; i < handlers.length; ++i) {
+      handlers[i].call(_this, req);
+    }
+    _this.off(path, onlyOnce);
+  }
+  return this.on(path, onlyOnce);
+}
+
+/**
+ * 这个方法会改变当前的`url`，从而触发路由（和dispatch类似，但是dispatch不会改动`url`）
+ * 这个方法对于hash/hashbang模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
+ * 改方法相当于调用一次history.pushState()然后再调用.dispatch()
+ * 如果url没有改变，则不"刷新"
+ *
+ * @param {String} path
+ * @return this
+ */
+function go(path) {
+  var loc = window.location;
+  var oldURI = loc.pathname + loc.search;
+  Listener.setHashHistory(path);
+  var newURI = loc.pathname + loc.search;
+  if (this.options.mode === 'history' && oldURI !== newURI) {
+    this.dispatch(newURI);
+  }
+  return this;
+}
+
+function back() {}
+
+/**
+ * 这个方法会改变当前的 `url` 但是不触发路由
+ */
+function setUrlOnly(path) {
+  Listener.setUrlOnly = true; // make sure not to trigger anything
+  Listener.setHashHistory(path);
+  return this;
+}
+
+/**
  * reload page: redispatch current path
  * @method
  * @return this
  */
-proto.reload = function () {
+function reload() {
   if (this.options.mode === 'history') {
     this.dispatch(location.pathname + location.search + location.hash);
   } else if (this.options.mode === 'hashbang') {
@@ -815,14 +686,91 @@ proto.reload = function () {
     this.dispatch(location.hash.slice(1));
   }
   return this;
+}
+
+function plugin(register) {}
+
+var optionDefaults = {
+  mode: 'hashbang',
+  recurse: false // TODO
 };
 
-proto._callHooks = function (hookName, req) {
+/**
+ * Router (routes)
+ * @constructor
+ * @param {Object} routes **Optional**
+ */
+// 虽然允许在同一个应用创建多个 Router ，但是正常情况下你只需要创建一个实例
+function Router(routes, options) {
+  routes = routes || {};
+  this._rtree = createRootRouteTree(routes);
+  this.options = {};
+  this._hooks = {}; // 全局钩子
+  this._init(options);
+}
+
+var _mode = 'hashbang';
+var _alreadySetMode = false;
+
+Router.mode = function setMode(mode) {
+  if (_alreadySetMode) return _mode;
+  _alreadySetMode = true;
+  _mode = mode;
+  return _mode;
+};
+
+var proto = Router.prototype;
+
+proto._init = function _init(options) {
+  options = options || {};
+  this.options = extend({}, optionDefaults, options);
+  this._hooks['beforeEachEnter'] = makeSureArray(options.beforeEachEnter);
+};
+
+// 调用全局钩子
+proto._callHooks = function _callHooks(hookName, Req) {
   var callbacks = this._hooks[hookName] || [];
   for (var i = 0; i < callbacks.length; ++i) {
-    callbacks[i].call(this, req);
+    callbacks[i].call(this, Req);
   }
 };
+
+// start a router
+proto.start = start;
+
+// stop a router
+proto.stop = stop$1;
+
+// destroy a router
+proto.destroy = destroy;
+
+// register a plugin
+proto.plugin = plugin;
+
+// mount a sub-route-tree on a route node
+proto.mount = mount;
+
+// dynamic add a route to route-tree
+proto.on = on;
+
+// like .on except that it will dispatch only once
+proto.once = once;
+
+// stop listen to a route
+proto.off = off;
+
+// dispatch a route if path matches
+proto.dispatch = dispatch;
+
+proto.go = go;
+
+proto.back = back;
+
+// only set url, don't dispatch any routes
+proto.setUrlOnly = setUrlOnly;
+
+// redispatch current route
+proto.reload = reload;
 
 export default Router;
 //# sourceMappingURL=spa-router.js.map

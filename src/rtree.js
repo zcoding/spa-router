@@ -1,49 +1,35 @@
-import RNode from './rnode';
+import createRNode from './rnode';
+import { isArray, makeSureArray } from './utils';
 
-// TODO: root怎么处理？
-export function handler(onChangeEvent) {
-  let mode = this.options.mode;
-  let url;
-  switch(mode) {
-    case 'history':
-      url = location.pathname + location.search + location.hash;
-      if (url.substr(0, 1) !== '/') {
-        url = '/' + url;
-      }
-      break;
-    case 'hashbang':
-    default:
-      var hash = location.hash.slice(1);
-      if (hash === '' || hash === '!') {
-        return this.redirect(this.options.root);
-      }
-      var newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
-      url = newURL.replace(/.*#!/, '');
-  }
-  this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
+// walk through the routeTree
+export function walk (routeTree, cb) {
 }
 
 /**
- * 根据给定的path，查找路由树，返回path对应的节点。如果节点不存在就创建新的节点
+ * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
+ * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
  * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
  * @param {RNode} tree
  * @param {String} path
- * @param {Boolean} onlyFind 只找节点，当节点不存在时不要创建新节点
+ * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
  * @return {RNode}
  * */
-export function findNode(tree, path, onlyFind) {
-  onlyFind = !!onlyFind;
-  var parts = path.split('/');
-  var target = null, found = false;
-  var parent = tree;
-  var params;
-  for (var i = 0, len = parts.length; i < len; ++i) {
+export function findNode(routeTreeRoot, routePath, createIfNotFound) {
+  if (routePath === '') { // 当前节点
+    return routeTreeRoot;
+  }
+  createIfNotFound = !!createIfNotFound;
+  const parts = routePath.split('/');
+  let target = null, found = false;
+  let parent = routeTreeRoot;
+  let params;
+  for (let i = 0, len = parts.length; i < len; ++i) {
     params = false;
-    var realCurrentValue = parts[i];
+    let realCurrentValue = parts[i];
 
-    var matcher = /:([a-zA-Z_][a-zA-Z0-9_]*)(\([^\)]+\))?/g;
+    const matcher = /:([a-zA-Z_][a-zA-Z0-9_]*)(\([^\)]+\))?/g;
 
-    var k = 0;
+    let k = 0;
 
     /* jshint ignore:start */
     realCurrentValue = realCurrentValue.replace(matcher, function($1, $2, $3) {
@@ -57,18 +43,18 @@ export function findNode(tree, path, onlyFind) {
     });
     /* jshint ignore:end */
 
-    for (var j = 0; j < parent._children.length; ++j ) {
-      if (parent._children[j].value === realCurrentValue) {
-        target = parent._children[j];
+    for (let j = 0; j < parent.children.length; ++j ) {
+      if (parent.children[j].path === realCurrentValue) {
+        target = parent.children[j];
         found = true;
         break;
       }
     }
     if (!found) { // 不存在，创建新节点
-      if (onlyFind) return false;
-      var extendNode = new RNode(realCurrentValue);
-      parent.children(extendNode);
-      extendNode.parent(parent);
+      if (!createIfNotFound) return false;
+      const extendNode = createRNode(realCurrentValue);
+      parent.addChildren(extendNode);
+      extendNode.parent = parent;
       extendNode.params = params;
       target = extendNode;
     }
@@ -78,53 +64,35 @@ export function findNode(tree, path, onlyFind) {
   return target;
 }
 
-export function removeRNode (rnode) {
-  const _parent = rnode._parent;
-  if (_parent) {
-    for (let i = 0; i < _parent._children.length; ++i) {
-      if (_parent._children[i] === rnode) {
-        _parent._children.splice(i, 0);
-        break;
-      }
-    }
-  }
-  return rnode;
+function createRouteNodeInPath (rootNode, routePath) {
+  routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
+  return findNode(rootNode, routePath, true);
 }
 
-/**
- * 构造路由树/子树
- * @param {RNode} root 当前根节点
- * @param {Object} routes 当前节点的路由表
- * @return {RNode} 返回根节点
- * */
-export function createRouteTree(root, routes) {
+// 构造路由树
+export function createRouteTree(routeNode, routeOptions) {
 
-  if (typeof routes === 'function') {
-    root.callbacks = [routes];
-    return root;
-  } else if (Array.isArray(routes)) {
-    root.callbacks = routes;
-    return root;
-  }
-
-  for (var path in routes) {
-    if (routes.hasOwnProperty(path)) {
-      // @TODO 如何实现 beforeLeave
-      var fns = routes[path];
-
-      if (path === '/') {
-        createRouteTree(root, fns);
-      } else {
-        if (path !== '' && path[0] === '/') {
-          path = path.slice(1);
-        }
-        createRouteTree(findNode(root, path), fns);
+  routeNode.beforeEnter = makeSureArray(routeOptions.beforeEnter);
+  routeNode.callbacks = makeSureArray(routeOptions.controllers);
+  routeNode.beforeLeave = makeSureArray(routeOptions.beforeLeave);
+  if (routeOptions.sub) { // 子路由
+    for (let subRoutePath in routeOptions.sub) {
+      if (routeOptions.sub.hasOwnProperty(subRoutePath)) {
+        const subRouteNode = createRouteNodeInPath(routeNode, subRoutePath);
+        createRouteTree(subRouteNode, routeOptions.sub[subRoutePath]);
       }
-
     }
   }
 
-  return root;
+}
+
+// 创建根结点
+export function createRootRouteTree (routes) {
+  const rootRouteNode = createRNode('');
+  createRouteTree(rootRouteNode, {
+    sub: routes
+  });
+  return rootRouteNode;
 }
 
 /**
@@ -146,13 +114,13 @@ export function dfs(root, parts, ci, ri, params) {
     }
   }
 
-  var parent = root.parent();
+  var parent = root.parent;
 
   if (parent === null && ri > 0) { // finally not matched
     return [false, newParams];
   }
 
-  if (parent !== null && ri > parent._children.length-1) { // not matched, go back
+  if (parent !== null && ri > parent.children.length-1) { // not matched, go back
     return [false, newParams];
   }
 
@@ -174,8 +142,8 @@ export function dfs(root, parts, ci, ri, params) {
     return [root, newParams];
   }
 
-  for (var i = 0; i < root._children.length; ++i) {
-    var found = dfs(root._children[i], parts, ci+1, i, newParams); // matched, go ahead
+  for (var i = 0; i < root.children.length; ++i) {
+    var found = dfs(root.children[i], parts, ci+1, i, newParams); // matched, go ahead
     if (!found[0]) continue;
     return found;
   }
@@ -203,3 +171,16 @@ export function searchRouteTree(tree, path) {
 
   return [found[0].callbacks, found[1]];
 }
+
+// export function removeRNode (rnode) {
+//   const _parent = rnode._parent;
+//   if (_parent) {
+//     for (let i = 0; i < _parent.children.length; ++i) {
+//       if (_parent.children[i] === rnode) {
+//         _parent.children.splice(i, 0);
+//         break;
+//       }
+//     }
+//   }
+//   return rnode;
+// }
