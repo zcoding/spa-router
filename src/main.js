@@ -14,6 +14,7 @@ import {
   createLink
 } from './api';
 
+import QS from './querystring';
 import createRNode from './rnode';
 import { createRootRouteTree } from './rtree';
 import { extend, makeSureArray } from './utils';
@@ -37,10 +38,13 @@ const optionDefaults = {
 // 虽然允许在同一个应用创建多个 Router ，但是正常情况下你只需要创建一个实例
 export default function Router(routes, options) {
   routes = routes || {};
-  this._rtree = createRootRouteTree(routes);
+  this._namedRoutes = {}; // 具名路由
+  this._rtree = createRootRouteTree(this._namedRoutes, routes);
   this._hooks = {}; // 全局钩子
   this._init(options);
 }
+
+Router.QS = QS;
 
 const proto = Router.prototype;
 
@@ -86,7 +90,7 @@ proto.off = off; // 🆗
 // dispatch a route if path matches
 proto.dispatch = dispatch; // 🆗
 
-proto.go = go;
+proto.go = go; // 🆗
 
 proto.back = back;
 

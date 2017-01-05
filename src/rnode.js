@@ -15,7 +15,8 @@ import { isArray, makeSureArray, ArrayCopy } from './utils';
  */
 function RNode(value) {
   this.path = value;
-  this.params = {};
+  this.params = false;
+  this.data = null;
   this._hooks = {};
   this.children = [];
   this.parent = null;

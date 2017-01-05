@@ -52,13 +52,36 @@ export function destroy () {
 export function mount (routePath, routes) {
   routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
   const currentRouteNode = findNode(this._rtree, routePath, true);
-  createRouteTree(currentRouteNode, routes);
+  createRouteTree(this._namedRoutes, currentRouteNode, routes);
   return this;
+}
+
+// 路由描述对象转换为路径
+function routeDescObjToPath (namedRoutes, routeDescObj) {
+  const routeNode = namedRoutes[routeDescObj.name];
+  if (!routeNode) {
+    return null;
+  }
+  const paths = [];
+  let rnode = routeNode;
+  while (rnode) {
+    let pathvalue = rnode.path;
+    if (rnode.params && routeDescObj.params) {
+      let paramsIndex = 0;
+      pathvalue = pathvalue.replace(/\([^\)]+\)/g, function ($1) {
+        return routeDescObj.params[rnode.params[paramsIndex++]] || $1;
+      });
+    }
+    paths.unshift(pathvalue);
+    rnode = rnode.parent;
+  }
+  return paths.join('/');
 }
 
 // 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
 export function dispatch (path) {
   if (typeof path === 'object' && path !== null) { // {name: 'routeName', params: {}}
+    path = routeDescObjToPath(this._namedRoutes, path);
   }
   if (lastReq) {
     this._callHooks('beforeEachLeave', lastReq);
@@ -82,6 +105,7 @@ export function dispatch (path) {
   const result = searchRouteTree(routeTree, path);
   const routeNode = result[0], params = result[1];
   Req.params = params;
+  Req.data = routeNode ? routeNode.data : null;
   this._callHooks('beforeEachEnter', Req);
   if (routeNode) {
     routeNode.callHooks('beforeEnter', Req);
@@ -149,10 +173,13 @@ export function once (routePath, callbacks) {
  * @return this
  */
 export function go (path) {
-  var loc = window.location;
-  var oldURI = loc.pathname + loc.search;
+  const loc = window.location;
+  const oldURI = loc.pathname + loc.search;
+  if (typeof path === 'object' && path !== null) {
+    path = routeDescObjToPath(this._namedRoutes, path);
+  }
   Listener.setHashHistory(path);
-  var newURI = loc.pathname + loc.search;
+  const newURI = `${loc.pathname}${loc.search}`;
   if (this.options.mode === 'history' && oldURI !== newURI) {
     this.dispatch(newURI);
   }
@@ -164,6 +191,9 @@ export function back () {}
 // 改变当前的 `url` 但是不触发路由
 // 和 dispatch 刚好相反，dispatch 只触发路由但不改变 `url`
 export function setUrlOnly (path) {
+  if (typeof path === 'object' && path !== null) {
+    path = routeDescObjToPath(this._namedRoutes, path);
+  }
   Listener.setUrlOnly = true; // make sure not to trigger anything
   Listener.setHashHistory(path);
   return this;

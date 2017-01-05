@@ -1,5 +1,5 @@
 import createRNode from './rnode';
-import { isArray, makeSureArray } from './utils';
+import { isArray, makeSureArray, warn } from './utils';
 
 /**
  * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
@@ -66,8 +66,16 @@ function createRouteNodeInPath (rootNode, routePath) {
 }
 
 // 构造路由树
-export function createRouteTree(routeNode, routeOptions) {
-
+export function createRouteTree(namedRoutes, routeNode, routeOptions) {
+  if (routeOptions.name) {
+    if (namedRoutes[routeOptions.name]) {
+      warn(`已经存在的具名路由 ${routeOptions.name} 将被覆盖`);
+    }
+    namedRoutes[routeOptions.name] = routeNode;
+  }
+  if (routeOptions.data) {
+    routeNode.data = routeOptions.data;
+  }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);
   routeNode.addHooks('beforeLeave', routeOptions.beforeLeave);
@@ -75,7 +83,7 @@ export function createRouteTree(routeNode, routeOptions) {
     for (let subRoutePath in routeOptions.sub) {
       if (routeOptions.sub.hasOwnProperty(subRoutePath)) {
         const subRouteNode = createRouteNodeInPath(routeNode, subRoutePath);
-        createRouteTree(subRouteNode, routeOptions.sub[subRoutePath]);
+        createRouteTree(namedRoutes, subRouteNode, routeOptions.sub[subRoutePath]);
       }
     }
   }
@@ -83,9 +91,9 @@ export function createRouteTree(routeNode, routeOptions) {
 }
 
 // 创建根结点
-export function createRootRouteTree (routes) {
+export function createRootRouteTree (namedRoutes, routes) {
   const rootRouteNode = createRNode('');
-  createRouteTree(rootRouteNode, {
+  createRouteTree(namedRoutes, rootRouteNode, {
     sub: routes
   });
   return rootRouteNode;
@@ -122,14 +130,14 @@ export function dfs(currentRouteNode, parts, ci, ri, params) {
 
   if (ci > parts.length-1 || ci < 0) return [false, newParams];
 
-  var matcher = new RegExp('^' + currentRouteNode.path + '$');
-  var matches = value.match(matcher);
+  const matcher = new RegExp('^' + currentRouteNode.path + '$');
+  let matches = value.match(matcher);
 
   if (matches === null) return [false, newParams]; // not matched, go back
 
   if (!!currentRouteNode.params) {
     matches = [].slice.apply(matches, [1]);
-    for (var k = 0; k < matches.length; ++k) {
+    for (let k = 0; k < matches.length; ++k) {
       newParams[currentRouteNode.params[k]] = matches[k];
     }
   }
@@ -138,8 +146,8 @@ export function dfs(currentRouteNode, parts, ci, ri, params) {
     return [currentRouteNode, newParams];
   }
 
-  for (var i = 0; i < currentRouteNode.children.length; ++i) {
-    var found = dfs(currentRouteNode.children[i], parts, ci+1, i, newParams); // matched, go ahead
+  for (let i = 0; i < currentRouteNode.children.length; ++i) {
+    const found = dfs(currentRouteNode.children[i], parts, ci+1, i, newParams); // matched, go ahead
     if (!found[0]) continue;
     return found;
   }

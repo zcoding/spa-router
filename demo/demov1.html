@@ -161,9 +161,13 @@
       controllers: [log, show],
       sub: {
         '/product': {
-          controllers: [log, show]
+          data: {
+            s: 'b'
+          },
+          controllers: [log, show, function (req) {console.log(req.data);}]
         },
         '/product/:color(r.+)-:size-:price': {
+          name: 'pro2',
           beforeEnter: function () {
             console.log('准备进入 product 页面');
           },
@@ -173,6 +177,7 @@
           controllers: [log, show]
         },
         '/product/:id': {
+          name: 'pro',
           controllers: [log, show]
         },
         '/about': {
@@ -202,6 +207,7 @@
     controllers: function () {console.log('this is hello world.');},
     sub: {
       "shit": {
+        name: 'helloshit',
         controllers: function () {console.log('this is hello world shit');}
       }
     }
@@ -210,6 +216,35 @@
   console.log(basicExampleRouter);
 
   basicExampleRouter.start();
+
+  var separatorExampleRoutes = {
+    '/test/:p1/:p2/:p3': {
+      controllers: show
+    },
+    '/test/:p1&:p2&:p3': {
+      controllers: show
+    },
+    '/test/:p1!:p2!:p3': {
+      controllers: show
+    },
+    '/test/:p1=:p2=:p3': {
+      controllers: show
+    },
+    '/test/:p1@:p2@:p3': {
+      controllers: show
+    },
+    '/test/hello@world&and!hahaha=shit-:haha': {
+      controllers: [show, function(req) {
+        getDom('[data-msg]').innerHTML = '"hello@world&and!hahaha=shit-" is not a parameter.';
+      }]
+    }
+  };
+
+  var separatorExampleRouter = new Router(separatorExampleRoutes);
+
+  console.log(separatorExampleRouter);
+
+  separatorExampleRouter.start();
 
   </script>
 </body>

@@ -224,7 +224,8 @@ var QS = {
 
 function RNode(value) {
   this.path = value;
-  this.params = {};
+  this.params = false;
+  this.data = null;
   this._hooks = {};
   this.children = [];
   this.parent = null;
@@ -429,8 +430,16 @@ function createRouteNodeInPath(rootNode, routePath) {
 }
 
 // 构造路由树
-function createRouteTree(routeNode, routeOptions) {
-
+function createRouteTree(namedRoutes, routeNode, routeOptions) {
+  if (routeOptions.name) {
+    if (namedRoutes[routeOptions.name]) {
+      warn('\u5DF2\u7ECF\u5B58\u5728\u7684\u5177\u540D\u8DEF\u7531 ' + routeOptions.name + ' \u5C06\u88AB\u8986\u76D6');
+    }
+    namedRoutes[routeOptions.name] = routeNode;
+  }
+  if (routeOptions.data) {
+    routeNode.data = routeOptions.data;
+  }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);
   routeNode.addHooks('beforeLeave', routeOptions.beforeLeave);
@@ -439,16 +448,16 @@ function createRouteTree(routeNode, routeOptions) {
     for (var subRoutePath in routeOptions.sub) {
       if (routeOptions.sub.hasOwnProperty(subRoutePath)) {
         var subRouteNode = createRouteNodeInPath(routeNode, subRoutePath);
-        createRouteTree(subRouteNode, routeOptions.sub[subRoutePath]);
+        createRouteTree(namedRoutes, subRouteNode, routeOptions.sub[subRoutePath]);
       }
     }
   }
 }
 
 // 创建根结点
-function createRootRouteTree(routes) {
+function createRootRouteTree(namedRoutes, routes) {
   var rootRouteNode = createRNode('');
-  createRouteTree(rootRouteNode, {
+  createRouteTree(namedRoutes, rootRouteNode, {
     sub: routes
   });
   return rootRouteNode;
@@ -495,8 +504,8 @@ function dfs(currentRouteNode, parts, ci, ri, params) {
 
   if (!!currentRouteNode.params) {
     matches = [].slice.apply(matches, [1]);
-    for (var k = 0; k < matches.length; ++k) {
-      newParams[currentRouteNode.params[k]] = matches[k];
+    for (var _k = 0; _k < matches.length; ++_k) {
+      newParams[currentRouteNode.params[_k]] = matches[_k];
     }
   }
 
@@ -586,13 +595,39 @@ function destroy() {
 function mount(routePath, routes) {
   routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
   var currentRouteNode = findNode(this._rtree, routePath, true);
-  createRouteTree(currentRouteNode, routes);
+  createRouteTree(this._namedRoutes, currentRouteNode, routes);
   return this;
+}
+
+// 路由描述对象转换为路径
+function routeDescObjToPath(namedRoutes, routeDescObj) {
+  var routeNode = namedRoutes[routeDescObj.name];
+  if (!routeNode) {
+    return null;
+  }
+  var paths = [];
+  var rnode = routeNode;
+  while (rnode) {
+    var pathvalue = rnode.path;
+    if (rnode.params && routeDescObj.params) {
+      (function () {
+        var paramsIndex = 0;
+        pathvalue = pathvalue.replace(/\([^\)]+\)/g, function ($1) {
+          return routeDescObj.params[rnode.params[paramsIndex++]] || $1;
+        });
+      })();
+    }
+    paths.unshift(pathvalue);
+    rnode = rnode.parent;
+  }
+  return paths.join('/');
 }
 
 // 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
 function dispatch(path) {
-  if ((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path !== null) {// {name: 'routeName', params: {}}
+  if ((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path !== null) {
+    // {name: 'routeName', params: {}}
+    path = routeDescObjToPath(this._namedRoutes, path);
   }
   if (lastReq) {
     this._callHooks('beforeEachLeave', lastReq);
@@ -617,6 +652,7 @@ function dispatch(path) {
   var routeNode = result[0],
       params = result[1];
   Req.params = params;
+  Req.data = routeNode ? routeNode.data : null;
   this._callHooks('beforeEachEnter', Req);
   if (routeNode) {
     routeNode.callHooks('beforeEnter', Req);
@@ -686,8 +722,11 @@ function once(routePath, callbacks) {
 function go(path) {
   var loc = window.location;
   var oldURI = loc.pathname + loc.search;
+  if ((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path !== null) {
+    path = routeDescObjToPath(this._namedRoutes, path);
+  }
   Listener.setHashHistory(path);
-  var newURI = loc.pathname + loc.search;
+  var newURI = '' + loc.pathname + loc.search;
   if (this.options.mode === 'history' && oldURI !== newURI) {
     this.dispatch(newURI);
   }
@@ -699,6 +738,9 @@ function back() {}
 // 改变当前的 `url` 但是不触发路由
 // 和 dispatch 刚好相反，dispatch 只触发路由但不改变 `url`
 function setUrlOnly(path) {
+  if ((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path !== null) {
+    path = routeDescObjToPath(this._namedRoutes, path);
+  }
   Listener.setUrlOnly = true; // make sure not to trigger anything
   Listener.setHashHistory(path);
   return this;
@@ -734,10 +776,13 @@ var optionDefaults = {
 // 虽然允许在同一个应用创建多个 Router ，但是正常情况下你只需要创建一个实例
 function Router(routes, options) {
   routes = routes || {};
-  this._rtree = createRootRouteTree(routes);
+  this._namedRoutes = {}; // 具名路由
+  this._rtree = createRootRouteTree(this._namedRoutes, routes);
   this._hooks = {}; // 全局钩子
   this._init(options);
 }
+
+Router.QS = QS;
 
 var proto = Router.prototype;
 
@@ -783,7 +828,7 @@ proto.off = off; // 🆗
 // dispatch a route if path matches
 proto.dispatch = dispatch; // 🆗
 
-proto.go = go;
+proto.go = go; // 🆗
 
 proto.back = back;
 
