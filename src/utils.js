@@ -35,3 +35,7 @@ export const isArray = Array.isArray ? Array.isArray : function(obj) {
 export function makeSureArray (obj) {
   return isArray(obj) ? obj : (obj ? [obj] : []);
 }
+
+export function ArrayCopy (arr) {
+  return arr.slice(0);
+}

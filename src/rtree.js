@@ -31,8 +31,7 @@ export function findNode(routeTreeRoot, routePath, createIfNotFound) {
 
     let k = 0;
 
-    /* jshint ignore:start */
-    realCurrentValue = realCurrentValue.replace(matcher, function($1, $2, $3) {
+    function replacement($1, $2, $3) {
       params = params || [];
       params[k++] = $2;
       if (!$3) { // In IE 8 , $3 is an empty String while in other browser it is undefined.
@@ -40,8 +39,9 @@ export function findNode(routeTreeRoot, routePath, createIfNotFound) {
       } else {
         return $3;
       }
-    });
-    /* jshint ignore:end */
+    }
+
+    realCurrentValue = realCurrentValue.replace(matcher, replacement);
 
     for (let j = 0; j < parent.children.length; ++j ) {
       if (parent.children[j].path === realCurrentValue) {
@@ -171,16 +171,3 @@ export function searchRouteTree(tree, path) {
 
   return [result[0], result[1]];
 }
-
-// export function removeRNode (rnode) {
-//   const _parent = rnode._parent;
-//   if (_parent) {
-//     for (let i = 0; i < _parent.children.length; ++i) {
-//       if (_parent.children[i] === rnode) {
-//         _parent.children.splice(i, 0);
-//         break;
-//       }
-//     }
-//   }
-//   return rnode;
-// }

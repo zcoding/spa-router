@@ -36,6 +36,10 @@ function makeSureArray(obj) {
   return isArray(obj) ? obj : obj ? [obj] : [];
 }
 
+function ArrayCopy(arr) {
+  return arr.slice(0);
+}
+
 function RNode(value) {
   this.path = value;
   this.params = {};
@@ -48,13 +52,17 @@ var proto$1 = RNode.prototype;
 
 proto$1.callHooks = function _callHooks(hookName, Req) {
   var callbacks = this._hooks[hookName] || [];
-  for (var i = 0; i < callbacks.length; ++i) {
-    callbacks[i].call(this, Req);
+  var _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
+  for (var i = 0; i < _copyCallbacks.length; ++i) {
+    var previousCallbackReturnValue = _copyCallbacks[i].call(this, Req);
+    if (previousCallbackReturnValue === false) break;
   }
+  return this;
 };
 
 proto$1.addHooks = function addHooks(hookName, callbacks) {
   this._hooks[hookName] = makeSureArray(callbacks);
+  return this;
 };
 
 // add children
@@ -63,6 +71,16 @@ proto$1.addChildren = function addChildren(children) {
     this.children = this.children.concat(children);
   } else {
     this.children.push(children);
+  }
+  return this;
+};
+
+proto$1.removeChild = function removeChild(child) {
+  for (var i = 0; i < this.children.length; ++i) {
+    if (this.children[i] === child) {
+      this.children.splice(i, 1);
+      break;
+    }
   }
   return this;
 };
@@ -337,8 +355,7 @@ function findNode(routeTreeRoot, routePath, createIfNotFound) {
 
     var k = 0;
 
-    /* jshint ignore:start */
-    realCurrentValue = realCurrentValue.replace(matcher, function ($1, $2, $3) {
+    function replacement($1, $2, $3) {
       params = params || [];
       params[k++] = $2;
       if (!$3) {
@@ -347,8 +364,9 @@ function findNode(routeTreeRoot, routePath, createIfNotFound) {
       } else {
         return $3;
       }
-    });
-    /* jshint ignore:end */
+    }
+
+    realCurrentValue = realCurrentValue.replace(matcher, replacement);
 
     for (var j = 0; j < parent.children.length; ++j) {
       if (parent.children[j].path === realCurrentValue) {
@@ -492,20 +510,8 @@ function searchRouteTree(tree, path) {
   return [result[0], result[1]];
 }
 
-// export function removeRNode (rnode) {
-//   const _parent = rnode._parent;
-//   if (_parent) {
-//     for (let i = 0; i < _parent.children.length; ++i) {
-//       if (_parent.children[i] === rnode) {
-//         _parent.children.splice(i, 0);
-//         break;
-//       }
-//     }
-//   }
-//   return rnode;
-// }
-
 var lastReq = null;
+var lastRouteNode = null;
 
 function handlerHashbangMode(onChangeEvent) {
   var hash = location.hash.slice(1);
@@ -526,6 +532,11 @@ function handlerHistoryMode(onChangeEvent) {
 }
 
 function start() {
+  if (this._isRunning) {
+    // start 只调用一次
+    return this;
+  }
+  this._isRunning = true;
   var _handler = this._mode === 'history' ? handlerHistoryMode : handlerHashbangMode;
   var _this = this;
   Listener.init(this._mode).add(function () {
@@ -543,23 +554,23 @@ function stop$1() {
 
 function destroy() {}
 
-/**
- * @param {String} path
- * @param {Object} routes
- * @return this
- */
-function mount(path, routes) {
-  if (path !== '' && path[0] === '/') {
-    path = path.slice(1);
-  }
-  createRouteTree(findNode(this.routeTree, path), routes);
+// 动态添加新路由（可能会替换原有的路由）
+function mount(routePath, routes) {
+  routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
+  var currentRouteNode = findNode(this._rtree, routePath, true);
+  createRouteTree(currentRouteNode, routes);
   return this;
 }
 
 // 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回
 function dispatch(path) {
+  if ((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path !== null) {// {name: 'routeName', params: {}}
+  }
   if (lastReq) {
     this._callHooks('beforeEachLeave', lastReq);
+    if (lastRouteNode) {
+      lastRouteNode.callHooks('beforeLeave', lastReq);
+    }
   }
   var routeTree = this._rtree;
   // 保存原始请求uri
@@ -575,80 +586,54 @@ function dispatch(path) {
     path = '';
   }
   var result = searchRouteTree(routeTree, path);
-  // const callbacks = result[0].callbacks;
-  Req.params = result[1];
+  var routeNode = result[0],
+      params = result[1];
+  Req.params = params;
   this._callHooks('beforeEachEnter', Req);
-  if (result[0]) {
-    result[0].callHooks('beforeEnter', Req);
-    result[0].callHooks('callbacks', Req);
+  if (routeNode) {
+    routeNode.callHooks('beforeEnter', Req);
+    routeNode.callHooks('callbacks', Req);
   }
-  // if (callbacks !== null) {
-  //   const _callbacksCopy = callbacks.slice(0); // 复制一个，避免中间调用了 off 导致 length 变化
-  //   for (let i = 0; i < _callbacksCopy.length; ++i) {
-  //     const previousCallbackReturnValue = _callbacksCopy[i].call(this, Req);
-  //     if (previousCallbackReturnValue === false) {
-  //       break;
-  //     }
-  //   }
-  // }
   lastReq = Req;
+  lastRouteNode = routeNode;
   return this;
 }
 
-/**
- * @param {String|RegExp} path
- * @param {Function|Array} handlers
- * @return this
- */
-function on(path, handlers) {
-  if (path !== '' && path[0] === '/') {
-    path = path.slice(1);
-  }
-  var n = findNode(this.routeTree, path);
-  n.callbacks = n.callbacks || [];
-  if (isArray(handlers)) {
-    n.callbacks = n.callbacks.concat(handlers);
-  } else if (typeof handlers === 'function') {
-    n.callbacks.push(handlers);
+// 动态添加路由回调
+function on(routePath, callbacks) {
+  routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
+  var routeNode = findNode(this._rtree, routePath, true);
+  if (!routeNode._hooks['callbacks']) {
+    routeNode.addHooks('callbacks', callbacks);
+  } else {
+    routeNode._hooks['callbacks'] = routeNode._hooks['callbacks'].concat(makeSureArray(callbacks));
   }
   return this;
 }
 
-/**
- * .off() 方法表示不再侦听某个路由的某个 cb
- * 如果没有指定 cb 则直接将该路由节点的所有 callbacks 移除并设置为 null
- * 如果 callbacks 已经全部移除，则设置为 null
- * @return this
- */
-function off(path, cb) {
-  if (path !== '' && path[0] === '/') {
-    path = path.slice(1);
-  }
-  var n = findNode(this.routeTree, path, true);
-  if (n && n.callbacks) {
+// 动态移除路由回调
+function off(routePath, cb) {
+  routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
+  var routeNode = findNode(this._rtree, routePath, false);
+  if (routeNode && routeNode._hooks['callbacks']) {
     if (cb) {
-      for (var i = 0; i < n.callbacks.length; ++i) {
-        if (n.callbacks[i] === cb) {
-          n.callbacks.splice(i, 1);
+      for (var i = 0; i < routeNode._hooks['callbacks'].length; ++i) {
+        if (routeNode._hooks['callbacks'][i] === cb) {
+          routeNode._hooks['callbacks'].splice(i, 1);
           break;
         }
       }
     } else {
-      n.callbacks.splice(0, n.callbacks.length);
+      routeNode._hooks['callbacks'].splice(0, routeNode._hooks['callbacks'].length);
     }
-    if (n.callbacks.length === 0) {
-      n.callbacks = null;
-    }
+  }
+  if (routeNode && routeNode._hooks['callbacks'] && routeNode._hooks['callbacks'].length === 0 && routeNode.children.length === 0 && routeNode.parent) {
+    routeNode.parent.removeChild(routeNode);
   }
   return this;
 }
 
-/**
- * 和.on()方法类似，但只会触发一次
- * @param {String|RegExp} path
- * @param {Function|Array} handlers
- * @return this
- */
+// 动态添加路由回调，但是只响应一次
 function once(path, handlers) {
   var _this = this;
   function onlyOnce(req) {
@@ -661,10 +646,10 @@ function once(path, handlers) {
 }
 
 /**
- * 这个方法会改变当前的`url`，从而触发路由（和dispatch类似，但是dispatch不会改动`url`）
- * 这个方法对于hash/hashbang模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
- * 改方法相当于调用一次history.pushState()然后再调用.dispatch()
- * 如果url没有改变，则不"刷新"
+ * 这个方法会改变当前的 `url`，从而触发路由（和 dispatch 类似，但是 dispatch 不会改动 `url`）
+ * 这个方法对于 hash/hashbang 模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
+ * 该方法相当于调用一次 history.pushState() 然后再调用 .dispatch()
+ * 如果 url 没有改变，不会"刷新"
  *
  * @param {String} path
  * @return this
@@ -682,9 +667,8 @@ function go(path) {
 
 function back() {}
 
-/**
- * 这个方法会改变当前的 `url` 但是不触发路由
- */
+// 改变当前的 `url` 但是不触发路由
+// 和 dispatch 刚好相反，dispatch 只触发路由但不改变 `url`
 function setUrlOnly(path) {
   Listener.setUrlOnly = true; // make sure not to trigger anything
   Listener.setHashHistory(path);
@@ -707,6 +691,8 @@ function reload() {
   return this;
 }
 
+// 创建一个链接
+
 function plugin(register) {}
 
 var optionDefaults = {
@@ -723,7 +709,6 @@ var optionDefaults = {
 function Router(routes, options) {
   routes = routes || {};
   this._rtree = createRootRouteTree(routes);
-  this.options = {};
   this._hooks = {}; // 全局钩子
   this._init(options);
 }
@@ -742,6 +727,7 @@ var proto = Router.prototype;
 
 proto._init = function _init(options) {
   options = options || {};
+  this._isRunning = false;
   this.options = extend({}, optionDefaults, options);
   this._hooks['beforeEachEnter'] = makeSureArray(options.beforeEachEnter);
   this._hooks['beforeEachLeave'] = makeSureArray(options.beforeEachLeave);

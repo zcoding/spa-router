@@ -36,7 +36,6 @@ const optionDefaults = {
 export default function Router(routes, options) {
   routes = routes || {};
   this._rtree = createRootRouteTree(routes);
-  this.options = {};
   this._hooks = {}; // 全局钩子
   this._init(options);
 }
@@ -55,6 +54,7 @@ const proto = Router.prototype;
 
 proto._init = function _init (options) {
   options = options || {};
+  this._isRunning = false;
   this.options = extend({}, optionDefaults, options);
   this._hooks['beforeEachEnter'] = makeSureArray(options.beforeEachEnter);
   this._hooks['beforeEachLeave'] = makeSureArray(options.beforeEachLeave);

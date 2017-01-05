@@ -1,4 +1,4 @@
-import { isArray, makeSureArray } from './utils';
+import { isArray, makeSureArray, ArrayCopy } from './utils';
 
 /**
  * RNode
@@ -25,13 +25,17 @@ const proto = RNode.prototype;
 
 proto.callHooks = function _callHooks (hookName, Req) {
   const callbacks = this._hooks[hookName] || [];
-  for (let i = 0; i < callbacks.length; ++i) {
-    callbacks[i].call(this, Req);
+  const _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
+  for (let i = 0; i < _copyCallbacks.length; ++i) {
+    const previousCallbackReturnValue = _copyCallbacks[i].call(this, Req);
+    if (previousCallbackReturnValue === false) break;
   }
+  return this;
 };
 
 proto.addHooks = function addHooks (hookName, callbacks) {
   this._hooks[hookName] = makeSureArray(callbacks);
+  return this;
 };
 
 // add children
@@ -44,6 +48,15 @@ proto.addChildren = function addChildren (children) {
   return this;
 };
 
+proto.removeChild = function removeChild (child) {
+  for (let i = 0; i < this.children.length; ++i) {
+    if (this.children[i] === child) {
+      this.children.splice(i, 1);
+      break;
+    }
+  }
+  return this;
+};
 
 export default function createRNode (value) {
   return new RNode(value);
