@@ -198,6 +198,15 @@
     }
   });
 
+  basicExampleRouter.mount('/hello/world', {
+    controllers: function () {console.log('this is hello world.');},
+    sub: {
+      "shit": {
+        controllers: function () {console.log('this is hello world shit');}
+      }
+    }
+  });
+
   console.log(basicExampleRouter);
 
   basicExampleRouter.start();

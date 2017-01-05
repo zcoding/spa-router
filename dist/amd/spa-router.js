@@ -14,6 +14,8 @@ function extend() {
   return obj;
 }
 
+
+
 function addEvent(name, handler) {
   if (window.addEventListener) {
     window.addEventListener(name, handler, false);
@@ -220,19 +222,6 @@ var QS = {
   }
 };
 
-/**
- * RNode
- * @constructor
- * @param {String} value
- *
- * path:          区分同级节点的唯一标识
- * params:        path 包含的参数，使用{参数名:参数规则}键值对表示
- * callbacks:     路由匹配时执行的回调函数或队列
- * beforeEnter:   路由匹配时，callbacks 执行之前执行的回调函数或队列（如果 beforeEnter 返回 false 则不会进入 callbacks 执行阶段）
- * beforeLeave:   路由匹配时，进入下一个路由之前（也就是当前路由离开之前）执行的回调函数或队列
- * children:      子节点列表引用
- * parent:        父节点引用
- */
 function RNode(value) {
   this.path = value;
   this.params = {};
@@ -371,18 +360,6 @@ var set = function set(object, property, value, receiver) {
   return value;
 };
 
-// walk through the routeTree
-
-
-/**
- * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
- * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
- * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
- * @param {RNode} tree
- * @param {String} path
- * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
- * @return {RNode}
- * */
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
     // 当前节点
@@ -739,8 +716,6 @@ function reload() {
 
 // 创建一个链接
 
-function plugin(register) {}
-
 var uid = 0;
 
 // mode: history|hashbang
@@ -793,11 +768,8 @@ proto.stop = stop$1; // 🆗
 // destroy a router
 proto.destroy = destroy; // 🆗
 
-// register a plugin
-proto.plugin = plugin;
-
 // mount a sub-route-tree on a route node
-proto.mount = mount;
+proto.mount = mount; // 🆗
 
 // dynamic add a route to route-tree
 proto.on = on; // 🆗

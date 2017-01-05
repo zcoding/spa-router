@@ -1,10 +1,6 @@
 import createRNode from './rnode';
 import { isArray, makeSureArray } from './utils';
 
-// walk through the routeTree
-export function walk (routeTree, cb) {
-}
-
 /**
  * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
  * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点

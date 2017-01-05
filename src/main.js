@@ -14,7 +14,6 @@ import {
   createLink
 } from './api';
 
-import { plugin } from './plugin';
 import createRNode from './rnode';
 import { createRootRouteTree } from './rtree';
 import { extend, makeSureArray } from './utils';
@@ -72,11 +71,8 @@ proto.stop = stop; // 🆗
 // destroy a router
 proto.destroy = destroy; // 🆗
 
-// register a plugin
-proto.plugin = plugin;
-
 // mount a sub-route-tree on a route node
-proto.mount = mount;
+proto.mount = mount; // 🆗
 
 // dynamic add a route to route-tree
 proto.on = on; // 🆗
