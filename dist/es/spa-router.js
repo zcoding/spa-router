@@ -40,55 +40,6 @@ function ArrayCopy(arr) {
   return arr.slice(0);
 }
 
-function RNode(value) {
-  this.path = value;
-  this.params = {};
-  this._hooks = {};
-  this.children = [];
-  this.parent = null;
-}
-
-var proto$1 = RNode.prototype;
-
-proto$1.callHooks = function _callHooks(hookName, Req) {
-  var callbacks = this._hooks[hookName] || [];
-  var _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
-  for (var i = 0; i < _copyCallbacks.length; ++i) {
-    var previousCallbackReturnValue = _copyCallbacks[i].call(null, Req);
-    if (previousCallbackReturnValue === false) break;
-  }
-  return this;
-};
-
-proto$1.addHooks = function addHooks(hookName, callbacks) {
-  this._hooks[hookName] = makeSureArray(callbacks);
-  return this;
-};
-
-// add children
-proto$1.addChildren = function addChildren(children) {
-  if (isArray(children)) {
-    this.children = this.children.concat(children);
-  } else {
-    this.children.push(children);
-  }
-  return this;
-};
-
-proto$1.removeChild = function removeChild(child) {
-  for (var i = 0; i < this.children.length; ++i) {
-    if (this.children[i] === child) {
-      this.children.splice(i, 1);
-      break;
-    }
-  }
-  return this;
-};
-
-function createRNode(value) {
-  return new RNode(value);
-}
-
 var historySupport = typeof window.history['pushState'] !== "undefined";
 
 var MODE = {
@@ -267,6 +218,68 @@ var QS = {
   }
 };
 
+/**
+ * RNode
+ * @constructor
+ * @param {String} value
+ *
+ * path:          区分同级节点的唯一标识
+ * params:        path 包含的参数，使用{参数名:参数规则}键值对表示
+ * callbacks:     路由匹配时执行的回调函数或队列
+ * beforeEnter:   路由匹配时，callbacks 执行之前执行的回调函数或队列（如果 beforeEnter 返回 false 则不会进入 callbacks 执行阶段）
+ * beforeLeave:   路由匹配时，进入下一个路由之前（也就是当前路由离开之前）执行的回调函数或队列
+ * children:      子节点列表引用
+ * parent:        父节点引用
+ */
+function RNode(value) {
+  this.path = value;
+  this.params = {};
+  this._hooks = {};
+  this.children = [];
+  this.parent = null;
+}
+
+var proto$1 = RNode.prototype;
+
+proto$1.callHooks = function _callHooks(hookName, Req) {
+  var callbacks = this._hooks[hookName] || [];
+  var _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
+  for (var i = 0; i < _copyCallbacks.length; ++i) {
+    var previousCallbackReturnValue = _copyCallbacks[i].call(null, Req);
+    if (previousCallbackReturnValue === false) break;
+  }
+  return this;
+};
+
+proto$1.addHooks = function addHooks(hookName, callbacks) {
+  this._hooks[hookName] = makeSureArray(callbacks);
+  return this;
+};
+
+// add children
+proto$1.addChildren = function addChildren(children) {
+  if (isArray(children)) {
+    this.children = this.children.concat(children);
+  } else {
+    this.children.push(children);
+  }
+  return this;
+};
+
+proto$1.removeChild = function removeChild(child) {
+  for (var i = 0; i < this.children.length; ++i) {
+    if (this.children[i] === child) {
+      this.children.splice(i, 1);
+      break;
+    }
+  }
+  return this;
+};
+
+function createRNode(value) {
+  return new RNode(value);
+}
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -355,6 +368,9 @@ var set = function set(object, property, value, receiver) {
 
   return value;
 };
+
+// walk through the routeTree
+
 
 /**
  * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
@@ -544,10 +560,6 @@ var lastReq = null;
 var lastRouteNode = null;
 
 function handlerHashbangMode(onChangeEvent) {
-  var hash = location.hash.slice(1);
-  if (hash === '' || hash === '!') {
-    return this.go('/');
-  }
   var newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
   var url = newURL.replace(/.*#!/, '');
   this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
@@ -555,9 +567,6 @@ function handlerHashbangMode(onChangeEvent) {
 
 function handlerHistoryMode(onChangeEvent) {
   var url = location.pathname + location.search + location.hash;
-  if (url.substr(0, 1) !== '/') {
-    url = '/' + url;
-  }
   this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
 }
 
@@ -616,8 +625,8 @@ function dispatch(path) {
   // 保存原始请求uri
   var uri = path;
   var queryIndex = path.indexOf('?');
-  var hashIndex = path.indexOf('#');
-  hashIndex = hashIndex === -1 ? path.length : hashIndex;
+  var _hashIndex = path.indexOf('#');
+  var hashIndex = _hashIndex === -1 ? path.length : _hashIndex;
   var queryString = queryIndex === -1 ? '' : path.slice(queryIndex + 1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
   var Req = { uri: uri, path: path, query: QS.parse(queryString), $router: this };
@@ -675,6 +684,7 @@ function off(routePath, cb) {
 
 // 动态添加路由回调，但是只响应一次
 function once(routePath, callbacks) {
+  callbacks = makeSureArray(callbacks);
   var _this = this;
   function onlyOnce(req) {
     for (var i = 0; i < callbacks.length; ++i) {
@@ -715,18 +725,12 @@ function setUrlOnly(path) {
   return this;
 }
 
-/**
- * reload page: redispatch current path
- * @method
- * @return this
- */
+// 重载当前页面
 function reload() {
   if (this.options.mode === 'history') {
-    this.dispatch(location.pathname + location.search + location.hash);
-  } else if (this.options.mode === 'hashbang') {
-    this.dispatch(location.hash.slice(2));
+    this.dispatch('' + location.pathname + location.search + location.hash);
   } else {
-    this.dispatch(location.hash.slice(1));
+    this.dispatch(location.hash.replace(/^#!?/, ''));
   }
   return this;
 }
@@ -779,13 +783,13 @@ proto._callHooks = function _callHooks(hookName, Req) {
 };
 
 // start a router
-proto.start = start;
+proto.start = start; // 🆗
 
 // stop a router
-proto.stop = stop$1;
+proto.stop = stop$1; // 🆗
 
 // destroy a router
-proto.destroy = destroy;
+proto.destroy = destroy; // 🆗
 
 // register a plugin
 proto.plugin = plugin;
@@ -794,26 +798,26 @@ proto.plugin = plugin;
 proto.mount = mount;
 
 // dynamic add a route to route-tree
-proto.on = on;
+proto.on = on; // 🆗
 
 // like .on except that it will dispatch only once
-proto.once = once;
+proto.once = once; // 🆗
 
 // stop listen to a route
-proto.off = off;
+proto.off = off; // 🆗
 
 // dispatch a route if path matches
-proto.dispatch = dispatch;
+proto.dispatch = dispatch; // 🆗
 
 proto.go = go;
 
 proto.back = back;
 
 // only set url, don't dispatch any routes
-proto.setUrlOnly = setUrlOnly;
+proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
-proto.reload = reload;
+proto.reload = reload; // 🆗
 
 export default Router;
 //# sourceMappingURL=spa-router.js.map

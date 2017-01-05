@@ -64,13 +64,13 @@ proto._callHooks = function _callHooks (hookName, Req) {
 };
 
 // start a router
-proto.start = start;
+proto.start = start; // 🆗
 
 // stop a router
-proto.stop = stop
+proto.stop = stop; // 🆗
 
 // destroy a router
-proto.destroy = destroy;
+proto.destroy = destroy; // 🆗
 
 // register a plugin
 proto.plugin = plugin;
@@ -79,23 +79,23 @@ proto.plugin = plugin;
 proto.mount = mount;
 
 // dynamic add a route to route-tree
-proto.on = on;
+proto.on = on; // 🆗
 
 // like .on except that it will dispatch only once
-proto.once = once;
+proto.once = once; // 🆗
 
 // stop listen to a route
-proto.off = off;
+proto.off = off; // 🆗
 
 // dispatch a route if path matches
-proto.dispatch = dispatch;
+proto.dispatch = dispatch; // 🆗
 
 proto.go = go;
 
 proto.back = back;
 
 // only set url, don't dispatch any routes
-proto.setUrlOnly = setUrlOnly;
+proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
-proto.reload = reload;
+proto.reload = reload; // 🆗

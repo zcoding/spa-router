@@ -1,5 +1,4 @@
 import { extend, addEvent, isArray, makeSureArray, warn } from './utils';
-import RNode from './rnode';
 import Listener from './listener';
 import QS from './querystring';
 import { findNode, createRouteTree, searchRouteTree } from './rtree';
@@ -7,21 +6,14 @@ import { findNode, createRouteTree, searchRouteTree } from './rtree';
 let lastReq = null, lastRouteNode = null;
 
 function handlerHashbangMode (onChangeEvent) {
-  var hash = location.hash.slice(1);
-  if (hash === '' || hash === '!') {
-    return this.go('/');
-  }
-  var newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
-  let url = newURL.replace(/.*#!/, '');
-  this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
+  const newURL = onChangeEvent && onChangeEvent.newURL || location.hash;
+  const url = newURL.replace(/.*#!/, '');
+  this.dispatch(url.charAt(0) === '/' ? url : `/${url}`);
 }
 
 function handlerHistoryMode (onChangeEvent) {
-  let url = location.pathname + location.search + location.hash;
-  if (url.substr(0, 1) !== '/') {
-    url = '/' + url;
-  }
-  this.dispatch(url.charAt(0) === '/' ? url : '/' + url);
+  const url = location.pathname + location.search + location.hash;
+  this.dispatch(url.charAt(0) === '/' ? url : `/${url}`);
 }
 
 export function start () {
@@ -74,12 +66,12 @@ export function dispatch (path) {
       lastRouteNode.callHooks('beforeLeave', lastReq);
     }
   }
-  let routeTree = this._rtree;
+  const routeTree = this._rtree;
   // 保存原始请求uri
-  let uri = path;
-  var queryIndex = path.indexOf('?');
-  var hashIndex = path.indexOf('#');
-  hashIndex = hashIndex === -1 ? path.length : hashIndex;
+  const uri = path;
+  const queryIndex = path.indexOf('?');
+  const _hashIndex = path.indexOf('#');
+  const hashIndex = _hashIndex === -1 ? path.length : _hashIndex;
   const queryString = queryIndex === -1 ? '' : path.slice(queryIndex+1, hashIndex);
   path = queryIndex === -1 ? path : path.slice(0, queryIndex);
   const Req = {uri: uri, path: path, query: QS.parse(queryString), $router: this};
@@ -136,6 +128,7 @@ export function off (routePath, cb) {
 
 // 动态添加路由回调，但是只响应一次
 export function once (routePath, callbacks) {
+  callbacks = makeSureArray(callbacks);
   const _this = this;
   function onlyOnce (req) {
     for (let i = 0; i < callbacks.length; ++i) {
@@ -176,18 +169,12 @@ export function setUrlOnly (path) {
   return this;
 }
 
-/**
- * reload page: redispatch current path
- * @method
- * @return this
- */
+// 重载当前页面
 export function reload () {
   if (this.options.mode === 'history') {
-    this.dispatch(location.pathname + location.search + location.hash);
-  } else if (this.options.mode === 'hashbang') {
-    this.dispatch(location.hash.slice(2));
+    this.dispatch(`${location.pathname}${location.search}${location.hash}`);
   } else {
-    this.dispatch(location.hash.slice(1));
+    this.dispatch(location.hash.replace(/^#!?/, ''));
   }
   return this;
 }
