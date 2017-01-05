@@ -15,8 +15,7 @@ import {
 } from './api';
 
 import QS from './querystring';
-import createRNode from './rnode';
-import { createRootRouteTree } from './rtree';
+import { createRootRouteTree, dfs } from './rtree';
 import { extend, makeSureArray } from './utils';
 import Listener from './listener';
 
@@ -99,3 +98,8 @@ proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
 proto.reload = reload; // 🆗
+
+proto.test = function (path) {
+  path = path === '/' ? '' : path;
+  return dfs(this._rtree, path.split('/'));
+};

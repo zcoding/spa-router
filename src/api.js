@@ -1,4 +1,4 @@
-import { extend, addEvent, isArray, makeSureArray, warn } from './utils';
+import { makeSureArray, warn } from './utils';
 import Listener from './listener';
 import QS from './querystring';
 import { findNode, createRouteTree, searchRouteTree } from './rtree';
@@ -103,7 +103,8 @@ export function dispatch (path) {
     path = '';
   }
   const result = searchRouteTree(routeTree, path);
-  const routeNode = result[0], params = result[1];
+  if (!result) return this; // 啥都找不到
+  const routeNode = result.rnode, params = result.params;
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
   this._callHooks('beforeEachEnter', Req);

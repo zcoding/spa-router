@@ -133,43 +133,73 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   var basicExampleRoutes = {
-    '/': [log, show],
-    '/product': [log, show],
-    '/product/:color-:size-:price': [log, show],
-    '/product/:id': [log, show],
-    '/about': [log, show],
+    '/': {
+      controllers: [log, show]
+    },
+    '/product': {
+      controllers: [log, show]
+    },
+    '/product/:color-:size-:price': {
+      controllers: [log, show]
+    },
+    '/product/:id': {
+      controllers: [log, show]
+    },
+    '/about': {
+      controllers: [log, show]
+    },
+    '*': {
+      controllers: notFound
+    }
   };
 
-  var basicExampleRouter = new Router(basicExampleRoutes);
-
-  /// .configure()
-  basicExampleRouter.configure({
-    notFound: notFound
+  var basicExampleRouter = new Router(basicExampleRoutes, {
+    mode: 'history'
   });
 
-  /// .mount()
+  // .mount()
   basicExampleRouter.mount('/admin', {
-    '/': [log, show],
-    '/product': {
-      '/': [log, show],
-      '/:color-:size-:price': [log, show],
-      '/:id': [log, show, function(req) { console.log(req.params['id']); }],
-      '/add': function notAccessable() { console.log('you never get this route'); }
+    controllers: [log, show],
+    sub: {
+      '/product': {
+        sub: {
+          '/': {
+            controllers: [log, show]
+          },
+          '/:color-:size-:price': {
+            controllers: [log, show]
+          },
+          '/:id': {
+            controllers: [log, show, function(req) { console.log(req.params['id']); }],
+            sub: {
+              '/ok/:sid': {
+                controllers: function ok () {console.log('ok');}
+              }
+            }
+          },
+          '/add': {
+            controllers: function notAccessable() { console.log('you never get this route'); }
+          },
+          '*': {
+            controllers: function aha(req) { console.log('这是子路由的 not found', req); }
+          }
+        }
+      }
     }
   });
 
-  basicExampleRouter.start({
-    mode: 'history'
-  });
+  basicExampleRouter.start();
 
   [].forEach.call(document.querySelectorAll('[data-pjax]'), function(ele, index) {
     ele.addEventListener('click', function(evt) {
       evt.preventDefault();
       var link2 = this.getAttribute('href');
-      basicExampleRouter.setRoute(link2);
+      basicExampleRouter.go(link2);
       return false;
     });
   });
+
+  console.log(basicExampleRouter)
 
   </script>
 </body>

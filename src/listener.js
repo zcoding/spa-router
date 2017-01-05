@@ -1,4 +1,4 @@
-import { extend, addEvent, warn } from './utils';
+import { addEvent, warn } from './utils';
 
 const historySupport = typeof window.history['pushState'] !== "undefined";
 

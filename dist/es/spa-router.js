@@ -434,7 +434,7 @@ function findNode(routeTreeRoot, routePath, createIfNotFound) {
 function createRouteNodeInPath(rootNode, routePath) {
   routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
   if (routePath === '*') {
-    var rnode = createRNode('.*');
+    var rnode = createRNode('');
     rnode.parent = rootNode;
     rootNode.addChildren(rnode);
     return rnode;
@@ -477,64 +477,87 @@ function createRootRouteTree(namedRoutes, routes) {
   return rootRouteNode;
 }
 
+// 计算一个节点在一棵树的层次
+function calcRNodeDepth(currentRouteNode) {
+  var depth = 0;
+  var rnode = currentRouteNode;
+  while (rnode) {
+    depth++;
+    rnode = rnode.parent;
+  }
+  return depth;
+}
+
 /**
+ * dfs 找匹配的路由节点
  * @param {RNode} currentRouteNode 当前节点
  * @param {Array} parts 路径分段数组
- * @param {Integer} ci 当前路径分段索引
- * @param {Integer} ri 当前节点所在兄弟节点列表的位置
- * @params {Object} params 记录参数的对象
- * @return {[RNode, Object]} 同时返回节点和参数
- */
-function dfs(currentRouteNode, parts, ci, ri, params) {
-
-  var value = parts[ci];
-
-  var newParams = {};
-  for (var p in params) {
-    // copy: params => newParams
-    if (params.hasOwnProperty(p)) {
-      newParams[p] = params[p];
-    }
-  }
-
-  var parent = currentRouteNode.parent;
-
-  if (parent === null && ri > 0) {
-    // finally not matched
-    return [false, newParams];
-  }
-
-  if (parent !== null && ri > parent.children.length - 1) {
-    // not matched, go back
-    return [false, newParams];
-  }
-
-  if (ci > parts.length - 1 || ci < 0) return [false, newParams];
-
+ * */
+function dfs(currentRouteNode, parts) {
+  var currentPathValue = parts[0];
   var matcher = new RegExp('^' + currentRouteNode.path + '$');
-  var matches = value.match(matcher);
-
-  if (matches === null) return [false, newParams]; // not matched, go back
-
-  if (!!currentRouteNode.params) {
-    matches = [].slice.apply(matches, [1]);
-    for (var _k = 0; _k < matches.length; ++_k) {
-      newParams[currentRouteNode.params[_k]] = matches[_k];
+  var matches = currentPathValue.match(matcher);
+  if (!matches) {
+    // 当前节点不匹配，返回
+    // 如果当前节点是 * 节点，则可能在找不到的时候返回这个节点
+    if (currentRouteNode.path === '') {
+      return {
+        rnode: currentRouteNode,
+        params: {},
+        notFound: true
+      };
+    }
+    return false;
+  }
+  var currentParams = {};
+  if (currentRouteNode.params) {
+    var paramsMatches = Array.prototype.slice.call(matches, 1);
+    for (var _k = 0; _k < paramsMatches.length; ++_k) {
+      currentParams[currentRouteNode.params[_k]] = paramsMatches[_k];
     }
   }
-
-  if (ci === parts.length - 1 && currentRouteNode.callbacks !== null) {
-    // finally matched
-    return [currentRouteNode, newParams];
+  if (parts.length === 1) {
+    // 在当前节点完成匹配
+    return {
+      rnode: currentRouteNode,
+      params: currentParams
+    };
   }
-
+  var notFoundList = [];
   for (var i = 0; i < currentRouteNode.children.length; ++i) {
-    var found = dfs(currentRouteNode.children[i], parts, ci + 1, i, newParams); // matched, go ahead
-    if (!found[0]) continue;
-    return found;
+    var _result = dfs(currentRouteNode.children[i], parts.slice(1));
+    if (_result && !_result.notFound) {
+      // 在子树中完成匹配
+      // 合并 params
+      for (var p in _result.params) {
+        if (_result.params.hasOwnProperty(p)) {
+          currentParams[p] = _result.params[p];
+        }
+      }
+      return {
+        rnode: _result.rnode,
+        params: currentParams
+      };
+    }
+    if (_result.notFound) {
+      notFoundList.push(_result);
+    }
   }
-
-  return dfs(currentRouteNode, parts, ci, ri + 1, params); // not matched, go back
+  // 全部路径都走完，找不到匹配项
+  // 如果有 * 节点匹配，则返回匹配路径最长的 * 节点
+  if (notFoundList.length > 0) {
+    var max = -1,
+        maxIndex = -1;
+    for (var _i = 0; _i < notFoundList.length; ++_i) {
+      var depth = calcRNodeDepth(notFoundList[_i].rnode);
+      if (depth > max) {
+        max = depth;
+        maxIndex = _i;
+      }
+    }
+    return notFoundList[maxIndex];
+  }
+  return false;
 }
 
 /**
@@ -548,20 +571,18 @@ function dfs(currentRouteNode, parts, ci, ri, params) {
  *
  * */
 function searchRouteTree(tree, path) {
+  path = path === '/' ? '' : path; // 如果是 / 路径，特殊处理（避免 split 之后多一项）
 
-  var result = dfs(tree, path.split('/'), 0, 0, {});
+  var result = dfs(tree, path.split('/'));
 
-  if (!result[0]) {
-    var resultNode = null;
-    for (var i = 0; i < tree.children.length; ++i) {
-      if (tree.children[i].path === '.*') {
-        resultNode = tree.children[i];
-      }
-    }
-    return [resultNode, {}];
+  if (result.notFound) {
+    return {
+      rnode: result.rnode,
+      params: result.params
+    };
   }
 
-  return [result[0], result[1]];
+  return result;
 }
 
 var lastReq = null;
@@ -669,8 +690,9 @@ function dispatch(path) {
     path = '';
   }
   var result = searchRouteTree(routeTree, path);
-  var routeNode = result[0],
-      params = result[1];
+  if (!result) return this; // 啥都找不到
+  var routeNode = result.rnode,
+      params = result.params;
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
   this._callHooks('beforeEachEnter', Req);
@@ -857,6 +879,11 @@ proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
 proto.reload = reload; // 🆗
+
+proto.test = function (path) {
+  path = path === '/' ? '' : path;
+  return dfs(this._rtree, path.split('/'));
+};
 
 export default Router;
 //# sourceMappingURL=spa-router.js.map
