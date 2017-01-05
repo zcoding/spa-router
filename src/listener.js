@@ -2,7 +2,15 @@ import { extend, addEvent, warn } from './utils';
 
 const historySupport = typeof window.history['pushState'] !== "undefined";
 
-let _mode = 'hashbang';
+const MODE = {
+  HASH: 1,
+  HASHBANG: 1,
+  HISTORY: 2
+};
+
+let RouteMode = MODE.HASHBANG;
+
+let _init = false;
 
 /// Listener
 const Listener = {
@@ -10,12 +18,21 @@ const Listener = {
 
   setUrlOnly: false,
 
+  setMode (mode) {
+    mode = String(mode).toUpperCase();
+    RouteMode = MODE[mode] || MODE.HASHBANG;
+  },
+
   init () {
-    if (this.history) { // IE 10+
+    if (_init) {
+      return this;
+    }
+    _init = true;
+    if (RouteMode === MODE.HISTORY) { // IE 10+
       if (historySupport) {
         addEvent('popstate', onchange);
       } else {
-        this.history = false;
+        RouteMode = MODE.HASHBANG;
         // warning
         warn('你的浏览器不支持 History API ，只能使用 hashbang 模式');
         addEvent('hashchange', onchange);
@@ -31,32 +48,44 @@ const Listener = {
     return this;
   },
 
-  setHashHistory (path) {
-    if (this.history) {
-      history.pushState({}, document.title, path);
+  remove (id) {
+    for (let i = 0; i < this.listeners.length; ++i) {
+      if (this.listeners[i].id === id) {
+        this.listeners.splice(i, 1);
+        break;
+      }
+    }
+    return this;
+  },
+
+  setHashHistory (targetURL) {
+    if (RouteMode === MODE.HISTORY) {
+      history.pushState({}, document.title, targetURL);
     } else {
-      if (path[0] === '/') {
-        location.hash = '!' + path;
+      if (targetURL[0] === '/') {
+        location.hash = `!${targetURL}`;
       } else {
-        var currentURL = location.hash.slice(2); // 去掉前面的#!
-        var idf = currentURL.indexOf('?');
-        if (idf !== -1) {
-          currentURL = currentURL.slice(0, idf);
+        let currentURL = location.hash.replace(/^#!?/, ''); // 去掉前面的 #!
+        const queryStringIndex = currentURL.indexOf('?');
+        if (queryStringIndex !== -1) {
+          currentURL = currentURL.slice(0, queryStringIndex);
         }
         if (/.*\/$/.test(currentURL)) {
-          location.hash = '!' + currentURL + path;
+          location.hash = `!${currentURL}${targetURL}`;
         } else {
-          var hash = currentURL.replace(/([^\/]+|)$/, function($1) {
-            return $1 === '' ? '/' + path : path;
+          const hash = currentURL.replace(/([^\/]+|)$/, function($1) {
+            return $1 === '' ? '/' + targetURL : targetURL;
           });
-          location.hash = '!' + hash;
+          location.hash = `!${hash}`;
         }
       }
     }
     return this;
   },
 
-  stop () {}
+  stop () {
+    // remove event listener
+  }
 };
 
 function onchange(onChangeEvent) {
@@ -66,7 +95,7 @@ function onchange(onChangeEvent) {
   }
   let listeners = Listener.listeners;
   for (let i = 0, l = listeners.length; i < l; i++) {
-    listeners[i](onChangeEvent);
+    listeners[i].handler.call(null, onChangeEvent);
   }
 }
 

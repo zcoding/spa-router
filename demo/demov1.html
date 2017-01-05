@@ -189,6 +189,7 @@
   };
 
   var basicExampleRouter = new Router(basicExampleRoutes, {
+    // mode: 'hashbang',
     beforeEachEnter: function (req) {
       console.log('正在进入: ' + req.uri);
     },

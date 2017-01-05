@@ -18,6 +18,9 @@ import { plugin } from './plugin';
 import createRNode from './rnode';
 import { createRootRouteTree } from './rtree';
 import { extend, makeSureArray } from './utils';
+import Listener from './listener';
+
+let uid = 0;
 
 // mode: history|hashbang
 // history     使用 HTML5 History API
@@ -40,22 +43,14 @@ export default function Router(routes, options) {
   this._init(options);
 }
 
-let _mode = 'hashbang';
-let _alreadySetMode = false;
-
-Router.mode = function setMode (mode) {
-  if (_alreadySetMode) return _mode;
-  _alreadySetMode = true;
-  _mode = mode;
-  return _mode;
-};
-
 const proto = Router.prototype;
 
 proto._init = function _init (options) {
   options = options || {};
+  this._uid = uid++;
   this._isRunning = false;
   this.options = extend({}, optionDefaults, options);
+  Listener.setMode(options.mode);
   this._hooks['beforeEachEnter'] = makeSureArray(options.beforeEachEnter);
   this._hooks['beforeEachLeave'] = makeSureArray(options.beforeEachLeave);
 };

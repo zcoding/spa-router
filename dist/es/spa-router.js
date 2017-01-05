@@ -54,7 +54,7 @@ proto$1.callHooks = function _callHooks(hookName, Req) {
   var callbacks = this._hooks[hookName] || [];
   var _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
   for (var i = 0; i < _copyCallbacks.length; ++i) {
-    var previousCallbackReturnValue = _copyCallbacks[i].call(this, Req);
+    var previousCallbackReturnValue = _copyCallbacks[i].call(null, Req);
     if (previousCallbackReturnValue === false) break;
   }
   return this;
@@ -91,18 +91,37 @@ function createRNode(value) {
 
 var historySupport = typeof window.history['pushState'] !== "undefined";
 
+var MODE = {
+  HASH: 1,
+  HASHBANG: 1,
+  HISTORY: 2
+};
+
+var RouteMode = MODE.HASHBANG;
+
+var _init$1 = false;
+
+/// Listener
 var Listener = {
   listeners: [],
 
   setUrlOnly: false,
 
+  setMode: function setMode(mode) {
+    mode = String(mode).toUpperCase();
+    RouteMode = MODE[mode] || MODE.HASHBANG;
+  },
   init: function init() {
-    if (this.history) {
+    if (_init$1) {
+      return this;
+    }
+    _init$1 = true;
+    if (RouteMode === MODE.HISTORY) {
       // IE 10+
       if (historySupport) {
         addEvent('popstate', onchange);
       } else {
-        this.history = false;
+        RouteMode = MODE.HASHBANG;
         // warning
         warn('你的浏览器不支持 History API ，只能使用 hashbang 模式');
         addEvent('hashchange', onchange);
@@ -116,23 +135,32 @@ var Listener = {
     this.listeners.push(fn);
     return this;
   },
-  setHashHistory: function setHashHistory(path) {
-    if (this.history) {
-      history.pushState({}, document.title, path);
+  remove: function remove(id) {
+    for (var i = 0; i < this.listeners.length; ++i) {
+      if (this.listeners[i].id === id) {
+        this.listeners.splice(i, 1);
+        break;
+      }
+    }
+    return this;
+  },
+  setHashHistory: function setHashHistory(targetURL) {
+    if (RouteMode === MODE.HISTORY) {
+      history.pushState({}, document.title, targetURL);
     } else {
-      if (path[0] === '/') {
-        location.hash = '!' + path;
+      if (targetURL[0] === '/') {
+        location.hash = '!' + targetURL;
       } else {
-        var currentURL = location.hash.slice(2); // 去掉前面的#!
-        var idf = currentURL.indexOf('?');
-        if (idf !== -1) {
-          currentURL = currentURL.slice(0, idf);
+        var currentURL = location.hash.replace(/^#!?/, ''); // 去掉前面的 #!
+        var queryStringIndex = currentURL.indexOf('?');
+        if (queryStringIndex !== -1) {
+          currentURL = currentURL.slice(0, queryStringIndex);
         }
         if (/.*\/$/.test(currentURL)) {
-          location.hash = '!' + currentURL + path;
+          location.hash = '!' + currentURL + targetURL;
         } else {
           var hash = currentURL.replace(/([^\/]+|)$/, function ($1) {
-            return $1 === '' ? '/' + path : path;
+            return $1 === '' ? '/' + targetURL : targetURL;
           });
           location.hash = '!' + hash;
         }
@@ -140,7 +168,9 @@ var Listener = {
     }
     return this;
   },
-  stop: function stop() {}
+  stop: function stop() {
+    // remove event listener
+  }
 };
 
 function onchange(onChangeEvent) {
@@ -150,7 +180,7 @@ function onchange(onChangeEvent) {
   }
   var listeners = Listener.listeners;
   for (var i = 0, l = listeners.length; i < l; i++) {
-    listeners[i](onChangeEvent);
+    listeners[i].handler.call(null, onChangeEvent);
   }
 }
 
@@ -534,13 +564,17 @@ function handlerHistoryMode(onChangeEvent) {
 function start() {
   if (this._isRunning) {
     // start 只调用一次
+    warn('start 方法只能调用一次');
     return this;
   }
   this._isRunning = true;
-  var _handler = this._mode === 'history' ? handlerHistoryMode : handlerHashbangMode;
+  var _handler = this.options.mode === 'history' ? handlerHistoryMode : handlerHashbangMode;
   var _this = this;
-  Listener.init(this._mode).add(function () {
-    return _handler.call(_this);
+  Listener.init().add({
+    id: this._uid,
+    handler: function handler() {
+      return _handler.call(_this);
+    }
   });
   // 首次触发
   _handler.call(this);
@@ -548,11 +582,17 @@ function start() {
 }
 
 function stop$1() {
-  Listener.stop();
+  Listener.remove(this._uid);
+  this._isRunning = false;
   return this;
 }
 
-function destroy() {}
+function destroy() {
+  this.stop();
+  this._hooks = null;
+  this._rtree = null;
+  return null;
+}
 
 // 动态添加新路由（可能会替换原有的路由）
 function mount(routePath, routes) {
@@ -634,15 +674,15 @@ function off(routePath, cb) {
 }
 
 // 动态添加路由回调，但是只响应一次
-function once(path, handlers) {
+function once(routePath, callbacks) {
   var _this = this;
   function onlyOnce(req) {
-    for (var i = 0; i < handlers.length; ++i) {
-      handlers[i].call(_this, req);
+    for (var i = 0; i < callbacks.length; ++i) {
+      callbacks[i].call(_this, req);
     }
-    _this.off(path, onlyOnce);
+    _this.off(routePath, onlyOnce);
   }
-  return this.on(path, onlyOnce);
+  return this.on(routePath, onlyOnce);
 }
 
 /**
@@ -695,6 +735,11 @@ function reload() {
 
 function plugin(register) {}
 
+var uid = 0;
+
+// mode: history|hashbang
+// history     使用 HTML5 History API
+// hashbang    使用 hash（hashbang 模式）
 var optionDefaults = {
   mode: 'hashbang',
   recurse: false // TODO
@@ -713,22 +758,14 @@ function Router(routes, options) {
   this._init(options);
 }
 
-var _mode = 'hashbang';
-var _alreadySetMode = false;
-
-Router.mode = function setMode(mode) {
-  if (_alreadySetMode) return _mode;
-  _alreadySetMode = true;
-  _mode = mode;
-  return _mode;
-};
-
 var proto = Router.prototype;
 
 proto._init = function _init(options) {
   options = options || {};
+  this._uid = uid++;
   this._isRunning = false;
   this.options = extend({}, optionDefaults, options);
+  Listener.setMode(options.mode);
   this._hooks['beforeEachEnter'] = makeSureArray(options.beforeEachEnter);
   this._hooks['beforeEachLeave'] = makeSureArray(options.beforeEachLeave);
 };

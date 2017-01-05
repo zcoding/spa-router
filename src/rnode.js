@@ -27,7 +27,7 @@ proto.callHooks = function _callHooks (hookName, Req) {
   const callbacks = this._hooks[hookName] || [];
   const _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
   for (let i = 0; i < _copyCallbacks.length; ++i) {
-    const previousCallbackReturnValue = _copyCallbacks[i].call(this, Req);
+    const previousCallbackReturnValue = _copyCallbacks[i].call(null, Req);
     if (previousCallbackReturnValue === false) break;
   }
   return this;

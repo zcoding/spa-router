@@ -1,4 +1,4 @@
-import { extend, addEvent, isArray, makeSureArray } from './utils';
+import { extend, addEvent, isArray, makeSureArray, warn } from './utils';
 import RNode from './rnode';
 import Listener from './listener';
 import QS from './querystring';
@@ -26,13 +26,17 @@ function handlerHistoryMode (onChangeEvent) {
 
 export function start () {
   if (this._isRunning) { // start 只调用一次
+    warn('start 方法只能调用一次');
     return this;
   }
   this._isRunning = true;
-  const _handler = this._mode === 'history' ? handlerHistoryMode : handlerHashbangMode;
+  const _handler = this.options.mode === 'history' ? handlerHistoryMode : handlerHashbangMode;
   const _this = this;
-  Listener.init(this._mode).add(function () {
-    return _handler.call(_this);
+  Listener.init().add({
+    id: this._uid,
+    handler: function handler () {
+      return _handler.call(_this);
+    }
   });
   // 首次触发
   _handler.call(this);
@@ -40,11 +44,17 @@ export function start () {
 }
 
 export function stop () {
-  Listener.stop();
+  Listener.remove(this._uid);
+  this._isRunning = false;
   return this;
 }
 
-export function destroy () {}
+export function destroy () {
+  this.stop();
+  this._hooks = null;
+  this._rtree = null;
+  return null;
+}
 
 // 动态添加新路由（可能会替换原有的路由）
 export function mount (routePath, routes) {
@@ -125,15 +135,15 @@ export function off (routePath, cb) {
 }
 
 // 动态添加路由回调，但是只响应一次
-export function once (path, handlers) {
+export function once (routePath, callbacks) {
   const _this = this;
   function onlyOnce (req) {
-    for (let i = 0; i < handlers.length; ++i) {
-      handlers[i].call(_this, req);
+    for (let i = 0; i < callbacks.length; ++i) {
+      callbacks[i].call(_this, req);
     }
-    _this.off(path, onlyOnce);
+    _this.off(routePath, onlyOnce);
   }
-  return this.on(path, onlyOnce);
+  return this.on(routePath, onlyOnce);
 }
 
 /**
