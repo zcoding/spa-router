@@ -27,7 +27,7 @@ let uid = 0;
 // hashbang    使用 hash（hashbang 模式）
 const optionDefaults = {
   mode: 'hashbang',
-  recurse: false // TODO
+  recurse: false // @TODO
 };
 
 /**

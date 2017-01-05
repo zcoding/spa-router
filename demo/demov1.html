@@ -187,10 +187,10 @@
     },
     '/shit': {
       controllers: [function oh () {console.log('ohshit');}]
+    },
+    '*': {
+      controllers: [function notfound () {console.log('not found');}]
     }
-    // '*': {
-    //   controllers: [function notfound () {console.log('not found');}]
-    // }
   };
 
   var basicExampleRouter = new Router(basicExampleRoutes, {
@@ -217,34 +217,34 @@
 
   basicExampleRouter.start();
 
-  var separatorExampleRoutes = {
-    '/test/:p1/:p2/:p3': {
-      controllers: show
-    },
-    '/test/:p1&:p2&:p3': {
-      controllers: show
-    },
-    '/test/:p1!:p2!:p3': {
-      controllers: show
-    },
-    '/test/:p1=:p2=:p3': {
-      controllers: show
-    },
-    '/test/:p1@:p2@:p3': {
-      controllers: show
-    },
-    '/test/hello@world&and!hahaha=shit-:haha': {
-      controllers: [show, function(req) {
-        getDom('[data-msg]').innerHTML = '"hello@world&and!hahaha=shit-" is not a parameter.';
-      }]
-    }
-  };
+  // var separatorExampleRoutes = {
+  //   '/test/:p1/:p2/:p3': {
+  //     controllers: show
+  //   },
+  //   '/test/:p1&:p2&:p3': {
+  //     controllers: show
+  //   },
+  //   '/test/:p1!:p2!:p3': {
+  //     controllers: show
+  //   },
+  //   '/test/:p1=:p2=:p3': {
+  //     controllers: show
+  //   },
+  //   '/test/:p1@:p2@:p3': {
+  //     controllers: show
+  //   },
+  //   '/test/hello@world&and!hahaha=shit-:haha': {
+  //     controllers: [show, function(req) {
+  //       getDom('[data-msg]').innerHTML = '"hello@world&and!hahaha=shit-" is not a parameter.';
+  //     }]
+  //   }
+  // };
 
-  var separatorExampleRouter = new Router(separatorExampleRoutes);
+  // var separatorExampleRouter = new Router(separatorExampleRoutes);
 
-  console.log(separatorExampleRouter);
+  // console.log(separatorExampleRouter);
 
-  separatorExampleRouter.start();
+  // separatorExampleRouter.start();
 
   </script>
 </body>

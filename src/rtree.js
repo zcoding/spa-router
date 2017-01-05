@@ -14,7 +14,6 @@ export function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') { // 当前节点
     return routeTreeRoot;
   }
-  createIfNotFound = !!createIfNotFound;
   const parts = routePath.split('/');
   let target = null, found = false;
   let parent = routeTreeRoot;
@@ -46,8 +45,9 @@ export function findNode(routeTreeRoot, routePath, createIfNotFound) {
         break;
       }
     }
-    if (!found) { // 不存在，创建新节点
+    if (!found) { // 不存在
       if (!createIfNotFound) return false;
+      // 创建新节点
       const extendNode = createRNode(realCurrentValue);
       parent.addChildren(extendNode);
       extendNode.parent = parent;
@@ -62,7 +62,14 @@ export function findNode(routeTreeRoot, routePath, createIfNotFound) {
 
 function createRouteNodeInPath (rootNode, routePath) {
   routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
-  return findNode(rootNode, routePath, true);
+  if (routePath === '*') {
+    const rnode = createRNode('.*');
+    rnode.parent = rootNode;
+    rootNode.addChildren(rnode);
+    return rnode;
+  } else {
+    return findNode(rootNode, routePath, true);
+  }
 }
 
 // 构造路由树
@@ -170,7 +177,13 @@ export function searchRouteTree(tree, path) {
   const result = dfs(tree, path.split('/'), 0, 0, {});
 
   if (!result[0]) {
-    return [null, {}];
+    let resultNode = null;
+    for (let i = 0; i < tree.children.length; ++i) {
+      if (tree.children[i].path === '.*') {
+        resultNode = tree.children[i];
+      }
+    }
+    return [resultNode, {}];
   }
 
   return [result[0], result[1]];

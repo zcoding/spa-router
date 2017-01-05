@@ -359,12 +359,20 @@ var set = function set(object, property, value, receiver) {
   return value;
 };
 
+/**
+ * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
+ * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
+ * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
+ * @param {RNode} tree
+ * @param {String} path
+ * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
+ * @return {RNode}
+ * */
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
     // 当前节点
     return routeTreeRoot;
   }
-  createIfNotFound = !!createIfNotFound;
   var parts = routePath.split('/');
   var target = null,
       found = false;
@@ -400,10 +408,11 @@ function findNode(routeTreeRoot, routePath, createIfNotFound) {
       }
     }
     if (!found) {
-      // 不存在，创建新节点
+      // 不存在
       if (!createIfNotFound) return {
           v: false
         };
+      // 创建新节点
       var extendNode = createRNode(realCurrentValue);
       parent.addChildren(extendNode);
       extendNode.parent = parent;
@@ -424,7 +433,14 @@ function findNode(routeTreeRoot, routePath, createIfNotFound) {
 
 function createRouteNodeInPath(rootNode, routePath) {
   routePath = routePath.replace(/^\/([^\/]*)/, '$1'); // 去掉前置 /
-  return findNode(rootNode, routePath, true);
+  if (routePath === '*') {
+    var rnode = createRNode('.*');
+    rnode.parent = rootNode;
+    rootNode.addChildren(rnode);
+    return rnode;
+  } else {
+    return findNode(rootNode, routePath, true);
+  }
 }
 
 // 构造路由树
@@ -536,7 +552,13 @@ function searchRouteTree(tree, path) {
   var result = dfs(tree, path.split('/'), 0, 0, {});
 
   if (!result[0]) {
-    return [null, {}];
+    var resultNode = null;
+    for (var i = 0; i < tree.children.length; ++i) {
+      if (tree.children[i].path === '.*') {
+        resultNode = tree.children[i];
+      }
+    }
+    return [resultNode, {}];
   }
 
   return [result[0], result[1]];
@@ -763,7 +785,7 @@ var uid = 0;
 // hashbang    使用 hash（hashbang 模式）
 var optionDefaults = {
   mode: 'hashbang',
-  recurse: false // TODO
+  recurse: false // @TODO
 };
 
 /**
