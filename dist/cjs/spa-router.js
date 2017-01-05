@@ -542,6 +542,12 @@ function dfs(currentRouteNode, parts) {
       };
     }
     if (_result.notFound) {
+      // 合并 currentParams
+      for (var _p in currentParams) {
+        if (currentParams.hasOwnProperty(_p)) {
+          _result.params[_p] = currentParams[_p];
+        }
+      }
       notFoundList.push(_result);
     }
   }
@@ -881,11 +887,6 @@ proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
 proto.reload = reload; // 🆗
-
-proto.test = function (path) {
-  path = path === '/' ? '' : path;
-  return dfs(this._rtree, path.split('/'));
-};
 
 module.exports = Router;
 //# sourceMappingURL=spa-router.js.map

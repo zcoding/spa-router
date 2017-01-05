@@ -166,6 +166,12 @@ export function dfs (currentRouteNode, parts) {
       };
     }
     if (_result.notFound) {
+      // 合并 currentParams
+      for (let p in currentParams) {
+        if (currentParams.hasOwnProperty(p)) {
+          _result.params[p] = currentParams[p];
+        }
+      }
       notFoundList.push(_result);
     }
   }

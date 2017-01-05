@@ -98,8 +98,3 @@ proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
 proto.reload = reload; // 🆗
-
-proto.test = function (path) {
-  path = path === '/' ? '' : path;
-  return dfs(this._rtree, path.split('/'));
-};
