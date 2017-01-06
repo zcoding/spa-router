@@ -7,89 +7,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var get = function get(object, property, receiver) {
-  if (object === null) object = Function.prototype;
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent === null) {
-      return undefined;
-    } else {
-      return get(parent, property, receiver);
-    }
-  } else if ("value" in desc) {
-    return desc.value;
-  } else {
-    var getter = desc.get;
-
-    if (getter === undefined) {
-      return undefined;
-    }
-
-    return getter.call(receiver);
-  }
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var set = function set(object, property, value, receiver) {
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent !== null) {
-      set(parent, property, value, receiver);
-    }
-  } else if ("value" in desc && desc.writable) {
-    desc.value = value;
-  } else {
-    var setter = desc.set;
-
-    if (setter !== undefined) {
-      setter.call(receiver, value);
-    }
-  }
-
-  return value;
-};
-
 function extend() {
   var obj = {};
   var srcList = Array.prototype.slice.call(arguments, 0);
@@ -149,7 +66,7 @@ var MODE = {
 
 var RouteMode = MODE.HASHBANG;
 
-var _init$1 = false;
+var _init = false;
 
 /// Listener
 var Listener = {
@@ -162,10 +79,10 @@ var Listener = {
     RouteMode = MODE[mode] || MODE.HASHBANG;
   },
   init: function init() {
-    if (_init$1) {
+    if (_init) {
       return this;
     }
-    _init$1 = true;
+    _init = true;
     if (RouteMode === MODE.HISTORY) {
       // IE 10+
       if (historySupport) {
@@ -398,6 +315,15 @@ function createRNode(value) {
   return new RNode(value);
 }
 
+/**
+ * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
+ * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
+ * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
+ * @param {RNode} tree
+ * @param {String} path
+ * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
+ * @return {RNode}
+ * */
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
     // 当前节点
@@ -655,7 +581,7 @@ function start() {
   return this;
 }
 
-function stop$1() {
+function stop() {
   Listener.remove(this._uid);
   this._isRunning = false;
   return this;
@@ -904,7 +830,7 @@ proto._callHooks = function _callHooks(hookName, Req) {
 proto.start = start; // 🆗
 
 // stop a router
-proto.stop = stop$1; // 🆗
+proto.stop = stop; // 🆗
 
 // destroy a router
 proto.destroy = destroy; // 🆗

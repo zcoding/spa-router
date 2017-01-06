@@ -5,18 +5,25 @@
 [![Versoin](https://img.shields.io/npm/v/spa-router-better.svg?style=flat-square "Version")](https://www.npmjs.com/package/spa-router-better)
 [![License](https://img.shields.io/npm/l/spa-router-better.svg?style=flat-square "License")](./LICENSE)
 
-## Plan
+## v1.0 changed
 
-+ [ ] add `redirect` option
-
-## Change Log
-
-+ 2016-12-15 v0.5.9
-  + finish `.once` method, change `.off` method
-+ 2016-10-14 v0.5.7
-  + add `setUrl` method which will only change url but not dispatching any routes
-+ 2016-09-28 v0.5.6
-  + add `req` params for `beforeEach` and `afterEach`
++ [x] support `beforeEnter`, `beforeLeave`, `beforeEachEnter`, `beforeEachLeave`
++ [x] `createLink` method
++ [x] `setUrl` changed to `setUrlOnly`
++ [x] 新增 `name` 选项，`name` 可以作为 `go`, `dispatch`, `setUrlOnly` 等方法的参数
++ [x] `go`, `dispatch`, `setUrlOnly` 等方法支持传入路由描述对象作为参数
++ [x] 新增 `data` 选项，可以通过 Req 对象传给回调函数使用
++ [x] 支持异步回调阻塞（即必须等待异步回调完成才调用下一个回调）
++ [ ] 支持 `go`, `back` 等历史操作
++ [x] 增加 `destroy` 方法销毁路由器
++ [x] 移除 `configure` 函数，配置应该在创建路由实例的时候完成
++ [ ] 支持 recurse 模式，即在寻找路由匹配的过程中，如果路由完全匹配完整路径的前缀部分，也可以触发 dispatch
++ [x] 公开 Router.QS 对象，提供操作 query string 的两个重要方法
++ [x] 移除 `setRoute` 方法，用 `go` 代替
++ [x] 移除 `redirect` 方法，用 `go` 代替
++ [x] 移除 `root` 配置项
++ [x] 支持 `*` 匹配
++ [x] 移除 `notFound` 配置项，使用 `*` 匹配
 
 ## Introduction
 
@@ -26,9 +33,9 @@
 
 ## Demo
 
-See demos in the `demo` folder.
-
-If you want to see demos with `history mode`, run `npm run server`.
+```
+npm install && npm start
+```
 
 ## Install
 
@@ -45,38 +52,62 @@ Use the dist files in the dist folder.
 3. invoke `.start()` method
 
 ```javascript
-////////// a complete demo
-var routes = {
-  '/': function(req) {
-    console.log('This is the index route!');
-  },
-  '/user': {
-    '/': function(req) {
-      console.log('This is the /user route!');
-    },
-    '/list': function(req) {
-      console.log('This is the /user/list route!');
-      console.log(req.query);
-    },
-    '/edit/:id': function(req) {
-      console.log('This is the /user/edit/:id route, current user is ' + req.params.id);
-      console.log(req.params['id']);
+const routes = {
+  "/": {
+    "name": "home",
+    "controllers": [homeController],
+    "sub": {
+      "/product": {
+        "name": "productList",
+        "beforeLeave": [doBeforeLeave],
+        "controllers": [productController1, productController2],
+        "beforeEnter": [doAfterEnter],
+        "data": {
+          "custom": "data"
+        }
+      },
+      "*": {
+        "name": "pageNotFound",
+        "controllers": []
+      }
     }
   }
 };
-var router = new Router(routes);
-router.start({
-  root: '/'
-});
+Router.mode('hashbang');
+const configs = {
+  mode: "hashbang", // default: hashbang
+  beforeEachEnter: [],
+  beforeEachLeave: []
+};
+const myRouter = new Router(routes, configs);
+myRouter.start();
 ```
 
-## Basic Uasge with Vue.js
+### options
 
-You can see the demo's source files in the `vue-router` folder.
+#### `name` (String)
 
-In the project's root directory, run `npm run vue` to start the demo, and then open `http://localhost:9999`.
+named-route
 
-This demo use [webpack-dev-server](https://github.com/webpack/webpack-dev-server) and support livereload. Try to change the demo's source and learn more usage about spa-router.
+#### `controllers` (Function|Array)
+
+callbacks
+
+#### `beforeEnter` (Function|Array)
+
+callbacks which will be called before `controllers`
+
+#### `beforeLeave` (Function|Array)
+
+callbacks which will be called before switch to another route
+
+#### `data` (Object)
+
+custom route data
+
+#### `sub` (Object)
+
+sub routes
 
 ## Params and Query
 
@@ -125,8 +156,21 @@ Notice:
 + all the query strings will be parsed into an `Object` or `Array`
 
 ## API
+
+### constructor
+
+```
+new Router(options);
+```
+
+options:
+
++ `mode` (String)
++ `beforeEachEnter` (Function|Array)
++ `beforeEachLeave` (Function|Array)
+
 ### Instance method
-#### `.start([options])`
+#### `.start()`
 
 start the router
 
@@ -134,6 +178,8 @@ Options
 + `root`: `[String]` where to begin
 + `notFound` `[Function]` this function will be called if current url do not match any routes
 + `mode` `['history'|'hashbang']` url mode, `history` need HTML5 History API support
+
+#### `.stop()`
 
 #### `.on(path, handler)`
 
@@ -152,7 +198,7 @@ router.on('/test', function(req) {
 
 remove a route from route table
 
-#### `.mount(routes)`
+#### `.mount(mountPath, subRoutes)`
 
 merge another route table with current route table
 
@@ -163,17 +209,16 @@ merge another route table with current route table
 
 dispatch a route
 
-#### .setRoute(path)
+#### .setUrlOnly(url)
+
+#### .go(path)
 
 change the url to `path` and dispatch a route
 
 + if the path has not changed, no routes will be dispatched, so do not use this method to reload a page
-+ usually used in `history` mode
 
 #### .reload()
 
 reload the page(dispatch current route again)
 
 + no arguments
-
-### API method
