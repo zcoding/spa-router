@@ -25,6 +25,7 @@ let uid = 0;
 // history     使用 HTML5 History API
 // hashbang    使用 hash（hashbang 模式）
 const optionDefaults = {
+  title: false,
   mode: 'hashbang',
   recurse: false // @TODO
 };

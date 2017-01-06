@@ -5,10 +5,8 @@ import { warn } from './utils';
  * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
  * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
  * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
- * @param {RNode} tree
- * @param {String} path
- * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
- * @return {RNode}
+ *
+ * createIfNotFound 当节点不存在时创建新节点
  * */
 export function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') { // 当前节点
@@ -82,6 +80,9 @@ export function createRouteTree(namedRoutes, routeNode, routeOptions) {
   }
   if (routeOptions.data) {
     routeNode.data = routeOptions.data;
+  }
+  if (routeOptions.title) {
+    routeNode.title = routeOptions.title;
   }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);

@@ -147,6 +147,7 @@
   var basicExampleRoutes = {
     '/': {
       name: 'home',
+      title: 'router.js',
       controllers: [log, show]
     },
     '/product': {
@@ -167,7 +168,8 @@
   };
 
   var basicExampleRouter = new Router(basicExampleRoutes, {
-    mode: 'history'
+    mode: 'history',
+    title: 'History Mode Demo'
   });
 
   // .mount()

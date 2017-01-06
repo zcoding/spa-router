@@ -73,6 +73,9 @@ var Listener = {
 
   setUrlOnly: false,
 
+  supportHistory: function supportHistory() {
+    return historySupport;
+  },
   setMode: function setMode(mode) {
     mode = String(mode).toUpperCase();
     RouteMode = MODE[mode] || MODE.HASHBANG;
@@ -168,14 +171,20 @@ var QS = {
       return '';
     }
     var appendString = traditional ? '' : '[]';
-    var names = Object.keys(obj).sort();
+    var keysArray = [];
+    for (var p in obj) {
+      if (obj.hasOwnProperty(p)) {
+        keysArray.push(p);
+      }
+    }
+    var names = keysArray.sort();
 
     var parts = [];
     for (var i = 0; i < names.length; ++i) {
       var name = names[i];
       var value = obj[name];
 
-      if (Array.isArray(value)) {
+      if (isArray(value)) {
         value.sort();
         var _parts = [];
         for (var j = 0; j < value.length; ++j) {
@@ -189,13 +198,14 @@ var QS = {
     return parts.join('&');
   },
 
+
   /**
    * querystring.parse
    * @param { String } queryString
    * @return { Object }
    * 
    * 'x=1&y=2' => {x: 1, y: 2}
-   * 'x=1&x=2' => {x: 2}
+   * 'x=1&x=2' => {x: [1, 2]}
    */
   parse: function parse(queryString) {
     if (typeof queryString !== 'string') {
@@ -214,16 +224,12 @@ var QS = {
 
     for (var i = 0; i < queryParts.length; ++i) {
       var parts = queryParts[i].replace(/\+/g, '%20').split('='); // 特殊字符`+`转换为空格
-      var name = parts[0],
-          value = parts[1];
-
-      name = decode(name);
-
-      value = value === undefined ? null : decode(value);
+      var name = decode(parts[0]),
+          value = parts[1] === undefined ? null : decode(parts[1]);
 
       if (!query.hasOwnProperty(name)) {
         query[name] = value;
-      } else if (Array.isArray(query[name])) {
+      } else if (isArray(query[name])) {
         query[name].push(value);
       } else {
         query[name] = [query[name], value];
@@ -233,22 +239,10 @@ var QS = {
   }
 };
 
-/**
- * RNode
- * @constructor
- * @param {String} value
- *
- * path:          区分同级节点的唯一标识
- * params:        path 包含的参数，使用{参数名:参数规则}键值对表示
- * callbacks:     路由匹配时执行的回调函数或队列
- * beforeEnter:   路由匹配时，callbacks 执行之前执行的回调函数或队列（如果 beforeEnter 返回 false 则不会进入 callbacks 执行阶段）
- * beforeLeave:   路由匹配时，进入下一个路由之前（也就是当前路由离开之前）执行的回调函数或队列
- * children:      子节点列表引用
- * parent:        父节点引用
- */
 function RNode(value) {
   this.path = value;
   this.params = false;
+  this.title = false;
   this.data = null;
   this._hooks = {};
   this.children = [];
@@ -314,15 +308,6 @@ function createRNode(value) {
   return new RNode(value);
 }
 
-/**
- * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
- * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
- * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
- * @param {RNode} tree
- * @param {String} path
- * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
- * @return {RNode}
- * */
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
     // 当前节点
@@ -408,6 +393,9 @@ function createRouteTree(namedRoutes, routeNode, routeOptions) {
   }
   if (routeOptions.data) {
     routeNode.data = routeOptions.data;
+  }
+  if (routeOptions.title) {
+    routeNode.title = routeOptions.title;
   }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);
@@ -666,6 +654,15 @@ function dispatch(path) {
       params = result.params;
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
+  if (routeNode) {
+    if (routeNode.title !== false) {
+      document.title = routeNode.title;
+    } else {
+      if (this.options.title !== false) {
+        document.title = this.options.title;
+      }
+    }
+  }
   this._callHooks('beforeEachEnter', Req);
   if (routeNode) {
     routeNode.callHooks('beforeEnter', Req);
@@ -745,7 +742,12 @@ function go(path) {
   return this;
 }
 
-function back() {}
+function back() {
+  if (Listener.supportHistory()) {
+    window['history'].back();
+  } else {}
+  return this;
+}
 
 // 只改变当前的 `url` 但是不触发路由
 // 和 dispatch 刚好相反，dispatch 只触发路由但不改变 `url`
@@ -785,6 +787,7 @@ var uid = 0;
 // history     使用 HTML5 History API
 // hashbang    使用 hash（hashbang 模式）
 var optionDefaults = {
+  title: false,
   mode: 'hashbang',
   recurse: false // @TODO
 };

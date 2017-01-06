@@ -117,6 +117,15 @@ export function dispatch (path) {
   const routeNode = result.rnode, params = result.params;
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
+  if (routeNode) {
+    if (routeNode.title !== false) {
+      document.title = routeNode.title;
+    } else {
+      if (this.options.title !== false) {
+        document.title = this.options.title;
+      }
+    }
+  }
   this._callHooks('beforeEachEnter', Req);
   if (routeNode) {
     routeNode.callHooks('beforeEnter', Req);
@@ -196,7 +205,13 @@ export function go (path) {
   return this;
 }
 
-export function back () {}
+export function back () {
+  if (Listener.supportHistory()) {
+    window['history'].back();
+  } else {
+  }
+  return this;
+}
 
 // 只改变当前的 `url` 但是不触发路由
 // 和 dispatch 刚好相反，dispatch 只触发路由但不改变 `url`

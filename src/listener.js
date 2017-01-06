@@ -18,6 +18,10 @@ const Listener = {
 
   setUrlOnly: false,
 
+  supportHistory () {
+    return historySupport;
+  },
+
   setMode (mode) {
     mode = String(mode).toUpperCase();
     RouteMode = MODE[mode] || MODE.HASHBANG;
