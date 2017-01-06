@@ -57,6 +57,7 @@ export function mount (routePath, routes) {
 }
 
 // 路由描述对象转换为路径
+// 如果缺少参数，会抛出错误
 function routeDescObjToPath (namedRoutes, routeDescObj) {
   const routeNode = namedRoutes[routeDescObj.name];
   if (!routeNode) {
@@ -66,10 +67,17 @@ function routeDescObjToPath (namedRoutes, routeDescObj) {
   let rnode = routeNode;
   while (rnode) {
     let pathvalue = rnode.path;
-    if (rnode.params && routeDescObj.params) {
+    if (rnode.params) {
+      if (!routeDescObj.params) {
+        throw new Error('缺少参数');
+      }
       let paramsIndex = 0;
       pathvalue = pathvalue.replace(/\([^\)]+\)/g, function ($1) {
-        return routeDescObj.params[rnode.params[paramsIndex++]] || $1;
+        const paramKey = rnode.params[paramsIndex++];
+        if (!routeDescObj.params.hasOwnProperty(paramKey)) {
+          throw new Error(`缺少参数 "${paramKey}"`);
+        }
+        return routeDescObj.params[paramKey];
       });
     }
     paths.unshift(pathvalue);
@@ -211,4 +219,12 @@ export function reload () {
 }
 
 // 创建一个链接
-export function createLink (linkTo) {}
+export function createLink (linkTo) {
+  let result = routeDescObjToPath(this._namedRoutes, linkTo);
+  if (result === null) {
+    warn(`路径 ${linkTo.name} 不存在`);
+    result = '/';
+  }
+  result = result === '' ? '/' : result;
+  return this.options.mode === 'history' ? result : `/#!${result}`;
+}

@@ -98,3 +98,5 @@ proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
 proto.reload = reload; // 🆗
+
+proto.createLink = createLink;

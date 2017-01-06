@@ -134,6 +134,7 @@
 
   var basicExampleRoutes = {
     '/': {
+      name: 'home',
       controllers: [log, show]
     },
     '/product': {
@@ -176,6 +177,7 @@
                 controllers: function ok () {console.log('ok');}
               },
               '*': {
+                name: 'inner_not_found',
                 controllers: function (req) {console.log('这是最里面的 not found', req.params);}
               }
             }

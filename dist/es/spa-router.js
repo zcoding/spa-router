@@ -359,15 +359,6 @@ var set = function set(object, property, value, receiver) {
   return value;
 };
 
-/**
- * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
- * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
- * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
- * @param {RNode} tree
- * @param {String} path
- * @param {Boolean} createIfNotFound 当节点不存在时创建新节点
- * @return {RNode}
- * */
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
     // 当前节点
@@ -647,6 +638,7 @@ function mount(routePath, routes) {
 }
 
 // 路由描述对象转换为路径
+// 如果缺少参数，会抛出错误
 function routeDescObjToPath(namedRoutes, routeDescObj) {
   var routeNode = namedRoutes[routeDescObj.name];
   if (!routeNode) {
@@ -656,11 +648,18 @@ function routeDescObjToPath(namedRoutes, routeDescObj) {
   var rnode = routeNode;
   while (rnode) {
     var pathvalue = rnode.path;
-    if (rnode.params && routeDescObj.params) {
+    if (rnode.params) {
       (function () {
+        if (!routeDescObj.params) {
+          throw new Error('缺少参数');
+        }
         var paramsIndex = 0;
         pathvalue = pathvalue.replace(/\([^\)]+\)/g, function ($1) {
-          return routeDescObj.params[rnode.params[paramsIndex++]] || $1;
+          var paramKey = rnode.params[paramsIndex++];
+          if (!routeDescObj.params.hasOwnProperty(paramKey)) {
+            throw new Error('\u7F3A\u5C11\u53C2\u6570 "' + paramKey + '"');
+          }
+          return routeDescObj.params[paramKey];
         });
       })();
     }
@@ -805,6 +804,15 @@ function reload() {
 }
 
 // 创建一个链接
+function createLink(linkTo) {
+  var result = routeDescObjToPath(this._namedRoutes, linkTo);
+  if (result === null) {
+    warn('\u8DEF\u5F84 ' + linkTo.name + ' \u4E0D\u5B58\u5728');
+    result = '/';
+  }
+  result = result === '' ? '/' : result;
+  return this.options.mode === 'history' ? result : '/#!' + result;
+}
 
 var uid = 0;
 
@@ -885,6 +893,8 @@ proto.setUrlOnly = setUrlOnly; // 🆗
 
 // redispatch current route
 proto.reload = reload; // 🆗
+
+proto.createLink = createLink;
 
 export default Router;
 //# sourceMappingURL=spa-router.js.map
