@@ -12,6 +12,11 @@ export function extend() {
   return obj;
 }
 
+// 判断是否 thenable 对象
+export function isThenable (obj) {
+  return typeof obj === 'object' && typeof obj['then'] === 'function';
+}
+
 export function removeHashBang (url) {
   return url.replace(/^#!?/, '');
 }

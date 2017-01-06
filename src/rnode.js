@@ -1,4 +1,4 @@
-import { isArray, makeSureArray, ArrayCopy } from './utils';
+import { isArray, makeSureArray, ArrayCopy, isThenable } from './utils';
 
 /**
  * RNode
@@ -24,13 +24,31 @@ function RNode(value) {
 
 const proto = RNode.prototype;
 
+function afterThen (thenable, restList, context, params) {
+  return thenable.then(function () {
+    return callThenableList(restList, context, params);
+  });
+}
+
+function callThenableList (callbacks, context, params) {
+  let currentReturn;
+  for (let i = 0; i < callbacks.length; ++i) {
+    currentReturn = callbacks[i].apply(context, params);
+    if (isThenable(currentReturn)) {
+      return afterThen(currentReturn, callbacks.slice(i+1), context, params);
+    } else if (currentReturn === false) {
+      break;
+    }
+  }
+  return currentReturn;
+}
+
+// 如果返回 thenable 对象，则后面的回调要等到当前异步操作完成再执行，如果异步操作失败，则后面的回调不执行
+// 如果返回 false 则后面的回调不执行
 proto.callHooks = function _callHooks (hookName, Req) {
   const callbacks = this._hooks[hookName] || [];
   const _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
-  for (let i = 0; i < _copyCallbacks.length; ++i) {
-    const previousCallbackReturnValue = _copyCallbacks[i].call(null, Req);
-    if (previousCallbackReturnValue === false) break;
-  }
+  callThenableList(_copyCallbacks, null, [Req]);
   return this;
 };
 

@@ -43,8 +43,10 @@ export function stop () {
 
 export function destroy () {
   this.stop();
-  this._hooks = null;
+  this._namedRoutes = null;
   this._rtree = null;
+  this._hooks = null;
+  this.options = null;
   return null;
 }
 
@@ -173,14 +175,13 @@ export function once (routePath, callbacks) {
 }
 
 /**
- * 这个方法会改变当前的 `url`，从而触发路由（和 dispatch 类似，但是 dispatch 不会改动 `url`）
- * 这个方法对于 hash/hashbang 模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
- * 该方法相当于调用一次 history.pushState() 然后再调用 .dispatch()
- * 如果 url 没有改变，不会"刷新"
+ * 这个方法会改变当前页面的 `url`，从而触发路由
+ * 在 history 模式下，用户无法通过标签改变 `url` 而不跳转页面，需要监听 click 事件，禁止默认跳转行为，并调用 go 方法
+ * 如果是 history 模式，相当于调用一次 history.pushState() 然后再调用 .dispatch()
+ * 如果 url 没有改变，不会"刷新"页面，要通过代码“刷新”页面，可以调用 reload 方法
  *
- * @param {String} path
- * @return this
- */
+ * path 可以是一个路由描述对象
+ * */
 export function go (path) {
   const loc = window.location;
   const oldURI = loc.pathname + loc.search;
@@ -197,7 +198,7 @@ export function go (path) {
 
 export function back () {}
 
-// 改变当前的 `url` 但是不触发路由
+// 只改变当前的 `url` 但是不触发路由
 // 和 dispatch 刚好相反，dispatch 只触发路由但不改变 `url`
 export function setUrlOnly (path) {
   if (typeof path === 'object' && path !== null) {

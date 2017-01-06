@@ -132,13 +132,25 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  function delay (time) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        resolve(123);
+      }, time);
+    });
+  }
+
+  function rejectContinue () {
+    return Promise.reject(233); // 如果被 reject 而且没有处理，后面的回调也无法执行
+  }
+
   var basicExampleRoutes = {
     '/': {
       name: 'home',
       controllers: [log, show]
     },
     '/product': {
-      controllers: [log, show]
+      controllers: [function () {console.log(3);return delay(1000);}, log, function () {return delay(1000);}, show, rejectContinue, function () {console.log(4);return false;}, function () {console.log(5);}]
     },
     '/product/:color-:size-:price': {
       controllers: [log, show]

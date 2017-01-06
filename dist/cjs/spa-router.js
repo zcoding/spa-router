@@ -1,5 +1,94 @@
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var get = function get(object, property, receiver) {
+  if (object === null) object = Function.prototype;
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent === null) {
+      return undefined;
+    } else {
+      return get(parent, property, receiver);
+    }
+  } else if ("value" in desc) {
+    return desc.value;
+  } else {
+    var getter = desc.get;
+
+    if (getter === undefined) {
+      return undefined;
+    }
+
+    return getter.call(receiver);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var set = function set(object, property, value, receiver) {
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent !== null) {
+      set(parent, property, value, receiver);
+    }
+  } else if ("value" in desc && desc.writable) {
+    desc.value = value;
+  } else {
+    var setter = desc.set;
+
+    if (setter !== undefined) {
+      setter.call(receiver, value);
+    }
+  }
+
+  return value;
+};
+
 function extend() {
   var obj = {};
   var srcList = Array.prototype.slice.call(arguments, 0);
@@ -12,6 +101,11 @@ function extend() {
     }
   }
   return obj;
+}
+
+// 判断是否 thenable 对象
+function isThenable(obj) {
+  return (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && typeof obj['then'] === 'function';
 }
 
 
@@ -222,6 +316,19 @@ var QS = {
   }
 };
 
+/**
+ * RNode
+ * @constructor
+ * @param {String} value
+ *
+ * path:          区分同级节点的唯一标识
+ * params:        path 包含的参数，使用{参数名:参数规则}键值对表示
+ * callbacks:     路由匹配时执行的回调函数或队列
+ * beforeEnter:   路由匹配时，callbacks 执行之前执行的回调函数或队列（如果 beforeEnter 返回 false 则不会进入 callbacks 执行阶段）
+ * beforeLeave:   路由匹配时，进入下一个路由之前（也就是当前路由离开之前）执行的回调函数或队列
+ * children:      子节点列表引用
+ * parent:        父节点引用
+ */
 function RNode(value) {
   this.path = value;
   this.params = false;
@@ -233,13 +340,31 @@ function RNode(value) {
 
 var proto$1 = RNode.prototype;
 
+function afterThen(thenable, restList, context, params) {
+  return thenable.then(function () {
+    return callThenableList(restList, context, params);
+  });
+}
+
+function callThenableList(callbacks, context, params) {
+  var currentReturn = void 0;
+  for (var i = 0; i < callbacks.length; ++i) {
+    currentReturn = callbacks[i].apply(context, params);
+    if (isThenable(currentReturn)) {
+      return afterThen(currentReturn, callbacks.slice(i + 1), context, params);
+    } else if (currentReturn === false) {
+      break;
+    }
+  }
+  return currentReturn;
+}
+
+// 如果返回 thenable 对象，则后面的回调要等到当前异步操作完成再执行，如果异步操作失败，则后面的回调不执行
+// 如果返回 false 则后面的回调不执行
 proto$1.callHooks = function _callHooks(hookName, Req) {
   var callbacks = this._hooks[hookName] || [];
   var _copyCallbacks = ArrayCopy(callbacks); // 复制一个，避免中间调用了 off 导致 length 变化
-  for (var i = 0; i < _copyCallbacks.length; ++i) {
-    var previousCallbackReturnValue = _copyCallbacks[i].call(null, Req);
-    if (previousCallbackReturnValue === false) break;
-  }
+  callThenableList(_copyCallbacks, null, [Req]);
   return this;
 };
 
@@ -271,95 +396,6 @@ proto$1.removeChild = function removeChild(child) {
 function createRNode(value) {
   return new RNode(value);
 }
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var get = function get(object, property, receiver) {
-  if (object === null) object = Function.prototype;
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent === null) {
-      return undefined;
-    } else {
-      return get(parent, property, receiver);
-    }
-  } else if ("value" in desc) {
-    return desc.value;
-  } else {
-    var getter = desc.get;
-
-    if (getter === undefined) {
-      return undefined;
-    }
-
-    return getter.call(receiver);
-  }
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var set = function set(object, property, value, receiver) {
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent !== null) {
-      set(parent, property, value, receiver);
-    }
-  } else if ("value" in desc && desc.writable) {
-    desc.value = value;
-  } else {
-    var setter = desc.set;
-
-    if (setter !== undefined) {
-      setter.call(receiver, value);
-    }
-  }
-
-  return value;
-};
 
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
@@ -626,8 +662,10 @@ function stop$1() {
 
 function destroy() {
   this.stop();
-  this._hooks = null;
+  this._namedRoutes = null;
   this._rtree = null;
+  this._hooks = null;
+  this.options = null;
   return null;
 }
 
@@ -760,14 +798,13 @@ function once(routePath, callbacks) {
 }
 
 /**
- * 这个方法会改变当前的 `url`，从而触发路由（和 dispatch 类似，但是 dispatch 不会改动 `url`）
- * 这个方法对于 hash/hashbang 模式没有多大用处，用户可以通过点击<a>标签实现`url`改变而不跳转页面，但是在history模式下，用户无法通过标签改变`url`而不跳转页面
- * 该方法相当于调用一次 history.pushState() 然后再调用 .dispatch()
- * 如果 url 没有改变，不会"刷新"
+ * 这个方法会改变当前页面的 `url`，从而触发路由
+ * 在 history 模式下，用户无法通过标签改变 `url` 而不跳转页面，需要监听 click 事件，禁止默认跳转行为，并调用 go 方法
+ * 如果是 history 模式，相当于调用一次 history.pushState() 然后再调用 .dispatch()
+ * 如果 url 没有改变，不会"刷新"页面，要通过代码“刷新”页面，可以调用 reload 方法
  *
- * @param {String} path
- * @return this
- */
+ * path 可以是一个路由描述对象
+ * */
 function go(path) {
   var loc = window.location;
   var oldURI = loc.pathname + loc.search;
@@ -784,7 +821,7 @@ function go(path) {
 
 function back() {}
 
-// 改变当前的 `url` 但是不触发路由
+// 只改变当前的 `url` 但是不触发路由
 // 和 dispatch 刚好相反，dispatch 只触发路由但不改变 `url`
 function setUrlOnly(path) {
   if ((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path !== null) {
