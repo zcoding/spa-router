@@ -15,7 +15,7 @@ import {
 } from './api';
 
 import QS from './querystring';
-import { createRootRouteTree, dfs } from './rtree';
+import { createRootRouteTree } from './rtree';
 import { extend, makeSureArray } from './utils';
 import Listener from './listener';
 

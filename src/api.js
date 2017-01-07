@@ -85,7 +85,11 @@ function routeDescObjToPath (namedRoutes, routeDescObj) {
     paths.unshift(pathvalue);
     rnode = rnode.parent;
   }
-  return paths.join('/');
+  let query = '';
+  if (routeDescObj.query) {
+    query += `?${QS.stringify(routeDescObj.query, routeDescObj.traditional)}`;
+  }
+  return paths.join('/') + query;
 }
 
 // 根据给定的路径，遍历路由树，只要找到一个匹配的就把路由返回

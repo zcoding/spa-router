@@ -82,6 +82,9 @@
           <td><a href="/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z" data-pjax>A Deep Path</a></td><td>/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z</td><td>/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z</td>
         </tr>
         <tr>
+          <td><a href="/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z" data-pjax>A Deep Path Not Found</a></td><td></td><td></td>
+        </tr>
+        <tr>
           <td><a href="/notfound" data-pjax>Not Found</a></td><td></td><td></td>
         </tr>
       </tbody>
@@ -167,7 +170,7 @@
       controllers: [log, show]
     },
     '/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z': {
-      controllers: function () {console.log('deep');}
+      controllers: [function () {console.log('deep');}, show]
     },
     '*': {
       controllers: notFound
@@ -192,6 +195,7 @@
             controllers: [log, show]
           },
           '/:id': {
+            name: 'prod',
             controllers: [log, show, function(req) { console.log(req.params['id']); }],
             sub: {
               '/ok/:sid': {

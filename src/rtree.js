@@ -124,8 +124,8 @@ function calcRNodeDepth (currentRouteNode) {
  * @param {RNode} currentRouteNode 当前节点
  * @param {Array} parts 路径分段数组
  * */
-// @TODO parts 很长会变慢？
-export function dfs (currentRouteNode, parts) {
+// @TODO parts 很长并且打开 devtools 的时候会变慢？
+function dfs (currentRouteNode, parts) {
   const currentPathValue = parts[0];
   const matcher = new RegExp('^' + currentRouteNode.path + '$');
   const matches = currentPathValue.match(matcher);
