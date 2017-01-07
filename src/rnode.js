@@ -21,6 +21,7 @@ function RNode(value) {
   this._hooks = {};
   this.children = [];
   this.parent = null;
+  this._registered = false;
 }
 
 const proto = RNode.prototype;

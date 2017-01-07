@@ -79,6 +79,9 @@
           <td><a href="/admin/product/12345" data-pjax>Admin Product Edit</a></td><td>/admin/product/:id</td><td>/admin/product/12345</td>
         </tr>
         <tr>
+          <td><a href="/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z" data-pjax>A Deep Path</a></td><td>/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z</td><td>/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z</td>
+        </tr>
+        <tr>
           <td><a href="/notfound" data-pjax>Not Found</a></td><td></td><td></td>
         </tr>
       </tbody>
@@ -151,6 +154,7 @@
       controllers: [log, show]
     },
     '/product': {
+      title: 'product list',
       controllers: [function () {console.log(3);return delay(1000);}, log, function () {return delay(1000);}, show, rejectContinue, function () {console.log(4);return false;}, function () {console.log(5);}]
     },
     '/product/:color-:size-:price': {
@@ -159,8 +163,11 @@
     '/product/:id': {
       controllers: [log, show]
     },
-    '/about': {
+    '/about/you': {
       controllers: [log, show]
+    },
+    '/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z': {
+      controllers: function () {console.log('deep');}
     },
     '*': {
       controllers: notFound

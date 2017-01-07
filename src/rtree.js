@@ -91,6 +91,7 @@ export function createRouteTree(namedRoutes, routeNode, routeOptions) {
     for (let subRoutePath in routeOptions.sub) {
       if (routeOptions.sub.hasOwnProperty(subRoutePath)) {
         const subRouteNode = createRouteNodeInPath(routeNode, subRoutePath);
+        subRouteNode._registered = true;
         createRouteTree(namedRoutes, subRouteNode, routeOptions.sub[subRoutePath]);
       }
     }
@@ -123,6 +124,7 @@ function calcRNodeDepth (currentRouteNode) {
  * @param {RNode} currentRouteNode 当前节点
  * @param {Array} parts 路径分段数组
  * */
+// @TODO parts 很长会变慢？
 export function dfs (currentRouteNode, parts) {
   const currentPathValue = parts[0];
   const matcher = new RegExp('^' + currentRouteNode.path + '$');
@@ -146,6 +148,9 @@ export function dfs (currentRouteNode, parts) {
     }
   }
   if (parts.length === 1) { // 在当前节点完成匹配
+    if (!currentRouteNode._registered) { // 不是注册节点
+      return false;
+    }
     return {
       rnode: currentRouteNode,
       params: currentParams

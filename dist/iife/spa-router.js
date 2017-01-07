@@ -248,6 +248,7 @@ function RNode(value) {
   this._hooks = {};
   this.children = [];
   this.parent = null;
+  this._registered = false;
 }
 
 var proto$1 = RNode.prototype;
@@ -309,6 +310,13 @@ function createRNode(value) {
   return new RNode(value);
 }
 
+/**
+ * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
+ * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
+ * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
+ *
+ * createIfNotFound 当节点不存在时创建新节点
+ * */
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
     // 当前节点
@@ -406,6 +414,7 @@ function createRouteTree(namedRoutes, routeNode, routeOptions) {
     for (var subRoutePath in routeOptions.sub) {
       if (routeOptions.sub.hasOwnProperty(subRoutePath)) {
         var subRouteNode = createRouteNodeInPath(routeNode, subRoutePath);
+        subRouteNode._registered = true;
         createRouteTree(namedRoutes, subRouteNode, routeOptions.sub[subRoutePath]);
       }
     }
@@ -437,6 +446,7 @@ function calcRNodeDepth(currentRouteNode) {
  * @param {RNode} currentRouteNode 当前节点
  * @param {Array} parts 路径分段数组
  * */
+// @TODO parts 很长会变慢？
 function dfs(currentRouteNode, parts) {
   var currentPathValue = parts[0];
   var matcher = new RegExp('^' + currentRouteNode.path + '$');
@@ -462,6 +472,10 @@ function dfs(currentRouteNode, parts) {
   }
   if (parts.length === 1) {
     // 在当前节点完成匹配
+    if (!currentRouteNode._registered) {
+      // 不是注册节点
+      return false;
+    }
     return {
       rnode: currentRouteNode,
       params: currentParams
