@@ -237,6 +237,19 @@ var QS = {
   }
 };
 
+/**
+ * RNode
+ * @constructor
+ * @param {String} value
+ *
+ * path:          区分同级节点的唯一标识
+ * params:        path 包含的参数，使用{参数名:参数规则}键值对表示
+ * callbacks:     路由匹配时执行的回调函数或队列
+ * beforeEnter:   路由匹配时，callbacks 执行之前执行的回调函数或队列（如果 beforeEnter 返回 false 则不会进入 callbacks 执行阶段）
+ * beforeLeave:   路由匹配时，进入下一个路由之前（也就是当前路由离开之前）执行的回调函数或队列
+ * children:      子节点列表引用
+ * parent:        父节点引用
+ */
 function RNode(value) {
   this.path = value;
   this.params = false;
@@ -786,6 +799,15 @@ function reload() {
   return this;
 }
 
+function redirect(path) {
+  if (history && history['replaceState']) {
+    history.replaceState({}, document.title, path);
+    this.dispatch(path);
+  } else {
+    this.go(path);
+  }
+}
+
 // 创建一个链接
 function createLink(linkTo) {
   var result = routeDescObjToPath(this._namedRoutes, linkTo);
@@ -869,6 +891,8 @@ proto.off = off; // 🆗
 proto.dispatch = dispatch; // 🆗
 
 proto.go = go; // 🆗
+
+proto.redirect = redirect; // 🆗
 
 proto.back = back;
 

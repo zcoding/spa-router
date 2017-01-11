@@ -8,6 +8,7 @@ import {
   off,
   once,
   go,
+  redirect,
   back,
   setUrlOnly,
   reload,
@@ -91,6 +92,8 @@ proto.off = off; // 🆗
 proto.dispatch = dispatch; // 🆗
 
 proto.go = go; // 🆗
+
+proto.redirect = redirect; // 🆗
 
 proto.back = back;
 

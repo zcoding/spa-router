@@ -238,6 +238,15 @@ export function reload () {
   return this;
 }
 
+export function redirect (path) {
+  if (history && history['replaceState']) {
+    history.replaceState({}, document.title, path);
+    this.dispatch(path);
+  } else {
+    this.go(path);
+  }
+}
+
 // 创建一个链接
 export function createLink (linkTo) {
   let result = routeDescObjToPath(this._namedRoutes, linkTo);
