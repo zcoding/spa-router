@@ -1,4 +1,4 @@
-import { makeSureArray, warn } from './utils';
+import { makeSureArray, warn, formatHashBangURI } from './utils';
 import Listener from './listener';
 import QS from './querystring';
 import { findNode, createRouteTree, searchRouteTree } from './rtree';
@@ -119,6 +119,11 @@ export function dispatch (path) {
   const result = searchRouteTree(routeTree, path);
   if (!result) return this; // 啥都找不到
   const routeNode = result.rnode, params = result.params;
+  // 如果有 redirect 就重定向
+  if (routeNode._redirect) {
+    this.redirect(routeNode._redirect);
+    return this;
+  }
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
   if (routeNode) {
@@ -132,7 +137,7 @@ export function dispatch (path) {
   }
   this._callHooks('beforeEachEnter', Req);
   if (routeNode) {
-    routeNode.callHooks('beforeEnter', Req);
+    routeNode.callHooks('beforeEnter', Req); // @TODO 如果 beforeEnter 返回 false 或者 Promise 会影响 callbacks
     routeNode.callHooks('callbacks', Req);
   }
   lastReq = Req;
@@ -238,13 +243,18 @@ export function reload () {
   return this;
 }
 
+// 重定向（只产生一条历史记录）
 export function redirect (path) {
-  if (history && history['replaceState']) {
-    history.replaceState({}, document.title, path);
+  if (typeof path === 'object' && path !== null) { // {name: 'routeName', params: {}}
+    path = routeDescObjToPath(this._namedRoutes, path);
+  }
+  if (this.options.mode === 'history') {
+    history.replaceState({}, '', path);
     this.dispatch(path);
   } else {
-    this.go(path);
+    location.replace(formatHashBangURI(path));
   }
+  return this;
 }
 
 // 创建一个链接

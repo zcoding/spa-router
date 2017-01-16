@@ -48,3 +48,12 @@ export function makeSureArray (obj) {
 export function ArrayCopy (arr) {
   return arr.slice(0);
 }
+
+export function formatHashBangURI (path) {
+  let raw = path.replace(/^#!?/, '');
+  // always
+  if (raw.charAt(0) !== '/') {
+    raw = '/' + raw;
+  }
+  return `/#!${raw}`;
+}

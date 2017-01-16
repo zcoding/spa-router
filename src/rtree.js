@@ -84,6 +84,9 @@ export function createRouteTree(namedRoutes, routeNode, routeOptions) {
   if (routeOptions.title) {
     routeNode.title = routeOptions.title;
   }
+  if (routeOptions.redirect) {
+    routeNode._redirect = routeOptions.redirect;
+  }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);
   routeNode.addHooks('beforeLeave', routeOptions.beforeLeave);

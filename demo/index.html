@@ -167,7 +167,13 @@
       controllers: [log, show]
     },
     '/about/you': {
+      name: 'about',
       controllers: [log, show]
+    },
+    '/about': {
+      redirect: {
+        name: 'about'
+      }
     },
     '/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z': {
       controllers: [function () {console.log('deep');}, show]

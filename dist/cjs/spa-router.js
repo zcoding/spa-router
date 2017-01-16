@@ -55,6 +55,15 @@ function ArrayCopy(arr) {
   return arr.slice(0);
 }
 
+function formatHashBangURI(path) {
+  var raw = path.replace(/^#!?/, '');
+  // always
+  if (raw.charAt(0) !== '/') {
+    raw = '/' + raw;
+  }
+  return '/#!' + raw;
+}
+
 var historySupport = typeof window.history['pushState'] !== "undefined";
 
 var MODE = {
@@ -115,7 +124,7 @@ var Listener = {
   },
   setHashHistory: function setHashHistory(targetURL) {
     if (RouteMode === MODE.HISTORY) {
-      history.pushState({}, document.title, targetURL);
+      history.pushState({}, '', targetURL);
     } else {
       if (targetURL[0] === '/') {
         location.hash = '!' + targetURL;
@@ -239,19 +248,6 @@ var QS = {
   }
 };
 
-/**
- * RNode
- * @constructor
- * @param {String} value
- *
- * path:          区分同级节点的唯一标识
- * params:        path 包含的参数，使用{参数名:参数规则}键值对表示
- * callbacks:     路由匹配时执行的回调函数或队列
- * beforeEnter:   路由匹配时，callbacks 执行之前执行的回调函数或队列（如果 beforeEnter 返回 false 则不会进入 callbacks 执行阶段）
- * beforeLeave:   路由匹配时，进入下一个路由之前（也就是当前路由离开之前）执行的回调函数或队列
- * children:      子节点列表引用
- * parent:        父节点引用
- */
 function RNode(value) {
   this.path = value;
   this.params = false;
@@ -261,6 +257,7 @@ function RNode(value) {
   this.children = [];
   this.parent = null;
   this._registered = false;
+  this._redirect = null; // 重定向
 }
 
 var proto$1 = RNode.prototype;
@@ -322,13 +319,6 @@ function createRNode(value) {
   return new RNode(value);
 }
 
-/**
- * 根据给定的 path，以 routeTreeRoot 为根节点查找，返回 path 对应的 rnode 节点
- * 如果节点不存在，并且 createIfNotFound 为 true 就创建新节点
- * 匹配参数（参数名由字母、数字、下划线组成，不能以数字开头。后面带括号的是特定参数的匹配规则。）
- *
- * createIfNotFound 当节点不存在时创建新节点
- * */
 function findNode(routeTreeRoot, routePath, createIfNotFound) {
   if (routePath === '') {
     // 当前节点
@@ -417,6 +407,9 @@ function createRouteTree(namedRoutes, routeNode, routeOptions) {
   }
   if (routeOptions.title) {
     routeNode.title = routeOptions.title;
+  }
+  if (routeOptions.redirect) {
+    routeNode._redirect = routeOptions.redirect;
   }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);
@@ -683,6 +676,11 @@ function dispatch(path) {
   if (!result) return this; // 啥都找不到
   var routeNode = result.rnode,
       params = result.params;
+  // 如果有 redirect 就重定向
+  if (routeNode._redirect) {
+    this.redirect(routeNode._redirect);
+    return this;
+  }
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
   if (routeNode) {
@@ -696,7 +694,7 @@ function dispatch(path) {
   }
   this._callHooks('beforeEachEnter', Req);
   if (routeNode) {
-    routeNode.callHooks('beforeEnter', Req);
+    routeNode.callHooks('beforeEnter', Req); // @TODO 如果 beforeEnter 返回 false 或者 Promise 会影响 callbacks
     routeNode.callHooks('callbacks', Req);
   }
   lastReq = Req;
@@ -801,13 +799,19 @@ function reload() {
   return this;
 }
 
+// 重定向（只产生一条历史记录）
 function redirect(path) {
-  if (history && history['replaceState']) {
-    history.replaceState({}, document.title, path);
+  if ((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path !== null) {
+    // {name: 'routeName', params: {}}
+    path = routeDescObjToPath(this._namedRoutes, path);
+  }
+  if (this.options.mode === 'history') {
+    history.replaceState({}, '', path);
     this.dispatch(path);
   } else {
-    this.go(path);
+    location.replace(formatHashBangURI(path));
   }
+  return this;
 }
 
 // 创建一个链接

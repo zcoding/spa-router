@@ -64,7 +64,7 @@ const Listener = {
 
   setHashHistory (targetURL) {
     if (RouteMode === MODE.HISTORY) {
-      history.pushState({}, document.title, targetURL);
+      history.pushState({}, '', targetURL);
     } else {
       if (targetURL[0] === '/') {
         location.hash = `!${targetURL}`;
