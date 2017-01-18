@@ -1,6 +1,4 @@
-import { addEvent, warn } from './utils';
-
-const historySupport = typeof window.history['pushState'] !== "undefined";
+import { addEvent, warn, historySupport } from './utils';
 
 const MODE = {
   HASH: 1,

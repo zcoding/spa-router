@@ -38,10 +38,12 @@ function addEvent(name, handler) {
 }
 
 function warn(message) {
-  if (window['console'] && console.warn) {
-    console.warn(message);
+  if (typeof console !== 'undefined') {
+    console.warn('[spa-router] ' + message);
   }
 }
+
+
 
 var isArray = Array.isArray ? Array.isArray : function (obj) {
   return Object.prototype.toString.call(obj) === '[object Array]';
@@ -64,7 +66,13 @@ function formatHashBangURI(path) {
   return '/#!' + raw;
 }
 
-var historySupport = typeof window.history['pushState'] !== "undefined";
+var historySupport = function () {
+  var ua = window.navigator.userAgent;
+  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
+    return false;
+  }
+  return window.history && 'pushState' in window.history;
+}();
 
 var MODE = {
   HASH: 1,
@@ -583,8 +591,14 @@ function start() {
       return _handler.call(_this);
     }
   });
-  // 首次触发
-  _handler.call(this);
+  if (this.options.mode !== 'history' && !/^#!\//.test(location.hash)) {
+    var i = location.href.indexOf('#');
+    var url = location.hash.replace(/^#!?/, '');
+    location.replace(location.href.slice(0, i >= 0 ? i : 0) + '#!/' + url.replace(/^\//, ''));
+  } else {
+    // 首次触发
+    _handler.call(this);
+  }
   return this;
 }
 

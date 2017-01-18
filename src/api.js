@@ -30,8 +30,14 @@ export function start () {
       return _handler.call(_this);
     }
   });
-  // 首次触发
-  _handler.call(this);
+  if (this.options.mode !== 'history' && !/^#!\//.test(location.hash)) {
+    const i = location.href.indexOf('#');
+    const url = location.hash.replace(/^#!?/, '');
+    location.replace(location.href.slice(0, i >= 0 ? i : 0) + '#!/' + url.replace(/^\//, ''));
+  } else {
+    // 首次触发
+    _handler.call(this);
+  }
   return this;
 }
 
