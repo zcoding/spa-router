@@ -263,6 +263,7 @@ function RNode(value) {
   this.children = [];
   this.parent = null;
   this._registered = false;
+  this._forward = false;
   this._redirect = null; // 重定向
 }
 
@@ -417,6 +418,9 @@ function createRouteTree(namedRoutes, routeNode, routeOptions) {
   if (routeOptions.redirect) {
     routeNode._redirect = routeOptions.redirect;
   }
+  if (routeOptions.forward) {
+    routeNode._forward = true;
+  }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);
   routeNode.addHooks('beforeLeave', routeOptions.beforeLeave);
@@ -545,16 +549,23 @@ function dfs(currentRouteNode, parts) {
  * @return {[Array, Object]} 同时返回回调和参数
  *
  * */
-function searchRouteTree(tree, path) {
+
+
+function searchRouteTree2(tree, path) {
   path = path === '/' ? '' : path; // 如果是 / 路径，特殊处理（避免 split 之后多一项）
 
   var result = dfs(tree, path.split('/'));
 
-  if (result.notFound) {
-    return {
-      rnode: result.rnode,
-      params: result.params
-    };
+  if (result && result.rnode) {
+    var forwardList = []; // 找到匹配路径上的全部节点
+    var node = result.rnode;
+    while (node.parent) {
+      if (node.parent._registered && node.parent._forward) {
+        forwardList.unshift(node.parent);
+      }
+      node = node.parent;
+    }
+    result.forwardList = forwardList;
   }
 
   return result;
@@ -684,7 +695,7 @@ function dispatch(path) {
   if (path === '/') {
     path = '';
   }
-  var result = searchRouteTree(routeTree, path);
+  var result = searchRouteTree2(routeTree, path);
   if (!result) return this; // 啥都找不到
   var routeNode = result.rnode,
       params = result.params;
@@ -695,6 +706,14 @@ function dispatch(path) {
   }
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
+  // 更新 this.current
+  this.current = {
+    uri: Req.uri,
+    path: Req.path,
+    query: Req.query,
+    params: Req.params,
+    data: Req.data
+  };
   if (routeNode) {
     if (routeNode.title !== false) {
       document.title = routeNode.title;
@@ -705,6 +724,14 @@ function dispatch(path) {
     }
   }
   this._callHooks('beforeEachEnter', Req);
+  var forwardList = result.forwardList;
+  // 如果有 forward 先执行 forward
+  if (forwardList) {
+    for (var i = 0; i < forwardList.length; ++i) {
+      var forwardNode = forwardList[i];
+      forwardNode.callHooks('callbacks', Req);
+    }
+  }
   if (routeNode) {
     routeNode.callHooks('beforeEnter', Req); // @TODO 如果 beforeEnter 返回 false 或者 Promise 会影响 callbacks
     routeNode.callHooks('callbacks', Req);
@@ -844,8 +871,7 @@ var uid = 0;
 // hashbang    使用 hash（hashbang 模式）
 var optionDefaults = {
   title: false,
-  mode: 'hashbang',
-  recurse: false // @TODO
+  mode: 'hashbang'
 };
 
 /**
@@ -860,6 +886,7 @@ function Router(routes, options) {
   this._rtree = createRootRouteTree(this._namedRoutes, routes);
   this._hooks = {}; // 全局钩子
   this._init(options);
+  this.current = {}; // 记录当前的 path 等信息
 }
 
 Router.QS = QS;

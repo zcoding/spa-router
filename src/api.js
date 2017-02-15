@@ -1,7 +1,7 @@
 import { makeSureArray, warn, formatHashBangURI } from './utils';
 import Listener from './listener';
 import QS from './querystring';
-import { findNode, createRouteTree, searchRouteTree } from './rtree';
+import { findNode, createRouteTree, searchRouteTree, searchRouteTree2 } from './rtree';
 
 let lastReq = null, lastRouteNode = null;
 
@@ -122,7 +122,7 @@ export function dispatch (path) {
   if (path === '/') {
     path = '';
   }
-  const result = searchRouteTree(routeTree, path);
+  const result = searchRouteTree2(routeTree, path);
   if (!result) return this; // 啥都找不到
   const routeNode = result.rnode, params = result.params;
   // 如果有 redirect 就重定向
@@ -132,6 +132,14 @@ export function dispatch (path) {
   }
   Req.params = params;
   Req.data = routeNode ? routeNode.data : null;
+  // 更新 this.current
+  this.current = {
+    uri: Req.uri,
+    path: Req.path,
+    query: Req.query,
+    params: Req.params,
+    data: Req.data
+  };
   if (routeNode) {
     if (routeNode.title !== false) {
       document.title = routeNode.title;
@@ -142,6 +150,14 @@ export function dispatch (path) {
     }
   }
   this._callHooks('beforeEachEnter', Req);
+  const forwardList = result.forwardList;
+  // 如果有 forward 先执行 forward
+  if (forwardList) {
+    for (let i = 0; i < forwardList.length; ++i) {
+      const forwardNode = forwardList[i];
+      forwardNode.callHooks('callbacks', Req);
+    }
+  }
   if (routeNode) {
     routeNode.callHooks('beforeEnter', Req); // @TODO 如果 beforeEnter 返回 false 或者 Promise 会影响 callbacks
     routeNode.callHooks('callbacks', Req);

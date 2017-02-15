@@ -22,6 +22,7 @@ function RNode(value) {
   this.children = [];
   this.parent = null;
   this._registered = false;
+  this._forward = false;
   this._redirect = null; // 重定向
 }
 

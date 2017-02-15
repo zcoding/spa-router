@@ -87,6 +87,9 @@ export function createRouteTree(namedRoutes, routeNode, routeOptions) {
   if (routeOptions.redirect) {
     routeNode._redirect = routeOptions.redirect;
   }
+  if (routeOptions.forward) {
+    routeNode._forward = true;
+  }
   routeNode.addHooks('beforeEnter', routeOptions.beforeEnter);
   routeNode.addHooks('callbacks', routeOptions.controllers);
   routeNode.addHooks('beforeLeave', routeOptions.beforeLeave);
@@ -99,7 +102,6 @@ export function createRouteTree(namedRoutes, routeNode, routeOptions) {
       }
     }
   }
-
 }
 
 // 创建根结点
@@ -220,6 +222,26 @@ export function searchRouteTree(tree, path) {
       rnode: result.rnode,
       params: result.params
     };
+  }
+
+  return result;
+}
+
+export function searchRouteTree2 (tree, path) {
+  path = path === '/' ? '' : path; // 如果是 / 路径，特殊处理（避免 split 之后多一项）
+
+  const result = dfs(tree, path.split('/'));
+
+  if (result && result.rnode) {
+    const forwardList = []; // 找到匹配路径上的全部节点
+    let node = result.rnode;
+    while (node.parent) {
+      if (node.parent._registered && node.parent._forward) {
+        forwardList.unshift(node.parent);
+      }
+      node = node.parent;
+    }
+    result.forwardList = forwardList;
   }
 
   return result;

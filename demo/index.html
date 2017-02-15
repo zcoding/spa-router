@@ -193,9 +193,10 @@
     controllers: [log, show],
     sub: {
       '/product': {
+        forward: true,
         sub: {
           '/': {
-            controllers: [log, show]
+            controllers: [log, show, function() {console.log('forward');}]
           },
           '/:color-:size-:price': {
             controllers: [log, show]

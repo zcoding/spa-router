@@ -27,8 +27,7 @@ let uid = 0;
 // hashbang    使用 hash（hashbang 模式）
 const optionDefaults = {
   title: false,
-  mode: 'hashbang',
-  recurse: false // @TODO
+  mode: 'hashbang'
 };
 
 /**
@@ -43,6 +42,7 @@ export default function Router(routes, options) {
   this._rtree = createRootRouteTree(this._namedRoutes, routes);
   this._hooks = {}; // 全局钩子
   this._init(options);
+  this.current = {}; // 记录当前的 path 等信息
 }
 
 Router.QS = QS;
